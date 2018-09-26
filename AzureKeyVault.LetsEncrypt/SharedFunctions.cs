@@ -27,7 +27,6 @@ namespace AzureKeyVault.LetsEncrypt
     {
         private static readonly HttpClient _httpClient = new HttpClient();
         private static readonly HttpClient _acmeHttpClient = new HttpClient { BaseAddress = new Uri("https://acme-v02.api.letsencrypt.org/") };
-        //private static readonly HttpClient _acmeHttpClient = new HttpClient { BaseAddress = new Uri("https://acme-staging-v02.api.letsencrypt.org/") };
 
         [FunctionName(nameof(IssueCertificate))]
         public static async Task IssueCertificate([OrchestrationTrigger] DurableOrchestrationContext context, ILogger log)
@@ -64,7 +63,7 @@ namespace AzureKeyVault.LetsEncrypt
 
             var certificates = await keyVaultClient.GetCertificatesAsync(Settings.Default.VaultBaseUrl);
 
-            var list = certificates.Where(x => x.Tags.TryGetValue("Issuer", out var issuer) && issuer == "letsencrypt.org")
+            var list = certificates.Where(x => x.Tags != null && x.Tags.TryGetValue("Issuer", out var issuer) && issuer == "letsencrypt.org")
                                    .Where(x => (x.Attributes.Expires.Value - currentDateTime).TotalDays < 30)
                                    .ToArray();
 
