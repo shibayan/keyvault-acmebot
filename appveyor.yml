@@ -1,0 +1,33 @@
+version: '{build}'
+
+pull_requests:
+  do_not_increment_build_number: true
+
+skip_branch_with_pr: true
+
+skip_commits:
+  files:
+    - azuredeploy.json
+    - README.md
+
+image: Visual Studio 2017
+
+build_script:
+  - dotnet publish -c Release
+  - 7z a latest.zip %APPVEYOR_BUILD_FOLDER%\AzureKeyVault.LetsEncrypt\bin\Release\netstandard2.0\publish\*
+
+test: off
+
+artifacts:
+  - path: latest.zip
+
+deploy:
+  - provider: AzureBlob
+    storage_account_name:
+      secure: ce5QAXSDXBBksRBZWAm06g==
+    storage_access_key:
+      secure: B8HwCa5Hvbbgztfgiv1PRS05jp3h7X67QsWmwiFemXVp2AmdIEIrW6SF/ZNzDFEV90luZ7gavcPGrHPDBKhh70Yj+xJ+uAqGRwpgCQxiUVD+McXKQvAwtB4iP8XnsOpo
+    container: azure-keyvault-letsencrypt
+    set_content_type: true
+    on:
+      appveyor_repo_tag: true
