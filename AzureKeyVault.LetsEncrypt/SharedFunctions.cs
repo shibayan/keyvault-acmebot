@@ -221,7 +221,7 @@ namespace AzureKeyVault.LetsEncrypt
         {
             var (hostNames, orderDetails) = context.GetInput<(string[], OrderDetails)>();
 
-            var certificateName = hostNames[0].Replace(".", "-");
+            var certificateName = hostNames[0].Replace("*", "wildcard").Replace(".", "-");
 
             var keyVaultClient = CreateKeyVaultClient();
 
