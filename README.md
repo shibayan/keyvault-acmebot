@@ -22,7 +22,7 @@
   - Azure Subscription Id
 - LetsEncrypt:Contacts
   - Email address for Let's Encrypt account
-- LetsEncrypt:VaultBaseName
+- LetsEncrypt:VaultBaseUrl
   - Azure Key Vault DNS name
 
 ### 3. Add a access policy
