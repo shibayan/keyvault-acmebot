@@ -112,7 +112,20 @@
           ],
           "clientAffinityEnabled": false
         }
-      }
+      },
+      "resources": [
+        {
+          "apiVersion": "2015-08-01",
+          "name": "metadata",
+          "type": "config",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/Sites', variables('functionAppName'))]"
+          ],
+          "properties": {
+            "synctriggersstatus": "[listsyncfunctiontriggerstatus(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2015-08-01').status]"
+          }
+        }
+      ]
     }
   ]
 }
