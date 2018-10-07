@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 using Microsoft.Azure.WebJobs;
@@ -19,7 +20,7 @@ namespace AzureKeyVault.LetsEncrypt
 
             if (request.Domains == null || request.Domains.Length == 0)
             {
-                return req.CreateErrorResponse(System.Net.HttpStatusCode.BadRequest, $"{nameof(request.Domains)} is empty.");
+                return req.CreateErrorResponse(HttpStatusCode.BadRequest, $"{nameof(request.Domains)} is empty.");
             }
 
             // Function input comes from the request content.
