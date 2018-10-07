@@ -10,6 +10,8 @@ using ACMESharp.Authorizations;
 using ACMESharp.Protocol;
 using ACMESharp.Protocol.Resources;
 
+using AzureKeyVault.LetsEncrypt.Internal;
+
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Azure.Management.Dns;

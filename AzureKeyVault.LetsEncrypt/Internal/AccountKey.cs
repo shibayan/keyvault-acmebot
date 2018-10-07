@@ -2,7 +2,7 @@ using System;
 
 using ACMESharp.Crypto.JOSE;
 
-namespace AzureKeyVault.LetsEncrypt
+namespace AzureKeyVault.LetsEncrypt.Internal
 {
     internal class AccountKey
     {
