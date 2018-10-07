@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <AzureFunctionsVersion>v2</AzureFunctionsVersion>
+    <UseNETCoreGenerator>true</UseNETCoreGenerator>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ACMESharpCore" Version="2.0.0.49-beta1" />

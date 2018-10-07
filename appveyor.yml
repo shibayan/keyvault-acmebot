@@ -14,7 +14,7 @@ image: Visual Studio 2017
 
 build_script:
   - dotnet publish -c Release
-  - 7z a latest.zip %APPVEYOR_BUILD_FOLDER%\AzureKeyVault.LetsEncrypt\bin\Release\netstandard2.0\publish\*
+  - 7z a latest.zip %APPVEYOR_BUILD_FOLDER%\AzureKeyVault.LetsEncrypt\bin\Release\netcoreapp2.0\publish\*
 
 test: off
 
