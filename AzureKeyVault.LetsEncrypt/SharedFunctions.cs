@@ -101,7 +101,7 @@ namespace AzureKeyVault.LetsEncrypt
             {
                 if (!zones.Any(x => hostName.EndsWith(x.Name)))
                 {
-                    log.LogError($"Azure DNS zone \"{hostNames}\" is not found");
+                    log.LogError($"Azure DNS zone \"{hostName}\" is not found");
 
                     throw new InvalidOperationException();
                 }
