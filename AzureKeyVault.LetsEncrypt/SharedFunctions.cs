@@ -12,6 +12,8 @@ using ACMESharp.Protocol.Resources;
 
 using AzureKeyVault.LetsEncrypt.Internal;
 
+using DnsClient;
+
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Azure.Management.Dns;
@@ -30,6 +32,8 @@ namespace AzureKeyVault.LetsEncrypt
         private static readonly HttpClient _httpClient = new HttpClient();
         private static readonly HttpClient _acmeHttpClient = new HttpClient { BaseAddress = new Uri("https://acme-v02.api.letsencrypt.org/") };
 
+        private static readonly LookupClient _lookupClient = new LookupClient { UseCache = false };
+
         [FunctionName(nameof(IssueCertificate))]
         public static async Task IssueCertificate([OrchestrationTrigger] DurableOrchestrationContext context, ILogger log)
         {
@@ -42,12 +46,17 @@ namespace AzureKeyVault.LetsEncrypt
             var orderDetails = await context.CallActivityAsync<OrderDetails>(nameof(Order), dnsNames);
 
             // 複数の Authorizations を処理する
-            var challenges = new List<Challenge>();
+            var challenges = new List<ChallengeResult>();
 
             foreach (var authorization in orderDetails.Payload.Authorizations)
             {
                 // ACME Challenge を実行
-                challenges.Add(await context.CallActivityAsync<Challenge>(nameof(Dns01Authorization), authorization));
+                var result = await context.CallActivityAsync<ChallengeResult>(nameof(Dns01Authorization), authorization);
+
+                // Azure DNS で正しくレコードが引けるか確認
+                await context.CallActivityWithRetryAsync(nameof(CheckIsDnsRecord), new RetryOptions(TimeSpan.FromSeconds(10), 6), result);
+
+                challenges.Add(result);
             }
 
             // ACME Answer を実行
@@ -106,15 +115,13 @@ namespace AzureKeyVault.LetsEncrypt
             {
                 if (!zones.Any(x => hostName.EndsWith(x.Name)))
                 {
-                    log.LogError($"Azure DNS zone \"{hostName}\" is not found");
-
-                    throw new InvalidOperationException();
+                    throw new InvalidOperationException($"Azure DNS zone \"{hostName}\" is not found");
                 }
             }
         }
 
         [FunctionName(nameof(Dns01Authorization))]
-        public static async Task<Challenge> Dns01Authorization([ActivityTrigger] DurableActivityContext context, ILogger log)
+        public static async Task<ChallengeResult> Dns01Authorization([ActivityTrigger] DurableActivityContext context, ILogger log)
         {
             var authzUrl = context.GetInput<string>();
 
@@ -182,13 +189,43 @@ namespace AzureKeyVault.LetsEncrypt
 
             await dnsClient.RecordSets.CreateOrUpdateAsync(resourceId["resourceGroups"], zone.Name, acmeDnsRecordName, RecordType.TXT, recordSet);
 
-            return challenge;
+            return new ChallengeResult
+            {
+                Url = challenge.Url,
+                DnsRecordName = challengeValidationDetails.DnsRecordName,
+                DnsRecordValue = challengeValidationDetails.DnsRecordValue
+            };
+        }
+
+        [FunctionName(nameof(CheckIsDnsRecord))]
+        public static async Task CheckIsDnsRecord([ActivityTrigger] DurableActivityContext context, ILogger log)
+        {
+            var challenge = context.GetInput<ChallengeResult>();
+
+            // 実際に ACME の TXT レコードを引いて確認する
+            var queryResult = await _lookupClient.QueryAsync(challenge.DnsRecordName, QueryType.TXT);
+
+            var txtRecord = queryResult.Answers
+                                       .OfType<DnsClient.Protocol.TxtRecord>()
+                                       .FirstOrDefault();
+
+            // レコードが存在しなかった場合はエラー
+            if (txtRecord == null)
+            {
+                throw new InvalidOperationException($"{challenge.DnsRecordName} did not resolve.");
+            }
+
+            // レコードに今回のチャレンジが含まれていない場合もエラー
+            if (!txtRecord.Text.Contains(challenge.DnsRecordValue))
+            {
+                throw new InvalidOperationException($"{challenge.DnsRecordName} value is not correct.");
+            }
         }
 
         [FunctionName(nameof(AnswerChallenges))]
         public static async Task AnswerChallenges([ActivityTrigger] DurableActivityContext context, ILogger log)
         {
-            var challenges = context.GetInput<IList<Challenge>>();
+            var challenges = context.GetInput<IList<ChallengeResult>>();
 
             var acme = await CreateAcmeClientAsync();
 
@@ -208,9 +245,28 @@ namespace AzureKeyVault.LetsEncrypt
 
             orderDetails = await acme.GetOrderDetailsAsync(orderDetails.OrderUrl, orderDetails);
 
-            if (orderDetails.Payload.Status != "ready")
+            if (orderDetails.Payload.Status == "pending")
             {
-                throw new InvalidOperationException($"Invalid order status is {orderDetails.Payload.Status}");
+                // pending の場合は何もしない
+                throw new InvalidOperationException("ACME domain validation is pending.");
+            }
+
+            if (orderDetails.Payload.Status == "invalid")
+            {
+                // エラーログ用に Authorization を取得
+                foreach (var authzUrl in orderDetails.Payload.Authorizations)
+                {
+                    var authorization = await acme.GetAuthorizationDetailsAsync(authzUrl);
+
+                    var challenge = authorization.Challenges.FirstOrDefault(x => x.Error != null);
+
+                    if (challenge != null)
+                    {
+                        log.LogError(JsonConvert.SerializeObject(challenge.Error));
+                    }
+                }
+
+                throw new InvalidOperationException("Invalid order status. Required retry at first.");
             }
         }
 
@@ -351,5 +407,12 @@ namespace AzureKeyVault.LetsEncrypt
                 { "providers", values[5] }
             };
         }
+    }
+
+    public class ChallengeResult
+    {
+        public string Url { get; set; }
+        public string DnsRecordName { get; set; }
+        public string DnsRecordValue { get; set; }
     }
 }
