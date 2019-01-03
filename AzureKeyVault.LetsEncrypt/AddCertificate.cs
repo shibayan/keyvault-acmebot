@@ -18,7 +18,7 @@ namespace AzureKeyVault.LetsEncrypt
         {
             var request = await req.Content.ReadAsAsync<AddCertificateRequest>();
 
-            if (request.Domains == null || request.Domains.Length == 0)
+            if (request?.Domains == null || request.Domains.Length == 0)
             {
                 return req.CreateErrorResponse(HttpStatusCode.BadRequest, $"{nameof(request.Domains)} is empty.");
             }
