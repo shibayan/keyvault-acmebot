@@ -1,6 +1,8 @@
 # Azure Key Vault Let's Encrypt
 
 [![Build status](https://ci.appveyor.com/api/projects/status/sr0okt6mld0ufkcd?svg=true)](https://ci.appveyor.com/project/shibayan/azure-keyvault-letsencrypt)
+[![Release](https://img.shields.io/github/release/shibayan/azure-keyvault-letsencrypt.svg)](https://github.com/shibayan/azure-keyvault-letsencrypt/releases/latest)
+[![License](https://img.shields.io/github/license/shibayan/azure-keyvault-letsencrypt.svg)](https://github.com/shibayan/azure-keyvault-letsencrypt/blob/master/LICENSE)
 
 ## Requirements
 
