@@ -205,18 +205,18 @@ namespace AzureKeyVault.LetsEncrypt
             // 実際に ACME の TXT レコードを引いて確認する
             var queryResult = await _lookupClient.QueryAsync(challenge.DnsRecordName, QueryType.TXT);
 
-            var txtRecord = queryResult.Answers
+            var txtRecords = queryResult.Answers
                                        .OfType<DnsClient.Protocol.TxtRecord>()
-                                       .FirstOrDefault();
+                                       .ToArray();
 
             // レコードが存在しなかった場合はエラー
-            if (txtRecord == null)
+            if (txtRecords.Length == 0)
             {
                 throw new InvalidOperationException($"{challenge.DnsRecordName} did not resolve.");
             }
 
             // レコードに今回のチャレンジが含まれていない場合もエラー
-            if (!txtRecord.Text.Contains(challenge.DnsRecordValue))
+            if (!txtRecords.Any(x => x.Text.Contains(challenge.DnsRecordValue)))
             {
                 throw new InvalidOperationException($"{challenge.DnsRecordName} value is not correct.");
             }
