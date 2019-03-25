@@ -54,7 +54,7 @@ namespace AzureKeyVault.LetsEncrypt
                 var result = await context.CallActivityAsync<ChallengeResult>(nameof(Dns01Authorization), authorization);
 
                 // Azure DNS で正しくレコードが引けるか確認
-                await context.CallActivityWithRetryAsync(nameof(CheckDnsChallenge), new RetryOptions(TimeSpan.FromSeconds(10), 6), result);
+                await context.CallActivityWithRetryAsync(nameof(CheckDnsChallenge), new RetryOptions(TimeSpan.FromSeconds(10), 6) { Handle = HandleRetriableException }, result);
 
                 challenges.Add(result);
             }
@@ -63,7 +63,7 @@ namespace AzureKeyVault.LetsEncrypt
             await context.CallActivityAsync(nameof(AnswerChallenges), challenges);
 
             // Order のステータスが ready になるまで 60 秒待機
-            await context.CallActivityWithRetryAsync(nameof(CheckIsReady), new RetryOptions(TimeSpan.FromSeconds(5), 12), orderDetails);
+            await context.CallActivityWithRetryAsync(nameof(CheckIsReady), new RetryOptions(TimeSpan.FromSeconds(5), 12) { Handle = HandleRetriableException }, orderDetails);
 
             await context.CallActivityAsync(nameof(FinalizeOrder), (dnsNames, orderDetails));
         }
@@ -407,6 +407,11 @@ namespace AzureKeyVault.LetsEncrypt
                 { "resourceGroups", values[3] },
                 { "providers", values[5] }
             };
+        }
+
+        private static bool HandleRetriableException(Exception exception)
+        {
+            return exception.InnerException is RetriableActivityException;
         }
     }
 
