@@ -16,8 +16,8 @@
     }
   },
   "variables": {
-    "functionAppName": "[concat(parameters('appNamePrefix'), uniquestring(utcNow()))]",
-    "storageAccountName": "[concat(uniquestring(utcNow()), 'azfunctions')]",
+    "functionAppName": "[concat(parameters('appNamePrefix'), uniquestring(resourceGroup().id, deployment().name))]",
+    "storageAccountName": "[concat(uniquestring(resourceGroup().id, deployment().name), 'azfunctions')]",
     "storageAccountId": "[concat(resourceGroup().id, '/providers/', 'Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
     "mailAddress": "[parameters('mailAddress')]"
   },
