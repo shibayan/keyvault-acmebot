@@ -299,10 +299,12 @@ namespace AzureKeyVault.LetsEncrypt
 
             var certificateData = await _httpClient.GetByteArrayAsync(finalize.Payload.Certificate);
 
-            // X509Certificate2 を作成
-            var certificate = new X509Certificate2(certificateData);
+            // X509Certificate2Collection を作成
+            var x509Certificates = new X509Certificate2Collection();
 
-            await keyVaultClient.MergeCertificateAsync(Settings.Default.VaultBaseUrl, certificateName, new X509Certificate2Collection(certificate));
+            x509Certificates.ImportFromPem(certificateData);
+
+            await keyVaultClient.MergeCertificateAsync(Settings.Default.VaultBaseUrl, certificateName, x509Certificates);
         }
 
         private static async Task<AcmeProtocolClient> CreateAcmeClientAsync()
