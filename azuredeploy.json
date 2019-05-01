@@ -2,7 +2,7 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "appName": {
+    "appNamePrefix": {
       "type": "string",
       "metadata": {
         "description": "The name of the function app that you wish to create."
@@ -16,9 +16,8 @@
     }
   },
   "variables": {
-    "functionAppName": "[parameters('appName')]",
-    "hostingPlanName": "[parameters('appName')]",
-    "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'azfunctions')]",
+    "functionAppName": "[concat(parameters('appNamePrefix'), uniquestring(resourceGroup().id, deployment().name))]",
+    "storageAccountName": "[concat(uniquestring(resourceGroup().id, deployment().name), 'azfunctions')]",
     "storageAccountId": "[concat(resourceGroup().id, '/providers/', 'Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
     "mailAddress": "[parameters('mailAddress')]"
   },
@@ -34,11 +33,11 @@
     },
     {
       "type": "Microsoft.Web/serverfarms",
-      "name": "[variables('hostingPlanName')]",
+      "name": "[variables('functionAppName')]",
       "apiVersion": "2015-04-01",
       "location": "[resourceGroup().location]",
       "properties": {
-        "name": "[variables('hostingPlanName')]",
+        "name": "[variables('functionAppName')]",
         "computeMode": "Dynamic",
         "sku": "Dynamic"
       }
@@ -65,12 +64,12 @@
         "type": "SystemAssigned"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "[resourceId('Microsoft.Web/serverfarms', variables('functionAppName'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
         "[resourceId('Microsoft.Insights/components', variables('functionAppName'))]"
       ],
       "properties": {
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('functionAppName'))]",
         "siteConfig": {
           "appSettings": [
             {

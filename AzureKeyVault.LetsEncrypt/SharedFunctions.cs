@@ -55,7 +55,7 @@ namespace AzureKeyVault.LetsEncrypt
                 var result = await context.CallActivityAsync<ChallengeResult>(nameof(Dns01Authorization), authorization);
 
                 // Azure DNS で正しくレコードが引けるか確認
-                await context.CallActivityWithRetryAsync(nameof(CheckIsDnsRecord), new RetryOptions(TimeSpan.FromSeconds(10), 6), result);
+                await context.CallActivityWithRetryAsync(nameof(CheckDnsChallenge), new RetryOptions(TimeSpan.FromSeconds(10), 6) { Handle = HandleRetriableException }, result);
 
                 challenges.Add(result);
             }
@@ -64,7 +64,7 @@ namespace AzureKeyVault.LetsEncrypt
             await context.CallActivityAsync(nameof(AnswerChallenges), challenges);
 
             // Order のステータスが ready になるまで 60 秒待機
-            await context.CallActivityWithRetryAsync(nameof(CheckIsReady), new RetryOptions(TimeSpan.FromSeconds(5), 12), orderDetails);
+            await context.CallActivityWithRetryAsync(nameof(CheckIsReady), new RetryOptions(TimeSpan.FromSeconds(5), 12) { Handle = HandleRetriableException }, orderDetails);
 
             await context.CallActivityAsync(nameof(FinalizeOrder), (dnsNames, orderDetails));
         }
@@ -198,8 +198,8 @@ namespace AzureKeyVault.LetsEncrypt
             };
         }
 
-        [FunctionName(nameof(CheckIsDnsRecord))]
-        public static async Task CheckIsDnsRecord([ActivityTrigger] DurableActivityContext context, ILogger log)
+        [FunctionName(nameof(CheckDnsChallenge))]
+        public static async Task CheckDnsChallenge([ActivityTrigger] DurableActivityContext context, ILogger log)
         {
             var challenge = context.GetInput<ChallengeResult>();
 
@@ -213,27 +213,13 @@ namespace AzureKeyVault.LetsEncrypt
             // レコードが存在しなかった場合はエラー
             if (txtRecords.Length == 0)
             {
-                throw new InvalidOperationException($"{challenge.DnsRecordName} did not resolve.");
+                throw new RetriableActivityException($"{challenge.DnsRecordName} did not resolve.");
             }
 
             // レコードに今回のチャレンジが含まれていない場合もエラー
             if (!txtRecords.Any(x => x.Text.Contains(challenge.DnsRecordValue)))
             {
-                throw new InvalidOperationException($"{challenge.DnsRecordName} value is not correct.");
-            }
-        }
-
-        [FunctionName(nameof(AnswerChallenges))]
-        public static async Task AnswerChallenges([ActivityTrigger] DurableActivityContext context, ILogger log)
-        {
-            var challenges = context.GetInput<IList<ChallengeResult>>();
-
-            var acme = await CreateAcmeClientAsync();
-
-            // Answer の準備が出来たことを通知
-            foreach (var challenge in challenges)
-            {
-                await acme.AnswerChallengeAsync(challenge.Url);
+                throw new RetriableActivityException($"{challenge.DnsRecordName} value is not correct.");
             }
         }
 
@@ -248,8 +234,8 @@ namespace AzureKeyVault.LetsEncrypt
 
             if (orderDetails.Payload.Status == "pending")
             {
-                // pending の場合は何もしない
-                throw new InvalidOperationException("ACME domain validation is pending.");
+                // pending の場合はリトライする
+                throw new RetriableActivityException("ACME domain validation is pending.");
             }
 
             if (orderDetails.Payload.Status == "invalid")
@@ -267,7 +253,22 @@ namespace AzureKeyVault.LetsEncrypt
                     }
                 }
 
+                // invalid の場合は最初から実行が必要なので失敗させる
                 throw new InvalidOperationException("Invalid order status. Required retry at first.");
+            }
+        }
+
+        [FunctionName(nameof(AnswerChallenges))]
+        public static async Task AnswerChallenges([ActivityTrigger] DurableActivityContext context, ILogger log)
+        {
+            var challenges = context.GetInput<IList<ChallengeResult>>();
+
+            var acme = await CreateAcmeClientAsync();
+
+            // Answer の準備が出来たことを通知
+            foreach (var challenge in challenges)
+            {
+                await acme.AnswerChallengeAsync(challenge.Url);
             }
         }
 
@@ -304,10 +305,12 @@ namespace AzureKeyVault.LetsEncrypt
 
             var certificateData = await _httpClient.GetByteArrayAsync(finalize.Payload.Certificate);
 
-            // X509Certificate2 を作成
-            var certificate = new X509Certificate2(certificateData);
+            // X509Certificate2Collection を作成
+            var x509Certificates = new X509Certificate2Collection();
 
-            await keyVaultClient.MergeCertificateAsync(Settings.Default.VaultBaseUrl, certificateName, new X509Certificate2Collection(certificate));
+            x509Certificates.ImportFromPem(certificateData);
+
+            await keyVaultClient.MergeCertificateAsync(Settings.Default.VaultBaseUrl, certificateName, x509Certificates);
         }
 
         private static async Task<AcmeProtocolClient> CreateAcmeClientAsync()
@@ -412,6 +415,11 @@ namespace AzureKeyVault.LetsEncrypt
                 { "resourceGroups", values[3] },
                 { "providers", values[5] }
             };
+        }
+
+        private static bool HandleRetriableException(Exception exception)
+        {
+            return exception.InnerException is RetriableActivityException;
         }
     }
 
