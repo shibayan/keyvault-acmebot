@@ -26,6 +26,8 @@
   - Email address for Let's Encrypt account
 - LetsEncrypt:VaultBaseUrl
   - Azure Key Vault DNS name
+- LetsEncrypt:Webhook
+  - Webhook destination URL (optional, Slack recommend)
 
 ### 3. Add a access policy
 
