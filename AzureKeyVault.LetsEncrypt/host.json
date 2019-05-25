@@ -3,7 +3,8 @@
   "extensions": {
     "durableTask": {
       "extendedSessionsEnabled": true,
-      "extendedSessionIdleTimeoutInSeconds": 30
+      "extendedSessionIdleTimeoutInSeconds": 30,
+      "CustomLifeCycleNotificationHelperType": "AzureKeyVault.LetsEncrypt.Internal.InProcLifeCycleNotificationHelper, AzureKeyVault.LetsEncrypt"
     }
   }
 }
