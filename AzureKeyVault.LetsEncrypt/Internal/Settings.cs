@@ -23,6 +23,8 @@ namespace AzureKeyVault.LetsEncrypt.Internal
 
         public string VaultBaseUrl => _section[nameof(VaultBaseUrl)];
 
+        public string Webhook => _section[nameof(Webhook)];
+
         public static Settings Default { get; } = new Settings();
     }
 }
