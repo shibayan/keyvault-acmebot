@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 
@@ -12,8 +11,10 @@ namespace AzureKeyVault.LetsEncrypt
         [FunctionName("RenewCertificates")]
         public static async Task RunOrchestrator([OrchestrationTrigger] DurableOrchestrationContext context, ILogger log)
         {
+            var proxy = context.CreateActivityProxy<ISharedFunctions>();
+
             // 期限切れまで 30 日以内の証明書を取得する
-            var certificates = await context.CallActivityAsync<IList<CertificateBundle>>(nameof(SharedFunctions.GetCertificates), context.CurrentUtcDateTime);
+            var certificates = await proxy.GetCertificates(context.CurrentUtcDateTime);
 
             // 更新対象となる証明書がない場合は終わる
             if (certificates.Count == 0)

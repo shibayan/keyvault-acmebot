@@ -20,30 +20,33 @@ using Microsoft.Azure.Management.Dns;
 using Microsoft.Azure.Management.Dns.Models;
 using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Extensions.Logging;
 using Microsoft.Rest;
 
 using Newtonsoft.Json;
 
 namespace AzureKeyVault.LetsEncrypt
 {
-    public static class SharedFunctions
+    public class SharedFunctions : ISharedFunctions
     {
+        private const string InstanceIdKey = "InstanceId";
+
         private static readonly HttpClient _httpClient = new HttpClient();
         private static readonly HttpClient _acmeHttpClient = new HttpClient { BaseAddress = new Uri("https://acme-v02.api.letsencrypt.org/") };
 
         private static readonly LookupClient _lookupClient = new LookupClient { UseCache = false };
 
         [FunctionName(nameof(IssueCertificate))]
-        public static async Task IssueCertificate([OrchestrationTrigger] DurableOrchestrationContext context, ILogger log)
+        public async Task IssueCertificate([OrchestrationTrigger] DurableOrchestrationContext context)
         {
             var dnsNames = context.GetInput<string[]>();
 
+            var proxy = context.CreateActivityProxy<ISharedFunctions>();
+
             // 前提条件をチェック
-            await context.CallActivityAsync(nameof(Dns01Precondition), dnsNames);
+            await proxy.Dns01Precondition(dnsNames);
 
             // 新しく ACME Order を作成する
-            var orderDetails = await context.CallActivityAsync<OrderDetails>(nameof(Order), dnsNames);
+            var orderDetails = await proxy.Order(dnsNames);
 
             // 複数の Authorizations を処理する
             var challenges = new List<ChallengeResult>();
@@ -51,28 +54,26 @@ namespace AzureKeyVault.LetsEncrypt
             foreach (var authorization in orderDetails.Payload.Authorizations)
             {
                 // ACME Challenge を実行
-                var result = await context.CallActivityAsync<ChallengeResult>(nameof(Dns01Authorization), authorization);
+                var result = await proxy.Dns01Authorization((authorization, context.InstanceId));
 
                 // Azure DNS で正しくレコードが引けるか確認
-                await context.CallActivityWithRetryAsync(nameof(CheckDnsChallenge), new RetryOptions(TimeSpan.FromSeconds(10), 6) { Handle = HandleRetriableException }, result);
+                await proxy.CheckDnsChallenge(result);
 
                 challenges.Add(result);
             }
 
             // ACME Answer を実行
-            await context.CallActivityAsync(nameof(AnswerChallenges), challenges);
+            await proxy.AnswerChallenges(challenges);
 
             // Order のステータスが ready になるまで 60 秒待機
-            await context.CallActivityWithRetryAsync(nameof(CheckIsReady), new RetryOptions(TimeSpan.FromSeconds(5), 12) { Handle = HandleRetriableException }, orderDetails);
+            await proxy.CheckIsReady(orderDetails);
 
-            await context.CallActivityAsync(nameof(FinalizeOrder), (dnsNames, orderDetails));
+            await proxy.FinalizeOrder((dnsNames, orderDetails));
         }
 
         [FunctionName(nameof(GetCertificates))]
-        public static async Task<IList<CertificateBundle>> GetCertificates([ActivityTrigger] DurableActivityContext context, ILogger log)
+        public async Task<IList<CertificateBundle>> GetCertificates([ActivityTrigger] DateTime currentDateTime)
         {
-            var currentDateTime = context.GetInput<DateTime>();
-
             var keyVaultClient = CreateKeyVaultClient();
 
             var certificates = await keyVaultClient.GetCertificatesAsync(Settings.Default.VaultBaseUrl);
@@ -92,20 +93,16 @@ namespace AzureKeyVault.LetsEncrypt
         }
 
         [FunctionName(nameof(Order))]
-        public static async Task<OrderDetails> Order([ActivityTrigger] DurableActivityContext context, ILogger log)
+        public async Task<OrderDetails> Order([ActivityTrigger] string[] hostNames)
         {
-            var hostNames = context.GetInput<string[]>();
-
             var acme = await CreateAcmeClientAsync();
 
             return await acme.CreateOrderAsync(hostNames);
         }
 
         [FunctionName(nameof(Dns01Precondition))]
-        public static async Task Dns01Precondition([ActivityTrigger] DurableActivityContext context, ILogger log)
+        public async Task Dns01Precondition([ActivityTrigger] string[] hostNames)
         {
-            var hostNames = context.GetInput<string[]>();
-
             var dnsClient = await CreateDnsManagementClientAsync();
 
             // Azure DNS が存在するか確認
@@ -121,9 +118,9 @@ namespace AzureKeyVault.LetsEncrypt
         }
 
         [FunctionName(nameof(Dns01Authorization))]
-        public static async Task<ChallengeResult> Dns01Authorization([ActivityTrigger] DurableActivityContext context, ILogger log)
+        public async Task<ChallengeResult> Dns01Authorization([ActivityTrigger] (string, string) input)
         {
-            var authzUrl = context.GetInput<string>();
+            var (authzUrl, instanceId) = input;
 
             var acme = await CreateAcmeClientAsync();
 
@@ -157,11 +154,11 @@ namespace AzureKeyVault.LetsEncrypt
 
             if (recordSet != null)
             {
-                if (recordSet.Metadata == null || !recordSet.Metadata.TryGetValue(nameof(context.InstanceId), out var instanceId) || instanceId != context.InstanceId)
+                if (recordSet.Metadata == null || !recordSet.Metadata.TryGetValue(InstanceIdKey, out var dnsInstanceId) || dnsInstanceId != instanceId)
                 {
                     recordSet.Metadata = new Dictionary<string, string>
                     {
-                        { nameof(context.InstanceId), context.InstanceId }
+                        { InstanceIdKey, instanceId }
                     };
 
                     recordSet.TxtRecords.Clear();
@@ -180,7 +177,7 @@ namespace AzureKeyVault.LetsEncrypt
                     TTL = 60,
                     Metadata = new Dictionary<string, string>
                     {
-                        { nameof(context.InstanceId), context.InstanceId }
+                        { InstanceIdKey, instanceId }
                     },
                     TxtRecords = new[]
                     {
@@ -200,10 +197,8 @@ namespace AzureKeyVault.LetsEncrypt
         }
 
         [FunctionName(nameof(CheckDnsChallenge))]
-        public static async Task CheckDnsChallenge([ActivityTrigger] DurableActivityContext context, ILogger log)
+        public async Task CheckDnsChallenge([ActivityTrigger] ChallengeResult challenge)
         {
-            var challenge = context.GetInput<ChallengeResult>();
-
             // 実際に ACME の TXT レコードを引いて確認する
             var queryResult = await _lookupClient.QueryAsync(challenge.DnsRecordName, QueryType.TXT);
 
@@ -225,10 +220,8 @@ namespace AzureKeyVault.LetsEncrypt
         }
 
         [FunctionName(nameof(CheckIsReady))]
-        public static async Task CheckIsReady([ActivityTrigger] DurableActivityContext context, ILogger log)
+        public async Task CheckIsReady([ActivityTrigger] OrderDetails orderDetails)
         {
-            var orderDetails = context.GetInput<OrderDetails>();
-
             var acme = await CreateAcmeClientAsync();
 
             orderDetails = await acme.GetOrderDetailsAsync(orderDetails.OrderUrl, orderDetails);
@@ -241,29 +234,14 @@ namespace AzureKeyVault.LetsEncrypt
 
             if (orderDetails.Payload.Status == "invalid")
             {
-                // エラーログ用に Authorization を取得
-                foreach (var authzUrl in orderDetails.Payload.Authorizations)
-                {
-                    var authorization = await acme.GetAuthorizationDetailsAsync(authzUrl);
-
-                    var challenge = authorization.Challenges.FirstOrDefault(x => x.Error != null);
-
-                    if (challenge != null)
-                    {
-                        log.LogError(JsonConvert.SerializeObject(challenge.Error));
-                    }
-                }
-
                 // invalid の場合は最初から実行が必要なので失敗させる
                 throw new InvalidOperationException("Invalid order status. Required retry at first.");
             }
         }
 
         [FunctionName(nameof(AnswerChallenges))]
-        public static async Task AnswerChallenges([ActivityTrigger] DurableActivityContext context, ILogger log)
+        public async Task AnswerChallenges([ActivityTrigger] IList<ChallengeResult> challenges)
         {
-            var challenges = context.GetInput<IList<ChallengeResult>>();
-
             var acme = await CreateAcmeClientAsync();
 
             // Answer の準備が出来たことを通知
@@ -274,9 +252,9 @@ namespace AzureKeyVault.LetsEncrypt
         }
 
         [FunctionName(nameof(FinalizeOrder))]
-        public static async Task FinalizeOrder([ActivityTrigger] DurableActivityContext context, ILogger log)
+        public async Task FinalizeOrder([ActivityTrigger] (string[], OrderDetails) input)
         {
-            var (hostNames, orderDetails) = context.GetInput<(string[], OrderDetails)>();
+            var (hostNames, orderDetails) = input;
 
             var certificateName = hostNames[0].Replace("*", "wildcard").Replace(".", "-");
 
@@ -411,11 +389,6 @@ namespace AzureKeyVault.LetsEncrypt
                 { "resourceGroups", values[3] },
                 { "providers", values[5] }
             };
-        }
-
-        private static bool HandleRetriableException(Exception exception)
-        {
-            return exception.InnerException is RetriableActivityException;
         }
     }
 

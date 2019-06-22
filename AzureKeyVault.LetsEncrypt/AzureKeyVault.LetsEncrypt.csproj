@@ -6,6 +6,7 @@
   <ItemGroup>
     <PackageReference Include="ACMESharpCore" Version="2.0.1.105" />
     <PackageReference Include="DnsClient" Version="1.2.0" />
+    <PackageReference Include="DurableTask.ActivityProxy" Version="1.0.0-preview" />
     <PackageReference Include="Microsoft.Azure.KeyVault" Version="3.0.3" />
     <PackageReference Include="Microsoft.Azure.Management.Dns" Version="3.0.1" />
     <PackageReference Include="Microsoft.Azure.Services.AppAuthentication" Version="1.0.3" />
