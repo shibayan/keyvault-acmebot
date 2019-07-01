@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
@@ -24,19 +23,14 @@ namespace AzureKeyVault.LetsEncrypt
                 return;
             }
 
-            var tasks = new List<Task>();
-
             // 証明書の更新を行う
             foreach (var certificate in certificates)
             {
                 log.LogInformation($"{certificate.Id} - {certificate.Attributes.Expires}");
 
                 // 証明書の更新処理を開始
-                tasks.Add(context.CallSubOrchestratorAsync(nameof(SharedFunctions.IssueCertificate), certificate.Policy.X509CertificateProperties.SubjectAlternativeNames.DnsNames));
+                await context.CallSubOrchestratorAsync(nameof(SharedFunctions.IssueCertificate), certificate.Policy.X509CertificateProperties.SubjectAlternativeNames.DnsNames);
             }
-
-            // サブオーケストレーターの完了を待つ
-            await Task.WhenAll(tasks);
         }
 
         [FunctionName("RenewCertificates_Timer")]
