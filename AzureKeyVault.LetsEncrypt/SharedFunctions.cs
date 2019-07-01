@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -54,7 +55,7 @@ namespace AzureKeyVault.LetsEncrypt
             foreach (var authorization in orderDetails.Payload.Authorizations)
             {
                 // ACME Challenge を実行
-                var result = await proxy.Dns01Authorization((authorization, context.InstanceId));
+                var result = await proxy.Dns01Authorization((authorization, context.ParentInstanceId));
 
                 // Azure DNS で正しくレコードが引けるか確認
                 await proxy.CheckDnsChallenge(result);
@@ -260,22 +261,35 @@ namespace AzureKeyVault.LetsEncrypt
 
             var keyVaultClient = CreateKeyVaultClient();
 
-            // Key Vault を使って CSR を作成
-            var request = await keyVaultClient.CreateCertificateAsync(Settings.Default.VaultBaseUrl, certificateName, new CertificatePolicy
+            byte[] csr;
+
+            try
             {
-                X509CertificateProperties = new X509CertificateProperties
+                // Key Vault を使って CSR を作成
+                var request = await keyVaultClient.CreateCertificateAsync(Settings.Default.VaultBaseUrl, certificateName, new CertificatePolicy
                 {
-                    SubjectAlternativeNames = new SubjectAlternativeNames(dnsNames: hostNames)
-                }
-            }, tags: new Dictionary<string, string>
+                    X509CertificateProperties = new X509CertificateProperties
+                    {
+                        SubjectAlternativeNames = new SubjectAlternativeNames(dnsNames: hostNames)
+                    }
+                }, tags: new Dictionary<string, string>
+                {
+                    { "Issuer", "letsencrypt.org" }
+                });
+
+                csr = request.Csr;
+            }
+            catch (KeyVaultErrorException ex) when (ex.Response.StatusCode == HttpStatusCode.Conflict)
             {
-                { "Issuer", "letsencrypt.org" }
-            });
+                var base64Csr = await keyVaultClient.GetPendingCertificateSigningRequestAsync(Settings.Default.VaultBaseUrl, certificateName);
+
+                csr = Convert.FromBase64String(base64Csr);
+            }
 
             var acme = await CreateAcmeClientAsync();
 
             // Order の最終処理を実行し、証明書を作成
-            var finalize = await acme.FinalizeOrderAsync(orderDetails.Payload.Finalize, request.Csr);
+            var finalize = await acme.FinalizeOrderAsync(orderDetails.Payload.Finalize, csr);
 
             var certificateData = await _httpClient.GetByteArrayAsync(finalize.Payload.Certificate);
 
