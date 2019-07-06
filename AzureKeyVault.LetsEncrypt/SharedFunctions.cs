@@ -55,7 +55,7 @@ namespace AzureKeyVault.LetsEncrypt
             foreach (var authorization in orderDetails.Payload.Authorizations)
             {
                 // ACME Challenge を実行
-                var result = await proxy.Dns01Authorization((authorization, context.ParentInstanceId));
+                var result = await proxy.Dns01Authorization((authorization, context.ParentInstanceId ?? context.InstanceId));
 
                 // Azure DNS で正しくレコードが引けるか確認
                 await proxy.CheckDnsChallenge(result);
