@@ -15,6 +15,7 @@ using KeyVault.Acmebot.Internal;
 
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
+using Microsoft.Azure.KeyVault.WebKey;
 using Microsoft.Azure.Management.Dns;
 using Microsoft.Azure.Management.Dns.Models;
 using Microsoft.Azure.WebJobs;
@@ -265,6 +266,11 @@ namespace KeyVault.Acmebot
                 // Key Vault を使って CSR を作成
                 var request = await _keyVaultClient.CreateCertificateAsync(Settings.Default.VaultBaseUrl, certificateName, new CertificatePolicy
                 {
+                    KeyProperties = new KeyProperties
+                    {
+                        Curve = JsonWebKeyCurveName.P256,
+                        KeyType = JsonWebKeyType.EllipticCurve
+                    },
                     X509CertificateProperties = new X509CertificateProperties
                     {
                         SubjectAlternativeNames = new SubjectAlternativeNames(dnsNames: hostNames)
