@@ -1,6 +1,6 @@
 # Azure Key Vault Let's Encrypt
 
-[![Build status](https://ci.appveyor.com/api/projects/status/sr0okt6mld0ufkcd?svg=true)](https://ci.appveyor.com/project/shibayan/azure-keyvault-letsencrypt)
+[![Build Status](https://dev.azure.com/shibayan/azure-letsencrypt/_apis/build/status/Build%20azure-keyvault-letsencrypt?branchName=master)](https://dev.azure.com/shibayan/azure-letsencrypt/_build/latest?definitionId=29&branchName=master)
 [![Release](https://img.shields.io/github/release/shibayan/azure-keyvault-letsencrypt.svg)](https://github.com/shibayan/azure-keyvault-letsencrypt/releases/latest)
 [![License](https://img.shields.io/github/license/shibayan/azure-keyvault-letsencrypt.svg)](https://github.com/shibayan/azure-keyvault-letsencrypt/blob/master/LICENSE)
 

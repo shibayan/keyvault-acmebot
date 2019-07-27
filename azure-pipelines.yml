@@ -1,0 +1,47 @@
+trigger:
+  branches:
+    include:
+    - master
+  tags:
+    include:
+    - v*
+
+variables:
+  buildConfiguration: Release
+  isGitHubTag: $[startsWith(variables['Build.SourceBranch'], 'refs/tags/v')]
+
+stages:
+- stage: Build
+  jobs:
+  - job: Build
+    pool:
+      vmImage: 'windows-2019'
+    steps:
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        arguments: '-c $(buildConfiguration) -o $(System.DefaultWorkingDirectory)/latest'
+
+    - publish: latest
+      artifact: function
+
+- stage: Deploy
+  dependsOn:
+  - Build
+  condition: and(succeeded(), eq(variables['isGitHubTag'], true))
+  jobs:
+  - job: Deploy
+    pool:
+      vmImage: 'windows-2019'
+    steps:
+      - checkout: none
+      - download: current
+
+      - task: AzureFileCopy@3
+        inputs:
+          SourcePath: '$(Pipeline.Workspace)/function/latest.zip'
+          azureSubscription: 'Visual Studio Enterprise'
+          Destination: 'AzureBlob'
+          storage: 'shibayan'
+          ContainerName: 'azure-keyvault-letsencrypt'
