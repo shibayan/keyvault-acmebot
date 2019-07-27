@@ -1,9 +1,14 @@
 trigger:
-- master
+  branches:
+    include:
+    - master
+  tags:
+    include:
+    - v*
 
 variables:
   buildConfiguration: Release
-  isGitHubTag: $[startsWith(variables['Build.SourceBranch'], 'refs/tags/')]
+  isGitHubTag: $[startsWith(variables['Build.SourceBranch'], 'refs/tags/v')]
 
 stages:
 - stage: Build
