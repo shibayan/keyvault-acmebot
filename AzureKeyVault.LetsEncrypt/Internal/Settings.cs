@@ -6,15 +6,14 @@ namespace AzureKeyVault.LetsEncrypt.Internal
     {
         public Settings()
         {
-            var builder = new ConfigurationBuilder()
-                          .AddJsonFile("local.settings.json", true)
-                          .AddEnvironmentVariables();
+            var configuration = new ConfigurationBuilder()
+                                .AddJsonFile("local.settings.json", true)
+                                .AddEnvironmentVariables()
+                                .Build();
 
-            _configuration = builder.Build();
-            _section = _configuration.GetSection("LetsEncrypt");
+            _section = configuration.GetSection("LetsEncrypt");
         }
 
-        private readonly IConfiguration _configuration;
         private readonly IConfiguration _section;
 
         public string Contacts => _section[nameof(Contacts)];

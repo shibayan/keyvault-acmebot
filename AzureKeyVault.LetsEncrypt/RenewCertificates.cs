@@ -5,10 +5,10 @@ using Microsoft.Extensions.Logging;
 
 namespace AzureKeyVault.LetsEncrypt
 {
-    public static class RenewCertificates
+    public class RenewCertificates
     {
         [FunctionName("RenewCertificates")]
-        public static async Task RunOrchestrator([OrchestrationTrigger] DurableOrchestrationContext context, ILogger log)
+        public async Task RunOrchestrator([OrchestrationTrigger] DurableOrchestrationContext context, ILogger log)
         {
             var proxy = context.CreateActivityProxy<ISharedFunctions>();
 
@@ -34,7 +34,7 @@ namespace AzureKeyVault.LetsEncrypt
         }
 
         [FunctionName("RenewCertificates_Timer")]
-        public static async Task TimerStart([TimerTrigger("0 0 0 * * *")] TimerInfo timer, [OrchestrationClient] DurableOrchestrationClient starter, ILogger log)
+        public static async Task TimerStart([TimerTrigger("0 0 0 * * 1,3,5")] TimerInfo timer, [OrchestrationClient] DurableOrchestrationClient starter, ILogger log)
         {
             // Function input comes from the request content.
             var instanceId = await starter.StartNewAsync("RenewCertificates", null);
