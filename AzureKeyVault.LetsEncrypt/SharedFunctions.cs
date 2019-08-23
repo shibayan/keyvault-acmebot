@@ -23,10 +23,10 @@ namespace AzureKeyVault.LetsEncrypt
 {
     public class SharedFunctions : ISharedFunctions
     {
-        public SharedFunctions(HttpClient httpClient, LookupClient lookupClient, AcmeProtocolClient acmeProtocolClient,
+        public SharedFunctions(IHttpClientFactory httpClientFactory, LookupClient lookupClient, AcmeProtocolClient acmeProtocolClient,
                                KeyVaultClient keyVaultClient, DnsManagementClient dnsManagementClient)
         {
-            _httpClient = httpClient;
+            _httpClientFactory = httpClientFactory;
             _lookupClient = lookupClient;
             _acmeProtocolClient = acmeProtocolClient;
             _keyVaultClient = keyVaultClient;
@@ -35,7 +35,7 @@ namespace AzureKeyVault.LetsEncrypt
 
         private const string InstanceIdKey = "InstanceId";
 
-        private readonly HttpClient _httpClient;
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly LookupClient _lookupClient;
         private readonly AcmeProtocolClient _acmeProtocolClient;
         private readonly KeyVaultClient _keyVaultClient;
@@ -275,7 +275,9 @@ namespace AzureKeyVault.LetsEncrypt
             // Order の最終処理を実行し、証明書を作成
             var finalize = await _acmeProtocolClient.FinalizeOrderAsync(orderDetails.Payload.Finalize, csr);
 
-            var certificateData = await _httpClient.GetByteArrayAsync(finalize.Payload.Certificate);
+            var httpClient = _httpClientFactory.CreateClient();
+
+            var certificateData = await httpClient.GetByteArrayAsync(finalize.Payload.Certificate);
 
             // X509Certificate2Collection を作成
             var x509Certificates = new X509Certificate2Collection();

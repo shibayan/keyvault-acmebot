@@ -34,7 +34,7 @@ namespace AzureKeyVault.LetsEncrypt
         }
 
         [FunctionName("RenewCertificates_Timer")]
-        public static async Task TimerStart([TimerTrigger("0 0 0 * * *")] TimerInfo timer, [OrchestrationClient] DurableOrchestrationClient starter, ILogger log)
+        public static async Task TimerStart([TimerTrigger("0 0 0 * * 1,3,5")] TimerInfo timer, [OrchestrationClient] DurableOrchestrationClient starter, ILogger log)
         {
             // Function input comes from the request content.
             var instanceId = await starter.StartNewAsync("RenewCertificates", null);
