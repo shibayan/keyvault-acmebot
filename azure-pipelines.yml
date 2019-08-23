@@ -8,7 +8,10 @@ trigger:
 
 variables:
   buildConfiguration: Release
+  dotnetSdkVersion: '2.2.x'
   isGitHubTag: $[startsWith(variables['Build.SourceBranch'], 'refs/tags/v')]
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  NUGET_XMLDOC_MODE: skip
 
 stages:
 - stage: Build
@@ -17,6 +20,12 @@ stages:
     pool:
       vmImage: 'windows-2019'
     steps:
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: $(dotnetSdkVersion)
+      displayName: 'Install .NET Core SDK $(dotnetSdkVersion)'
+
     - task: DotNetCoreCLI@2
       inputs:
         command: 'publish'
