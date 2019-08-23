@@ -234,13 +234,10 @@ namespace AzureKeyVault.LetsEncrypt
         }
 
         [FunctionName(nameof(AnswerChallenges))]
-        public async Task AnswerChallenges([ActivityTrigger] IList<ChallengeResult> challenges)
+        public Task AnswerChallenges([ActivityTrigger] IList<ChallengeResult> challenges)
         {
             // Answer の準備が出来たことを通知
-            foreach (var challenge in challenges)
-            {
-                await _acmeProtocolClient.AnswerChallengeAsync(challenge.Url);
-            }
+            return Task.WhenAll(challenges.Select(x => _acmeProtocolClient.AnswerChallengeAsync(x.Url)));
         }
 
         [FunctionName(nameof(FinalizeOrder))]
