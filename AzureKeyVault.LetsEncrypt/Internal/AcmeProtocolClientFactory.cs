@@ -9,28 +9,26 @@ using Newtonsoft.Json;
 
 namespace AzureKeyVault.LetsEncrypt.Internal
 {
-    internal static class AcmeProtocolClientExtensions
+    public interface IAcmeProtocolClientFactory
+    {
+        Task<AcmeProtocolClient> CreateClientAsync();
+    }
+
+    internal class AcmeProtocolClientFactory : IAcmeProtocolClientFactory
     {
         private static readonly Uri _acmeEndpoint = new Uri("https://acme-v02.api.letsencrypt.org/");
 
-        internal static AcmeProtocolClient CreateAcmeProtocolClient()
+        public async Task<AcmeProtocolClient> CreateClientAsync()
         {
             var account = LoadState<AccountDetails>("account.json");
             var accountKey = LoadState<AccountKey>("account_key.json");
-            var acmeDir = LoadState<ServiceDirectory>("directory.json");
+            var directory = LoadState<ServiceDirectory>("directory.json");
 
-            var acmeProtocolClient = new AcmeProtocolClient(_acmeEndpoint, acmeDir, account, accountKey?.GenerateSigner());
+            var acmeProtocolClient = new AcmeProtocolClient(_acmeEndpoint, directory, account, accountKey?.GenerateSigner());
 
-            acmeProtocolClient.EnsureInitializedAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-
-            return acmeProtocolClient;
-        }
-
-        internal static async Task EnsureInitializedAsync(this AcmeProtocolClient acmeProtocolClient)
-        {
-            if (acmeProtocolClient.Directory.NewNonce == null)
+            if (directory == null)
             {
-                var directory = await acmeProtocolClient.GetDirectoryAsync();
+                directory = await acmeProtocolClient.GetDirectoryAsync();
 
                 acmeProtocolClient.Directory = directory;
             }
@@ -39,9 +37,9 @@ namespace AzureKeyVault.LetsEncrypt.Internal
 
             if (acmeProtocolClient.Account == null)
             {
-                var account = await acmeProtocolClient.CreateAccountAsync(new[] { "mailto:" + Settings.Default.Contacts }, true);
+                account = await acmeProtocolClient.CreateAccountAsync(new[] { "mailto:" + Settings.Default.Contacts }, true);
 
-                var accountKey = new AccountKey
+                accountKey = new AccountKey
                 {
                     KeyType = acmeProtocolClient.Signer.JwsAlg,
                     KeyExport = acmeProtocolClient.Signer.Export()
@@ -52,6 +50,8 @@ namespace AzureKeyVault.LetsEncrypt.Internal
 
                 acmeProtocolClient.Account = account;
             }
+
+            return acmeProtocolClient;
         }
 
         private static TState LoadState<TState>(string path)
