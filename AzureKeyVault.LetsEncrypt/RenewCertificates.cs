@@ -5,10 +5,10 @@ using Microsoft.Extensions.Logging;
 
 namespace AzureKeyVault.LetsEncrypt
 {
-    public static class RenewCertificates
+    public class RenewCertificates
     {
         [FunctionName("RenewCertificates")]
-        public static async Task RunOrchestrator([OrchestrationTrigger] DurableOrchestrationContext context, ILogger log)
+        public async Task RunOrchestrator([OrchestrationTrigger] DurableOrchestrationContext context, ILogger log)
         {
             var proxy = context.CreateActivityProxy<ISharedFunctions>();
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -9,7 +8,6 @@ using System.Threading.Tasks;
 
 using ACMESharp.Authorizations;
 using ACMESharp.Protocol;
-using ACMESharp.Protocol.Resources;
 
 using AzureKeyVault.LetsEncrypt.Internal;
 
@@ -19,22 +17,29 @@ using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Azure.Management.Dns;
 using Microsoft.Azure.Management.Dns.Models;
-using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Rest;
-
-using Newtonsoft.Json;
 
 namespace AzureKeyVault.LetsEncrypt
 {
     public class SharedFunctions : ISharedFunctions
     {
+        public SharedFunctions(HttpClient httpClient, LookupClient lookupClient, AcmeProtocolClient acmeProtocolClient,
+                               KeyVaultClient keyVaultClient, DnsManagementClient dnsManagementClient)
+        {
+            _httpClient = httpClient;
+            _lookupClient = lookupClient;
+            _acmeProtocolClient = acmeProtocolClient;
+            _keyVaultClient = keyVaultClient;
+            _dnsManagementClient = dnsManagementClient;
+        }
+
         private const string InstanceIdKey = "InstanceId";
 
-        private static readonly HttpClient _httpClient = new HttpClient();
-        private static readonly HttpClient _acmeHttpClient = new HttpClient { BaseAddress = new Uri("https://acme-v02.api.letsencrypt.org/") };
-
-        private static readonly LookupClient _lookupClient = new LookupClient { UseCache = false };
+        private readonly HttpClient _httpClient;
+        private readonly LookupClient _lookupClient;
+        private readonly AcmeProtocolClient _acmeProtocolClient;
+        private readonly KeyVaultClient _keyVaultClient;
+        private readonly DnsManagementClient _dnsManagementClient;
 
         [FunctionName(nameof(IssueCertificate))]
         public async Task IssueCertificate([OrchestrationTrigger] DurableOrchestrationContext context)
@@ -75,9 +80,7 @@ namespace AzureKeyVault.LetsEncrypt
         [FunctionName(nameof(GetCertificates))]
         public async Task<IList<CertificateBundle>> GetCertificates([ActivityTrigger] DateTime currentDateTime)
         {
-            var keyVaultClient = CreateKeyVaultClient();
-
-            var certificates = await keyVaultClient.GetCertificatesAsync(Settings.Default.VaultBaseUrl);
+            var certificates = await _keyVaultClient.GetCertificatesAsync(Settings.Default.VaultBaseUrl);
 
             var list = certificates.Where(x => x.Tags != null && x.Tags.TryGetValue("Issuer", out var issuer) && issuer == "letsencrypt.org")
                                    .Where(x => (x.Attributes.Expires.Value - currentDateTime).TotalDays < 30)
@@ -87,27 +90,23 @@ namespace AzureKeyVault.LetsEncrypt
 
             foreach (var item in list)
             {
-                bundles.Add(await keyVaultClient.GetCertificateAsync(item.Id));
+                bundles.Add(await _keyVaultClient.GetCertificateAsync(item.Id));
             }
 
             return bundles;
         }
 
         [FunctionName(nameof(Order))]
-        public async Task<OrderDetails> Order([ActivityTrigger] string[] hostNames)
+        public Task<OrderDetails> Order([ActivityTrigger] string[] hostNames)
         {
-            var acme = await CreateAcmeClientAsync();
-
-            return await acme.CreateOrderAsync(hostNames);
+            return _acmeProtocolClient.CreateOrderAsync(hostNames);
         }
 
         [FunctionName(nameof(Dns01Precondition))]
         public async Task Dns01Precondition([ActivityTrigger] string[] hostNames)
         {
-            var dnsClient = await CreateDnsManagementClientAsync();
-
             // Azure DNS が存在するか確認
-            var zones = await dnsClient.Zones.ListAsync();
+            var zones = await _dnsManagementClient.Zones.ListAsync();
 
             foreach (var hostName in hostNames)
             {
@@ -123,19 +122,15 @@ namespace AzureKeyVault.LetsEncrypt
         {
             var (authzUrl, instanceId) = input;
 
-            var acme = await CreateAcmeClientAsync();
-
-            var authz = await acme.GetAuthorizationDetailsAsync(authzUrl);
+            var authz = await _acmeProtocolClient.GetAuthorizationDetailsAsync(authzUrl);
 
             // DNS-01 Challenge の情報を拾う
             var challenge = authz.Challenges.First(x => x.Type == "dns-01");
 
-            var challengeValidationDetails = AuthorizationDecoder.ResolveChallengeForDns01(authz, challenge, acme.Signer);
+            var challengeValidationDetails = AuthorizationDecoder.ResolveChallengeForDns01(authz, challenge, _acmeProtocolClient.Signer);
 
             // Azure DNS の TXT レコードを書き換え
-            var dnsClient = await CreateDnsManagementClientAsync();
-
-            var zone = (await dnsClient.Zones.ListAsync()).First(x => challengeValidationDetails.DnsRecordName.EndsWith(x.Name));
+            var zone = (await _dnsManagementClient.Zones.ListAsync()).First(x => challengeValidationDetails.DnsRecordName.EndsWith(x.Name));
 
             var resourceId = ParseResourceId(zone.Id);
 
@@ -146,7 +141,7 @@ namespace AzureKeyVault.LetsEncrypt
 
             try
             {
-                recordSet = await dnsClient.RecordSets.GetAsync(resourceId["resourceGroups"], zone.Name, acmeDnsRecordName, RecordType.TXT);
+                recordSet = await _dnsManagementClient.RecordSets.GetAsync(resourceId.resourceGroup, zone.Name, acmeDnsRecordName, RecordType.TXT);
             }
             catch
             {
@@ -187,7 +182,7 @@ namespace AzureKeyVault.LetsEncrypt
                 };
             }
 
-            await dnsClient.RecordSets.CreateOrUpdateAsync(resourceId["resourceGroups"], zone.Name, acmeDnsRecordName, RecordType.TXT, recordSet);
+            await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(resourceId.resourceGroup, zone.Name, acmeDnsRecordName, RecordType.TXT, recordSet);
 
             return new ChallengeResult
             {
@@ -223,9 +218,7 @@ namespace AzureKeyVault.LetsEncrypt
         [FunctionName(nameof(CheckIsReady))]
         public async Task CheckIsReady([ActivityTrigger] OrderDetails orderDetails)
         {
-            var acme = await CreateAcmeClientAsync();
-
-            orderDetails = await acme.GetOrderDetailsAsync(orderDetails.OrderUrl, orderDetails);
+            orderDetails = await _acmeProtocolClient.GetOrderDetailsAsync(orderDetails.OrderUrl, orderDetails);
 
             if (orderDetails.Payload.Status == "pending")
             {
@@ -243,12 +236,10 @@ namespace AzureKeyVault.LetsEncrypt
         [FunctionName(nameof(AnswerChallenges))]
         public async Task AnswerChallenges([ActivityTrigger] IList<ChallengeResult> challenges)
         {
-            var acme = await CreateAcmeClientAsync();
-
             // Answer の準備が出来たことを通知
             foreach (var challenge in challenges)
             {
-                await acme.AnswerChallengeAsync(challenge.Url);
+                await _acmeProtocolClient.AnswerChallengeAsync(challenge.Url);
             }
         }
 
@@ -259,14 +250,12 @@ namespace AzureKeyVault.LetsEncrypt
 
             var certificateName = hostNames[0].Replace("*", "wildcard").Replace(".", "-");
 
-            var keyVaultClient = CreateKeyVaultClient();
-
             byte[] csr;
 
             try
             {
                 // Key Vault を使って CSR を作成
-                var request = await keyVaultClient.CreateCertificateAsync(Settings.Default.VaultBaseUrl, certificateName, new CertificatePolicy
+                var request = await _keyVaultClient.CreateCertificateAsync(Settings.Default.VaultBaseUrl, certificateName, new CertificatePolicy
                 {
                     X509CertificateProperties = new X509CertificateProperties
                     {
@@ -281,15 +270,13 @@ namespace AzureKeyVault.LetsEncrypt
             }
             catch (KeyVaultErrorException ex) when (ex.Response.StatusCode == HttpStatusCode.Conflict)
             {
-                var base64Csr = await keyVaultClient.GetPendingCertificateSigningRequestAsync(Settings.Default.VaultBaseUrl, certificateName);
+                var base64Csr = await _keyVaultClient.GetPendingCertificateSigningRequestAsync(Settings.Default.VaultBaseUrl, certificateName);
 
                 csr = Convert.FromBase64String(base64Csr);
             }
 
-            var acme = await CreateAcmeClientAsync();
-
             // Order の最終処理を実行し、証明書を作成
-            var finalize = await acme.FinalizeOrderAsync(orderDetails.Payload.Finalize, csr);
+            var finalize = await _acmeProtocolClient.FinalizeOrderAsync(orderDetails.Payload.Finalize, csr);
 
             var certificateData = await _httpClient.GetByteArrayAsync(finalize.Payload.Certificate);
 
@@ -298,111 +285,14 @@ namespace AzureKeyVault.LetsEncrypt
 
             x509Certificates.ImportFromPem(certificateData);
 
-            await keyVaultClient.MergeCertificateAsync(Settings.Default.VaultBaseUrl, certificateName, x509Certificates);
+            await _keyVaultClient.MergeCertificateAsync(Settings.Default.VaultBaseUrl, certificateName, x509Certificates);
         }
 
-        private static async Task<AcmeProtocolClient> CreateAcmeClientAsync()
-        {
-            var account = default(AccountDetails);
-            var accountKey = default(AccountKey);
-            var acmeDir = default(ServiceDirectory);
-
-            LoadState(ref account, "account.json");
-            LoadState(ref accountKey, "account_key.json");
-            LoadState(ref acmeDir, "directory.json");
-
-            var acme = new AcmeProtocolClient(_acmeHttpClient, acmeDir, account, accountKey?.GenerateSigner());
-
-            if (acmeDir == null)
-            {
-                acmeDir = await acme.GetDirectoryAsync();
-
-                SaveState(acmeDir, "directory.json");
-
-                acme.Directory = acmeDir;
-            }
-
-            await acme.GetNonceAsync();
-
-            if (account == null || accountKey == null)
-            {
-                account = await acme.CreateAccountAsync(new[] { "mailto:" + Settings.Default.Contacts }, true);
-
-                accountKey = new AccountKey
-                {
-                    KeyType = acme.Signer.JwsAlg,
-                    KeyExport = acme.Signer.Export()
-                };
-
-                SaveState(account, "account.json");
-                SaveState(accountKey, "account_key.json");
-
-                acme.Account = account;
-            }
-
-            return acme;
-        }
-
-        private static void LoadState<T>(ref T value, string path)
-        {
-            var fullPath = Environment.ExpandEnvironmentVariables(@"%HOME%\.acme\" + path);
-
-            if (!File.Exists(fullPath))
-            {
-                return;
-            }
-
-            var json = File.ReadAllText(fullPath);
-
-            value = JsonConvert.DeserializeObject<T>(json);
-        }
-
-        private static void SaveState<T>(T value, string path)
-        {
-            var fullPath = Environment.ExpandEnvironmentVariables(@"%HOME%\.acme\" + path);
-            var directoryPath = Path.GetDirectoryName(fullPath);
-
-            if (!Directory.Exists(directoryPath))
-            {
-                Directory.CreateDirectory(directoryPath);
-            }
-
-            var json = JsonConvert.SerializeObject(value, Formatting.Indented);
-
-            File.WriteAllText(fullPath, json);
-        }
-
-        private static async Task<DnsManagementClient> CreateDnsManagementClientAsync()
-        {
-            var tokenProvider = new AzureServiceTokenProvider();
-
-            var accessToken = await tokenProvider.GetAccessTokenAsync("https://management.azure.com/");
-
-            var dnsClient = new DnsManagementClient(new TokenCredentials(accessToken))
-            {
-                SubscriptionId = Settings.Default.SubscriptionId
-            };
-
-            return dnsClient;
-        }
-
-        private static KeyVaultClient CreateKeyVaultClient()
-        {
-            var tokenProvider = new AzureServiceTokenProvider();
-
-            return new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(tokenProvider.KeyVaultTokenCallback));
-        }
-
-        private static IDictionary<string, string> ParseResourceId(string resourceId)
+        private static (string subscription, string resourceGroup, string provider) ParseResourceId(string resourceId)
         {
             var values = resourceId.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
-            return new Dictionary<string, string>
-            {
-                { "subscriptions", values[1] },
-                { "resourceGroups", values[3] },
-                { "providers", values[5] }
-            };
+            return (values[1], values[3], values[5]);
         }
     }
 

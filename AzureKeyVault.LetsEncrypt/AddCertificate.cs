@@ -9,10 +9,10 @@ using Microsoft.Extensions.Logging;
 
 namespace AzureKeyVault.LetsEncrypt
 {
-    public static class AddCertificate
+    public class AddCertificate
     {
         [FunctionName("AddCertificate_HttpStart")]
-        public static async Task<HttpResponseMessage> HttpStart(
+        public async Task<HttpResponseMessage> HttpStart(
             [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestMessage req,
             [OrchestrationClient] DurableOrchestrationClient starter,
             ILogger log)
