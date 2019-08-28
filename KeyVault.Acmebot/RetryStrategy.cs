@@ -1,8 +1,8 @@
 ﻿using System;
 
-using AzureKeyVault.LetsEncrypt.Internal;
+using KeyVault.Acmebot.Internal;
 
-namespace AzureKeyVault.LetsEncrypt
+namespace KeyVault.Acmebot
 {
     public static class RetryStrategy
     {

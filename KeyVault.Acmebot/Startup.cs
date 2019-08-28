@@ -1,6 +1,7 @@
-﻿using AzureKeyVault.LetsEncrypt.Internal;
+﻿using DnsClient;
 
-using DnsClient;
+using KeyVault.Acmebot;
+using KeyVault.Acmebot.Internal;
 
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Azure.KeyVault;
@@ -9,9 +10,9 @@ using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Rest;
 
-[assembly: FunctionsStartup(typeof(AzureKeyVault.LetsEncrypt.Startup))]
+[assembly: FunctionsStartup(typeof(Startup))]
 
-namespace AzureKeyVault.LetsEncrypt
+namespace KeyVault.Acmebot
 {
     public class Startup : FunctionsStartup
     {

@@ -7,7 +7,7 @@ using ACMESharp.Protocol;
 using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Azure.WebJobs;
 
-namespace AzureKeyVault.LetsEncrypt
+namespace KeyVault.Acmebot
 {
     public interface ISharedFunctions
     {

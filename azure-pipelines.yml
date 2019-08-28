@@ -30,7 +30,7 @@ stages:
       inputs:
         command: 'publish'
         publishWebProjects: false
-        arguments: '-c $(buildConfiguration) -o $(System.DefaultWorkingDirectory)/latest'
+        arguments: '-c $(buildConfiguration) -o $(Build.SourcesDirectory)/latest'
 
     - publish: latest
       artifact: function
