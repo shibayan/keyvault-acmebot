@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace AzureKeyVault.LetsEncrypt.Internal
+namespace KeyVault.Acmebot.Internal
 {
     internal class Settings
     {

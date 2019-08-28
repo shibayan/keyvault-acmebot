@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2036
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureKeyVault.LetsEncrypt", "AzureKeyVault.LetsEncrypt\AzureKeyVault.LetsEncrypt.csproj", "{81F62D09-D16D-4B0C-9DAE-C075580F5021}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeyVault.Acmebot", "KeyVault.Acmebot\KeyVault.Acmebot.csproj", "{81F62D09-D16D-4B0C-9DAE-C075580F5021}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

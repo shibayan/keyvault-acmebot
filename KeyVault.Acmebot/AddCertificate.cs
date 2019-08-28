@@ -7,7 +7,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
-namespace AzureKeyVault.LetsEncrypt
+namespace KeyVault.Acmebot
 {
     public class AddCertificate
     {

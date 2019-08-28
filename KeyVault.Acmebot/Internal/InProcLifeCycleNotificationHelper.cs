@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
-namespace AzureKeyVault.LetsEncrypt.Internal
+namespace KeyVault.Acmebot.Internal
 {
     internal class InProcLifeCycleNotificationHelper : ILifeCycleNotificationHelper
     {

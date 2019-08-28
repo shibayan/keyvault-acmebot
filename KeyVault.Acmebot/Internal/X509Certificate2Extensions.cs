@@ -1,7 +1,7 @@
 using System;
 using System.Security.Cryptography.X509Certificates;
 
-namespace AzureKeyVault.LetsEncrypt.Internal
+namespace KeyVault.Acmebot.Internal
 {
     internal static class X509Certificate2Extensions
     {

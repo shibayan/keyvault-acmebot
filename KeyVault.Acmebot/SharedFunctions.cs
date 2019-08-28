@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 using ACMESharp.Authorizations;
 using ACMESharp.Protocol;
 
-using AzureKeyVault.LetsEncrypt.Internal;
-
 using DnsClient;
+
+using KeyVault.Acmebot.Internal;
 
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
@@ -19,7 +19,7 @@ using Microsoft.Azure.Management.Dns;
 using Microsoft.Azure.Management.Dns.Models;
 using Microsoft.Azure.WebJobs;
 
-namespace AzureKeyVault.LetsEncrypt
+namespace KeyVault.Acmebot
 {
     public class SharedFunctions : ISharedFunctions
     {

@@ -7,7 +7,7 @@ using ACMESharp.Protocol.Resources;
 
 using Newtonsoft.Json;
 
-namespace AzureKeyVault.LetsEncrypt.Internal
+namespace KeyVault.Acmebot.Internal
 {
     public interface IAcmeProtocolClientFactory
     {
