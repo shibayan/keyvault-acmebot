@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json.schemastore.org/proxies",
+  "proxies": {
+    "AddCertificate": {
+      "matchCondition": {
+        "route": "add-certificate"
+      },
+      "backendUri": "https://shibayan.blob.core.windows.net/azure-keyvault-letsencrypt/index.html"
+    }
+  }
+}
