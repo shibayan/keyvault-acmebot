@@ -29,14 +29,23 @@
 - LetsEncrypt:Webhook
   - Webhook destination URL (optional, Slack recommend)
 
-### 3. Add a access policy
+### 3. Enable App Service Authentication (EasyAuth) with AAD
+
+Open `Authentication / Authorization` from Azure Portal and turn on App Service Authentication. Then select `Log in with Azure Active Directory` as an action when not logging in.
+
+![Enable App Service Authentication with AAD](https://user-images.githubusercontent.com/1356444/49693401-ecc7c400-fbb4-11e8-9ae1-5d376a4d8a05.png)
+
+Set up Azure Active Directory provider by selecting `Express`.
+
+![Create New Azure AD App](https://user-images.githubusercontent.com/1356444/49693412-6f508380-fbb5-11e8-81fb-6bbcbe47654e.png)
+
+### 4. Add a access policy
 
 Add the created Azure Function to the Key Vault `Certificate management` access policy.
 
 ![image](https://user-images.githubusercontent.com/1356444/46597665-19f7e780-cb1c-11e8-9cb3-82e706d5dfd6.png)
 
-
-### 4. Assign role to Azure DNS
+### 5. Assign role to Azure DNS
 
 Assign `DNS Zone Contributor` role to Azure DNS.
 
@@ -44,17 +53,12 @@ Assign `DNS Zone Contributor` role to Azure DNS.
 
 ### Adding new certificate
 
-Run `AddCertificate_HttpStart` function with parameters.
+Go to `https://YOUR-FUNCTIONS.azurewebsites.net/add-certificate`. Since the Web UI is displayed, if you select the target DNS zone and input domain and execute it, a certificate will be issued.
 
-```sh
-curl https://YOUR-FUNCTIONS.azurewebsites.net/api/AddCertificate_HttpStart?code=YOUR-FUNCTION-SECRET -X POST \
-    -H 'Content-Type:application/json' \
-    -d '{"Domains":["example.com","www.example.com"]}'
-```
+![Add certificate](https://user-images.githubusercontent.com/1356444/64176075-9b283d80-ce97-11e9-8ee7-02530d0c03f2.png)
 
-- Domains
-  - DNS names to issue certificates.
-  
+If nothing is displayed in the dropdown, the IAM setting is incorrect.
+
 ## Thanks
 
 - [ACMESharp Core](https://github.com/PKISharp/ACMESharpCore) by @ebekker
