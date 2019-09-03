@@ -13,10 +13,15 @@ namespace KeyVault.Acmebot
     {
         [FunctionName("AddCertificate_HttpStart")]
         public async Task<HttpResponseMessage> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestMessage req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "add-certificate")] HttpRequestMessage req,
             [OrchestrationClient] DurableOrchestrationClient starter,
             ILogger log)
         {
+            if (!req.Headers.Contains("X-MS-CLIENT-PRINCIPAL-ID"))
+            {
+                return req.CreateErrorResponse(HttpStatusCode.Unauthorized, $"Need to activate EasyAuth.");
+            }
+
             var request = await req.Content.ReadAsAsync<AddCertificateRequest>();
 
             if (request?.Domains == null || request.Domains.Length == 0)

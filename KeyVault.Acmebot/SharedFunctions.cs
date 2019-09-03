@@ -96,6 +96,25 @@ namespace KeyVault.Acmebot
             return bundles;
         }
 
+        [FunctionName(nameof(GetZones))]
+        public async Task<IList<Zone>> GetZones([ActivityTrigger] object input = null)
+        {
+            var list = await _dnsManagementClient.Zones.ListAsync();
+
+            var zones = new List<Zone>();
+
+            zones.AddRange(list);
+
+            while (list.NextPageLink != null)
+            {
+                list = await _dnsManagementClient.Zones.ListNextAsync(list.NextPageLink);
+
+                zones.AddRange(list);
+            }
+
+            return zones;
+        }
+
         [FunctionName(nameof(Order))]
         public async Task<OrderDetails> Order([ActivityTrigger] string[] hostNames)
         {

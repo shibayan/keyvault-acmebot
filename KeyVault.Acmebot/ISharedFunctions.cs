@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ACMESharp.Protocol;
 
 using Microsoft.Azure.KeyVault.Models;
+using Microsoft.Azure.Management.Dns.Models;
 using Microsoft.Azure.WebJobs;
 
 namespace KeyVault.Acmebot
@@ -12,6 +13,8 @@ namespace KeyVault.Acmebot
     public interface ISharedFunctions
     {
         Task<IList<CertificateBundle>> GetCertificates(DateTime currentDateTime);
+
+        Task<IList<Zone>> GetZones(object input = null);
 
         Task<OrderDetails> Order(string[] hostNames);
         
