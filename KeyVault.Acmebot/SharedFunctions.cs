@@ -80,7 +80,7 @@ namespace KeyVault.Acmebot
         [FunctionName(nameof(GetCertificates))]
         public async Task<IList<CertificateBundle>> GetCertificates([ActivityTrigger] DateTime currentDateTime)
         {
-            var certificates = await _keyVaultClient.GetCertificatesAsync(Settings.Default.VaultBaseUrl);
+            var certificates = await _keyVaultClient.GetAllCertificatesAsync(Settings.Default.VaultBaseUrl);
 
             var list = certificates.Where(x => x.Tags != null && x.Tags.TryGetValue("Issuer", out var issuer) && issuer == "letsencrypt.org")
                                    .Where(x => (x.Attributes.Expires.Value - currentDateTime).TotalDays < 30)
@@ -97,22 +97,9 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(GetZones))]
-        public async Task<IList<Zone>> GetZones([ActivityTrigger] object input = null)
+        public Task<IList<Zone>> GetZones([ActivityTrigger] object input = null)
         {
-            var list = await _dnsManagementClient.Zones.ListAsync();
-
-            var zones = new List<Zone>();
-
-            zones.AddRange(list);
-
-            while (list.NextPageLink != null)
-            {
-                list = await _dnsManagementClient.Zones.ListNextAsync(list.NextPageLink);
-
-                zones.AddRange(list);
-            }
-
-            return zones;
+            return _dnsManagementClient.Zones.ListAllAsync();
         }
 
         [FunctionName(nameof(Order))]
@@ -127,7 +114,7 @@ namespace KeyVault.Acmebot
         public async Task Dns01Precondition([ActivityTrigger] string[] hostNames)
         {
             // Azure DNS が存在するか確認
-            var zones = await _dnsManagementClient.Zones.ListAsync();
+            var zones = await _dnsManagementClient.Zones.ListAllAsync();
 
             foreach (var hostName in hostNames)
             {
@@ -153,7 +140,7 @@ namespace KeyVault.Acmebot
             var challengeValidationDetails = AuthorizationDecoder.ResolveChallengeForDns01(authz, challenge, acmeProtocolClient.Signer);
 
             // Azure DNS の TXT レコードを書き換え
-            var zone = (await _dnsManagementClient.Zones.ListAsync()).First(x => challengeValidationDetails.DnsRecordName.EndsWith(x.Name));
+            var zone = (await _dnsManagementClient.Zones.ListAllAsync()).First(x => challengeValidationDetails.DnsRecordName.EndsWith(x.Name));
 
             var resourceId = ParseResourceId(zone.Id);
 
