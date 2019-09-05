@@ -47,7 +47,10 @@ Add the created Azure Function to the Key Vault `Certificate management` access 
 
 ### 5. Assign role to Azure DNS
 
-Assign `DNS Zone Contributor` role to Azure DNS.
+Assign `DNS Zone Contributor` role to Azure DNS zone or Resource Group.
+
+![temp](https://user-images.githubusercontent.com/1356444/64354572-a9628f00-d03a-11e9-93c9-0c12992ca9bf.png)
+
 
 ## Usage
 
