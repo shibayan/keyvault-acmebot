@@ -4,6 +4,33 @@
 [![Release](https://img.shields.io/github/release/shibayan/keyvault-acmebot.svg)](https://github.com/shibayan/keyvault-acmebot/releases/latest)
 [![License](https://img.shields.io/github/license/shibayan/keyvault-acmebot.svg)](https://github.com/shibayan/keyvault-acmebot/blob/master/LICENSE)
 
+This function provide easy automation of Let's Encrypt for Azure Key Vault. This project started to solve some problems.
+
+- Store certificates securely with Key Vault
+- Centrally manage many certificates with one Key Vault
+- Simple deployment and configuration
+- Robustness of implementation
+- Easy monitoring (Application Insights, Webhook)
+
+Use Key Vault for secure and centralized management of Let's Encrypt certificates.
+
+## Table Of Contents
+
+- [Feature Support](#feature-support)
+- [Requirements](#requirements)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [Thanks](#thanks)
+- [License](#license)
+
+## Feature Support
+
+- All Azure App Service (Web Apps / Functions / Containers, any OS)
+- Azure CDN / Front Door
+- Azure Application Gateway v2
+- Subject Alternative Names (SANs) certificates (multi-domains support)
+- Wildcard certificates
+
 ## Requirements
 
 - Azure Subscription
@@ -61,6 +88,23 @@ Go to `https://YOUR-FUNCTIONS.azurewebsites.net/add-certificate`. Since the Web 
 ![Add certificate](https://user-images.githubusercontent.com/1356444/64176075-9b283d80-ce97-11e9-8ee7-02530d0c03f2.png)
 
 If nothing is displayed in the dropdown, the IAM setting is incorrect.
+
+### App Service (Web Apps / Functions / Containers)
+
+Select "Import Key Vault Certificate" button to import the certificate from Key Vault into App Service.
+
+![image](https://user-images.githubusercontent.com/1356444/64438173-974c2380-d102-11e9-88c0-5ed34a5ce42a.png)
+
+After that, the certificate will automatically be renewed from Key Vault.
+
+### Application Gateway v2
+
+- https://docs.microsoft.com/en-us/azure/application-gateway/key-vault-certs
+
+### Azure CDN / Front Door
+
+- https://docs.microsoft.com/en-us/azure/cdn/cdn-custom-ssl?tabs=option-2-enable-https-with-your-own-certificate
+- https://docs.microsoft.com/en-us/azure/frontdoor/front-door-custom-domain-https#option-2-use-your-own-certificate
 
 ## Thanks
 
