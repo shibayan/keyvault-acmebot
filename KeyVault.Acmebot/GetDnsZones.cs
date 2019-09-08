@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -38,7 +39,7 @@ namespace KeyVault.Acmebot
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
-            return await starter.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId);
+            return await starter.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromMinutes(1));
         }
     }
 }
