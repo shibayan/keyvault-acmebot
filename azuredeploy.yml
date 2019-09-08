@@ -31,30 +31,33 @@ parameters:
 variables:
   functionAppName: "[concat(parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]"
   storageAccountName: "[concat(uniquestring(resourceGroup().id, deployment().name), 'azfunctions')]"
-  storageAccountId: "[concat(resourceGroup().id, '/providers/', 'Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+  storageAccountId: "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
   mailAddress: "[parameters('mailAddress')]"
   keyVaultSkuName: "[parameters('keyVaultSkuName')]"
 
 resources:
 - type: Microsoft.Storage/storageAccounts
   name: "[variables('storageAccountName')]"
-  apiVersion: 2015-05-01-preview
+  apiVersion: 2018-11-01
   location: '[resourceGroup().location]'
-  properties:
-    accountType: Standard_LRS
+  sku:
+    name: Standard_LRS
 
 - type: Microsoft.Web/serverfarms
   name: "[variables('functionAppName')]"
-  apiVersion: 2015-04-01
+  apiVersion: 2018-02-01
   location: '[resourceGroup().location]'
   properties:
     name: "[variables('functionAppName')]"
-    computeMode: Dynamic
-    sku: Dynamic
+  sku:
+    name: Y1
+    tier: Dynamic
+    size: Y1
+    family: Y
 
 - type: Microsoft.Insights/components
   name: "[variables('functionAppName')]"
-  apiVersion: 2014-04-01
+  apiVersion: 2015-05-01
   location: '[resourceGroup().location]'
   tags:
     "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('functionAppName'))]": Resource
@@ -63,7 +66,7 @@ resources:
 
 - type: Microsoft.Web/sites
   name: "[variables('functionAppName')]"
-  apiVersion: 2016-03-01
+  apiVersion: 2018-02-01
   location: '[resourceGroup().location]'
   kind: functionapp
   identity:
@@ -79,9 +82,9 @@ resources:
       - name: APPINSIGHTS_INSTRUMENTATIONKEY
         value: "[reference(resourceId('Microsoft.Insights/components', variables('functionAppName')), '2015-05-01').InstrumentationKey]"
       - name: AzureWebJobsStorage
-        value: "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
+        value: "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'), '2018-11-01').keys[0].value)]"
       - name: WEBSITE_CONTENTAZUREFILECONNECTIONSTRING
-        value: "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
+        value: "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'), '2018-11-01').keys[0].value)]"
       - name: WEBSITE_CONTENTSHARE
         value: "[toLower(variables('functionAppName'))]"
       - name: WEBSITE_RUN_FROM_PACKAGE
@@ -98,13 +101,13 @@ resources:
         value: "[if(parameters('createWithKeyVault'), concat('https://', variables('functionAppName'), '.vault.azure.net/'), '')]"
       clientAffinityEnabled: false
   resources:
-  - apiVersion: 2015-08-01
+  - apiVersion: 2018-02-01
     name: metadata
     type: config
     dependsOn:
     - "[resourceId('Microsoft.Web/Sites', variables('functionAppName'))]"
     properties:
-      synctriggersstatus: "[listsyncfunctiontriggerstatus(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2015-08-01').status]"
+      synctriggersstatus: "[listsyncfunctiontriggerstatus(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2018-02-01').status]"
 
 - type: Microsoft.KeyVault/vaults
   name: "[variables('functionAppName')]"
