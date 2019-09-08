@@ -23,7 +23,7 @@
         false
       ],
       "metadata": {
-        "description": "If you choose true, create and configure a key vault at the same time.."
+        "description": "If you choose true, create and configure a key vault at the same time."
       }
     },
     "keyVaultSkuName": {
