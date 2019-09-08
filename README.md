@@ -52,7 +52,7 @@ Use Key Vault for secure and centralized management of Let's Encrypt certificate
 - LetsEncrypt:Contacts
   - Email address for Let's Encrypt account
 - LetsEncrypt:VaultBaseUrl
-  - Azure Key Vault DNS name
+  - Azure Key Vault DNS name (Only when using an existing Key Vault)
 - LetsEncrypt:Webhook
   - Webhook destination URL (optional, Slack recommend)
 
@@ -66,18 +66,17 @@ Set up Azure Active Directory provider by selecting `Express`.
 
 ![Create New Azure AD App](https://user-images.githubusercontent.com/1356444/49693412-6f508380-fbb5-11e8-81fb-6bbcbe47654e.png)
 
-### 4. Add a access policy
-
-Add the created Azure Function to the Key Vault `Certificate management` access policy.
-
-![image](https://user-images.githubusercontent.com/1356444/46597665-19f7e780-cb1c-11e8-9cb3-82e706d5dfd6.png)
-
-### 5. Assign role to Azure DNS
+### 4. Assign role to Azure DNS
 
 Assign `DNS Zone Contributor` role to Azure DNS zone or Resource Group.
 
 ![temp](https://user-images.githubusercontent.com/1356444/64354572-a9628f00-d03a-11e9-93c9-0c12992ca9bf.png)
 
+### 5. Add a access policy (Only when using an existing Key Vault)
+
+Add the created Azure Function to the Key Vault `Certificate management` access policy.
+
+![image](https://user-images.githubusercontent.com/1356444/46597665-19f7e780-cb1c-11e8-9cb3-82e706d5dfd6.png)
 
 ## Usage
 
