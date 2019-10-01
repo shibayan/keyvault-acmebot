@@ -2,7 +2,7 @@
 
 using KeyVault.Acmebot.Internal;
 
-namespace KeyVault.Acmebot
+namespace KeyVault.Acmebot.Contracts
 {
     public static class RetryStrategy
     {

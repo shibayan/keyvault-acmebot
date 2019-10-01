@@ -5,26 +5,28 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
+using KeyVault.Acmebot.Contracts;
+
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
 namespace KeyVault.Acmebot
 {
-    public class GetDnsZones
+    public class GetDnsZonesFunctions
     {
-        [FunctionName("GetDnsZones")]
-        public async Task<IList<string>> RunOrchestrator([OrchestrationTrigger] DurableOrchestrationContext context)
+        [FunctionName(nameof(GetDnsZones))]
+        public async Task<IList<string>> GetDnsZones([OrchestrationTrigger] DurableOrchestrationContext context)
         {
-            var proxy = context.CreateActivityProxy<ISharedFunctions>();
+            var activity = context.CreateActivityProxy<ISharedFunctions>();
 
-            var zones = await proxy.GetZones();
+            var zones = await activity.GetZones();
 
             return zones.Select(x => x.Name).ToArray();
         }
 
-        [FunctionName("GetDnsZones_HttpStart")]
-        public async Task<HttpResponseMessage> HttpStart(
+        [FunctionName(nameof(GetDnsZones_HttpStart))]
+        public async Task<HttpResponseMessage> GetDnsZones_HttpStart(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "get-dns-zones")] HttpRequestMessage req,
             [OrchestrationClient] DurableOrchestrationClient starter,
             ILogger log)
@@ -35,7 +37,7 @@ namespace KeyVault.Acmebot
             }
 
             // Function input comes from the request content.
-            string instanceId = await starter.StartNewAsync("GetDnsZones", null);
+            string instanceId = await starter.StartNewAsync(nameof(GetDnsZones), null);
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 

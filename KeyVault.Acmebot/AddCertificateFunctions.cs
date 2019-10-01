@@ -3,16 +3,18 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
+using KeyVault.Acmebot.Models;
+
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
 namespace KeyVault.Acmebot
 {
-    public class AddCertificate
+    public class AddCertificateFunctions
     {
-        [FunctionName("AddCertificate_HttpStart")]
-        public async Task<HttpResponseMessage> HttpStart(
+        [FunctionName(nameof(AddCertificate_HttpStart))]
+        public async Task<HttpResponseMessage> AddCertificate_HttpStart(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "add-certificate")] HttpRequestMessage req,
             [OrchestrationClient] DurableOrchestrationClient starter,
             ILogger log)
@@ -36,10 +38,5 @@ namespace KeyVault.Acmebot
 
             return await starter.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromMinutes(5));
         }
-    }
-
-    public class AddCertificateRequest
-    {
-        public string[] Domains { get; set; }
     }
 }

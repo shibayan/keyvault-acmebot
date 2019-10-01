@@ -1,19 +1,21 @@
 ﻿using System.Threading.Tasks;
 
+using KeyVault.Acmebot.Contracts;
+
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 
 namespace KeyVault.Acmebot
 {
-    public class RenewCertificates
+    public class RenewCertificatesFunctions
     {
-        [FunctionName("RenewCertificates")]
-        public async Task RunOrchestrator([OrchestrationTrigger] DurableOrchestrationContext context, ILogger log)
+        [FunctionName(nameof(RenewCertificates))]
+        public async Task RenewCertificates([OrchestrationTrigger] DurableOrchestrationContext context, ILogger log)
         {
-            var proxy = context.CreateActivityProxy<ISharedFunctions>();
+            var activity = context.CreateActivityProxy<ISharedFunctions>();
 
             // 期限切れまで 30 日以内の証明書を取得する
-            var certificates = await proxy.GetCertificates(context.CurrentUtcDateTime);
+            var certificates = await activity.GetCertificates(context.CurrentUtcDateTime);
 
             // 更新対象となる証明書がない場合は終わる
             if (certificates.Count == 0)
@@ -33,11 +35,11 @@ namespace KeyVault.Acmebot
             }
         }
 
-        [FunctionName("RenewCertificates_Timer")]
-        public static async Task TimerStart([TimerTrigger("0 0 0 * * 1,3,5")] TimerInfo timer, [OrchestrationClient] DurableOrchestrationClient starter, ILogger log)
+        [FunctionName(nameof(RenewCertificates_Timer))]
+        public static async Task RenewCertificates_Timer([TimerTrigger("0 0 0 * * 1,3,5")] TimerInfo timer, [OrchestrationClient] DurableOrchestrationClient starter, ILogger log)
         {
             // Function input comes from the request content.
-            var instanceId = await starter.StartNewAsync("RenewCertificates", null);
+            var instanceId = await starter.StartNewAsync(nameof(RenewCertificates), null);
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
         }
