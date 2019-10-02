@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using ACMESharp.Protocol;
 using ACMESharp.Protocol.Resources;
 
+using Microsoft.Extensions.Options;
+
 using Newtonsoft.Json;
 
 namespace KeyVault.Acmebot.Internal
@@ -16,6 +18,13 @@ namespace KeyVault.Acmebot.Internal
 
     internal class AcmeProtocolClientFactory : IAcmeProtocolClientFactory
     {
+        public AcmeProtocolClientFactory(IOptions<LetsEncryptOptions> options)
+        {
+            _options = options.Value;
+        }
+
+        private readonly LetsEncryptOptions _options;
+
         private static readonly Uri _acmeEndpoint = new Uri("https://acme-v02.api.letsencrypt.org/");
 
         public async Task<AcmeProtocolClient> CreateClientAsync()
@@ -37,7 +46,7 @@ namespace KeyVault.Acmebot.Internal
 
             if (acmeProtocolClient.Account == null)
             {
-                account = await acmeProtocolClient.CreateAccountAsync(new[] { "mailto:" + Settings.Default.Contacts }, true);
+                account = await acmeProtocolClient.CreateAccountAsync(new[] { "mailto:" + _options.Contacts }, true);
 
                 accountKey = new AccountKey
                 {
