@@ -19,9 +19,9 @@ namespace KeyVault.Acmebot.Contracts
         Task<IList<Zone>> GetZones(object input = null);
 
         Task<OrderDetails> Order(string[] hostNames);
-        
+
         Task Dns01Precondition(string[] hostNames);
-        
+
         Task<ChallengeResult> Dns01Authorization((string, string) input);
 
         [RetryOptions("00:00:10", 6, HandlerType = typeof(RetryStrategy), HandlerMethodName = nameof(RetryStrategy.RetriableException))]
@@ -29,9 +29,9 @@ namespace KeyVault.Acmebot.Contracts
 
         [RetryOptions("00:00:05", 12, HandlerType = typeof(RetryStrategy), HandlerMethodName = nameof(RetryStrategy.RetriableException))]
         Task CheckIsReady(OrderDetails orderDetails);
-        
+
         Task AnswerChallenges(IList<ChallengeResult> challenges);
-        
+
         Task FinalizeOrder((string[], OrderDetails) input);
     }
 }

@@ -215,8 +215,8 @@ namespace KeyVault.Acmebot
             var queryResult = await _lookupClient.QueryAsync(challenge.DnsRecordName, QueryType.TXT);
 
             var txtRecords = queryResult.Answers
-                                       .OfType<DnsClient.Protocol.TxtRecord>()
-                                       .ToArray();
+                                        .OfType<DnsClient.Protocol.TxtRecord>()
+                                        .ToArray();
 
             // レコードが存在しなかった場合はエラー
             if (txtRecords.Length == 0)
