@@ -16,7 +16,7 @@ namespace KeyVault.Acmebot
         [FunctionName(nameof(AddCertificate_HttpStart))]
         public async Task<HttpResponseMessage> AddCertificate_HttpStart(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "add-certificate")] HttpRequestMessage req,
-            [OrchestrationClient] DurableOrchestrationClient starter,
+            [DurableClient] IDurableClient starter,
             ILogger log)
         {
             if (!req.Headers.Contains("X-MS-CLIENT-PRINCIPAL-ID"))

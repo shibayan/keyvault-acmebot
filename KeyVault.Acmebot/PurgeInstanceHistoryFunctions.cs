@@ -12,7 +12,7 @@ namespace KeyVault.Acmebot
         [FunctionName(nameof(PurgeInstanceHistory_Timer))]
         public Task PurgeInstanceHistory_Timer(
             [TimerTrigger("0 0 6 * * 0")] TimerInfo timer,
-            [OrchestrationClient] DurableOrchestrationClient starter)
+            [DurableClient] IDurableClient starter)
         {
             return starter.PurgeInstanceHistoryAsync(
                 DateTime.MinValue,

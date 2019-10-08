@@ -16,7 +16,7 @@ namespace KeyVault.Acmebot
     public class GetDnsZonesFunctions
     {
         [FunctionName(nameof(GetDnsZones))]
-        public async Task<IList<string>> GetDnsZones([OrchestrationTrigger] DurableOrchestrationContext context)
+        public async Task<IList<string>> GetDnsZones([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             var activity = context.CreateActivityProxy<ISharedFunctions>();
 
@@ -28,7 +28,7 @@ namespace KeyVault.Acmebot
         [FunctionName(nameof(GetDnsZones_HttpStart))]
         public async Task<HttpResponseMessage> GetDnsZones_HttpStart(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "get-dns-zones")] HttpRequestMessage req,
-            [OrchestrationClient] DurableOrchestrationClient starter,
+            [DurableClient] IDurableClient starter,
             ILogger log)
         {
             if (!req.Headers.Contains("X-MS-CLIENT-PRINCIPAL-ID"))

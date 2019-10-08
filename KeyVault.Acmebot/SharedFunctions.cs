@@ -48,7 +48,7 @@ namespace KeyVault.Acmebot
         private readonly DnsManagementClient _dnsManagementClient;
 
         [FunctionName(nameof(IssueCertificate))]
-        public async Task IssueCertificate([OrchestrationTrigger] DurableOrchestrationContext context)
+        public async Task IssueCertificate([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             var dnsNames = context.GetInput<string[]>();
 
