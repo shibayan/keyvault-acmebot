@@ -7,6 +7,7 @@ using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.Management.Dns;
 using Microsoft.Azure.Services.AppAuthentication;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -34,7 +35,7 @@ namespace KeyVault.Acmebot
 
             builder.Services.AddSingleton(new LookupClient { UseCache = false });
 
-            builder.Services.AddSingleton(provider => 
+            builder.Services.AddSingleton(provider =>
                 new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(new AzureServiceTokenProvider().KeyVaultTokenCallback)));
 
             builder.Services.AddSingleton(provider =>
@@ -48,6 +49,7 @@ namespace KeyVault.Acmebot
             });
 
             builder.Services.AddSingleton<IAcmeProtocolClientFactory, AcmeProtocolClientFactory>();
+            builder.Services.AddSingleton<ILifeCycleNotificationHelper, WebhookLifeCycleNotification>();
 
             builder.Services.Configure<LetsEncryptOptions>(Configuration.GetSection("LetsEncrypt"));
         }
