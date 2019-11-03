@@ -4,7 +4,7 @@
     "durableTask": {
       "hubName": "DurableFunctionsHub",
       "extendedSessionsEnabled": true,
-      "extendedSessionIdleTimeoutInSeconds": 30
+      "extendedSessionIdleTimeoutInSeconds": 60
     }
   }
 }
