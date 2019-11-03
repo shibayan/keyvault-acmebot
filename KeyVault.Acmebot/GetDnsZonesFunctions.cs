@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
+
+using DurableTask.TypedProxy;
 
 using KeyVault.Acmebot.Contracts;
 
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
@@ -26,14 +29,14 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(GetDnsZones_HttpStart))]
-        public async Task<HttpResponseMessage> GetDnsZones_HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "get-dns-zones")] HttpRequestMessage req,
+        public async Task<IActionResult> GetDnsZones_HttpStart(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "get-dns-zones")] HttpRequest req,
             [DurableClient] IDurableClient starter,
             ILogger log)
         {
-            if (!req.Headers.Contains("X-MS-CLIENT-PRINCIPAL-ID"))
+            if (!req.HttpContext.User.Identity.IsAuthenticated)
             {
-                return req.CreateErrorResponse(HttpStatusCode.Unauthorized, $"Need to activate EasyAuth.");
+                return new UnauthorizedObjectResult("Need to activate EasyAuth.");
             }
 
             // Function input comes from the request content.

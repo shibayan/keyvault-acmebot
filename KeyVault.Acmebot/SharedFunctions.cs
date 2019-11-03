@@ -11,6 +11,8 @@ using ACMESharp.Protocol;
 
 using DnsClient;
 
+using DurableTask.TypedProxy;
+
 using KeyVault.Acmebot.Contracts;
 using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Models;
@@ -20,6 +22,7 @@ using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Azure.Management.Dns;
 using Microsoft.Azure.Management.Dns.Models;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Options;
 
 namespace KeyVault.Acmebot

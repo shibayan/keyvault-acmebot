@@ -4,11 +4,12 @@ using System.Threading.Tasks;
 
 using ACMESharp.Protocol;
 
+using DurableTask.TypedProxy;
+
 using KeyVault.Acmebot.Models;
 
 using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Azure.Management.Dns.Models;
-using Microsoft.Azure.WebJobs;
 
 namespace KeyVault.Acmebot.Contracts
 {

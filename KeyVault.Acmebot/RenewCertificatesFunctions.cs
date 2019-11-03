@@ -1,8 +1,11 @@
 ﻿using System.Threading.Tasks;
 
+using DurableTask.TypedProxy;
+
 using KeyVault.Acmebot.Contracts;
 
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 
 namespace KeyVault.Acmebot
