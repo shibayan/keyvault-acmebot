@@ -2,11 +2,21 @@
 using System.Threading.Tasks;
 
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Options;
 
 namespace KeyVault.Acmebot.Internal
 {
-    internal class InProcLifeCycleNotificationHelper : ILifeCycleNotificationHelper
+    internal class WebhookLifeCycleNotification : ILifeCycleNotificationHelper
     {
+        public WebhookLifeCycleNotification(IHttpClientFactory httpClientFactory, IOptions<LetsEncryptOptions> options)
+        {
+            _httpClientFactory = httpClientFactory;
+            _options = options.Value;
+        }
+
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly LetsEncryptOptions _options;
+
         public Task OrchestratorStartingAsync(string hubName, string functionName, string instanceId, bool isReplay)
         {
             return Task.CompletedTask;
@@ -27,18 +37,16 @@ namespace KeyVault.Acmebot.Internal
             return Task.CompletedTask;
         }
 
-        private static readonly HttpClient _httpClient = new HttpClient();
-
-        private static async Task PostEventAsync(string functionName, string instanceId, string reason)
+        private async Task PostEventAsync(string functionName, string instanceId, string reason)
         {
-            if (string.IsNullOrEmpty(Settings.Default.Webhook))
+            if (string.IsNullOrEmpty(_options.Webhook))
             {
                 return;
             }
 
             object model;
 
-            if (Settings.Default.Webhook.Contains("hooks.slack.com"))
+            if (_options.Webhook.Contains("hooks.slack.com"))
             {
                 model = new
                 {
@@ -63,7 +71,9 @@ namespace KeyVault.Acmebot.Internal
                 };
             }
 
-            await _httpClient.PostAsJsonAsync(Settings.Default.Webhook, model);
+            var httpClient = _httpClientFactory.CreateClient();
+
+            await httpClient.PostAsJsonAsync(_options.Webhook, model);
         }
     }
 }

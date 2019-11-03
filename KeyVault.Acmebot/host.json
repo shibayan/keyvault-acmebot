@@ -2,9 +2,9 @@
   "version": "2.0",
   "extensions": {
     "durableTask": {
+      "hubName": "DurableFunctionsHub",
       "extendedSessionsEnabled": true,
-      "extendedSessionIdleTimeoutInSeconds": 60,
-      "CustomLifeCycleNotificationHelperType": "AzureKeyVault.LetsEncrypt.Internal.InProcLifeCycleNotificationHelper, AzureKeyVault.LetsEncrypt"
+      "extendedSessionIdleTimeoutInSeconds": 60
     }
   }
 }

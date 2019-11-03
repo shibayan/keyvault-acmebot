@@ -1,8 +1,11 @@
 ﻿using System.Threading.Tasks;
 
+using DurableTask.TypedProxy;
+
 using KeyVault.Acmebot.Contracts;
 
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 
 namespace KeyVault.Acmebot
@@ -10,7 +13,7 @@ namespace KeyVault.Acmebot
     public class RenewCertificatesFunctions
     {
         [FunctionName(nameof(RenewCertificates))]
-        public async Task RenewCertificates([OrchestrationTrigger] DurableOrchestrationContext context, ILogger log)
+        public async Task RenewCertificates([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
         {
             var activity = context.CreateActivityProxy<ISharedFunctions>();
 
@@ -36,7 +39,10 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(RenewCertificates_Timer))]
-        public static async Task RenewCertificates_Timer([TimerTrigger("0 0 0 * * 1,3,5")] TimerInfo timer, [OrchestrationClient] DurableOrchestrationClient starter, ILogger log)
+        public static async Task RenewCertificates_Timer(
+            [TimerTrigger("0 0 0 * * 1,3,5")] TimerInfo timer,
+            [DurableClient] IDurableClient starter,
+            ILogger log)
         {
             // Function input comes from the request content.
             var instanceId = await starter.StartNewAsync(nameof(RenewCertificates), null);
