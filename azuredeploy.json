@@ -4,6 +4,7 @@
   "parameters": {
     "appNamePrefix": {
       "type": "string",
+      "maxLength": 19,
       "metadata": {
         "description": "The name of the function app that you wish to create."
       }
@@ -13,13 +14,36 @@
       "metadata": {
         "description": "Email address for Let's Encrypt account."
       }
+    },
+    "createWithKeyVault": {
+      "type": "bool",
+      "defaultValue": true,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "If you choose true, create and configure a key vault at the same time."
+      }
+    },
+    "keyVaultSkuName": {
+      "type": "string",
+      "defaultValue": "Standard",
+      "allowedValues": [
+        "Standard",
+        "Premium"
+      ],
+      "metadata": {
+        "description": "Specifies whether the key vault is a standard vault or a premium vault."
+      }
     }
   },
   "variables": {
-    "functionAppName": "[concat(parameters('appNamePrefix'), uniquestring(resourceGroup().id, deployment().name))]",
+    "functionAppName": "[concat(parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
     "storageAccountName": "[concat(uniquestring(resourceGroup().id, deployment().name), 'azfunctions')]",
     "storageAccountId": "[concat(resourceGroup().id, '/providers/', 'Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
-    "mailAddress": "[parameters('mailAddress')]"
+    "mailAddress": "[parameters('mailAddress')]",
+    "keyVaultSkuName": "[parameters('keyVaultSkuName')]"
   },
   "resources": [
     {
@@ -107,6 +131,10 @@
             {
               "name": "LetsEncrypt:Contacts",
               "value": "[variables('mailAddress')]"
+            },
+            {
+              "name": "LetsEncrypt:VaultBaseUrl",
+              "value": "[if(parameters('createWithKeyVault'), concat('https://', variables('functionAppName'), '.vault.azure.net/'), '')]"
             }
           ],
           "clientAffinityEnabled": false
@@ -125,6 +153,32 @@
           }
         }
       ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "[variables('functionAppName')]",
+      "apiVersion": "2018-02-14",
+      "location": "[resourceGroup().location]",
+      "condition": "[parameters('createWithKeyVault')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/Sites', variables('functionAppName'))]"
+      ],
+      "properties": {
+        "tenantId": "[subscription().tenantId]",
+        "accessPolicies": [
+          {
+            "objectId": "[reference(resourceId('Microsoft.Web/Sites', variables('functionAppName')), '2016-03-01', 'Full').identity.principalId]",
+            "tenantId": "[subscription().tenantId]",
+            "permissions": {
+              "certificates": [ "get", "list", "create", "update" ]
+            }
+          }
+        ],
+        "sku": {
+          "name": "[variables('keyVaultSkuName')]",
+          "family": "A"
+        }
+      }
     }
   ]
 }

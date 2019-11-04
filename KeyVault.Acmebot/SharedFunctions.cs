@@ -11,7 +11,11 @@ using ACMESharp.Protocol;
 
 using DnsClient;
 
+using DurableTask.TypedProxy;
+
+using KeyVault.Acmebot.Contracts;
 using KeyVault.Acmebot.Internal;
+using KeyVault.Acmebot.Models;
 
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
@@ -19,17 +23,21 @@ using Microsoft.Azure.KeyVault.WebKey;
 using Microsoft.Azure.Management.Dns;
 using Microsoft.Azure.Management.Dns.Models;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Options;
 
 namespace KeyVault.Acmebot
 {
     public class SharedFunctions : ISharedFunctions
     {
-        public SharedFunctions(IHttpClientFactory httpClientFactory, LookupClient lookupClient, IAcmeProtocolClientFactory acmeProtocolClientFactory,
+        public SharedFunctions(IHttpClientFactory httpClientFactory, LookupClient lookupClient,
+                               IAcmeProtocolClientFactory acmeProtocolClientFactory, IOptions<LetsEncryptOptions> options,
                                KeyVaultClient keyVaultClient, DnsManagementClient dnsManagementClient)
         {
             _httpClientFactory = httpClientFactory;
             _lookupClient = lookupClient;
             _acmeProtocolClientFactory = acmeProtocolClientFactory;
+            _options = options.Value;
             _keyVaultClient = keyVaultClient;
             _dnsManagementClient = dnsManagementClient;
         }
@@ -39,21 +47,22 @@ namespace KeyVault.Acmebot
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly LookupClient _lookupClient;
         private readonly IAcmeProtocolClientFactory _acmeProtocolClientFactory;
+        private readonly LetsEncryptOptions _options;
         private readonly KeyVaultClient _keyVaultClient;
         private readonly DnsManagementClient _dnsManagementClient;
 
         [FunctionName(nameof(IssueCertificate))]
-        public async Task IssueCertificate([OrchestrationTrigger] DurableOrchestrationContext context)
+        public async Task IssueCertificate([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             var dnsNames = context.GetInput<string[]>();
 
-            var proxy = context.CreateActivityProxy<ISharedFunctions>();
+            var activity = context.CreateActivityProxy<ISharedFunctions>();
 
             // 前提条件をチェック
-            await proxy.Dns01Precondition(dnsNames);
+            await activity.Dns01Precondition(dnsNames);
 
             // 新しく ACME Order を作成する
-            var orderDetails = await proxy.Order(dnsNames);
+            var orderDetails = await activity.Order(dnsNames);
 
             // 複数の Authorizations を処理する
             var challenges = new List<ChallengeResult>();
@@ -61,27 +70,27 @@ namespace KeyVault.Acmebot
             foreach (var authorization in orderDetails.Payload.Authorizations)
             {
                 // ACME Challenge を実行
-                var result = await proxy.Dns01Authorization((authorization, context.ParentInstanceId ?? context.InstanceId));
+                var result = await activity.Dns01Authorization((authorization, context.ParentInstanceId ?? context.InstanceId));
 
                 // Azure DNS で正しくレコードが引けるか確認
-                await proxy.CheckDnsChallenge(result);
+                await activity.CheckDnsChallenge(result);
 
                 challenges.Add(result);
             }
 
             // ACME Answer を実行
-            await proxy.AnswerChallenges(challenges);
+            await activity.AnswerChallenges(challenges);
 
             // Order のステータスが ready になるまで 60 秒待機
-            await proxy.CheckIsReady(orderDetails);
+            await activity.CheckIsReady(orderDetails);
 
-            await proxy.FinalizeOrder((dnsNames, orderDetails));
+            await activity.FinalizeOrder((dnsNames, orderDetails));
         }
 
         [FunctionName(nameof(GetCertificates))]
         public async Task<IList<CertificateBundle>> GetCertificates([ActivityTrigger] DateTime currentDateTime)
         {
-            var certificates = await _keyVaultClient.GetCertificatesAsync(Settings.Default.VaultBaseUrl);
+            var certificates = await _keyVaultClient.GetAllCertificatesAsync(_options.VaultBaseUrl);
 
             var list = certificates.Where(x => x.Tags != null && x.Tags.TryGetValue("Issuer", out var issuer) && issuer == "letsencrypt.org")
                                    .Where(x => (x.Attributes.Expires.Value - currentDateTime).TotalDays < 30)
@@ -97,6 +106,12 @@ namespace KeyVault.Acmebot
             return bundles;
         }
 
+        [FunctionName(nameof(GetZones))]
+        public Task<IList<Zone>> GetZones([ActivityTrigger] object input = null)
+        {
+            return _dnsManagementClient.Zones.ListAllAsync();
+        }
+
         [FunctionName(nameof(Order))]
         public async Task<OrderDetails> Order([ActivityTrigger] string[] hostNames)
         {
@@ -109,7 +124,7 @@ namespace KeyVault.Acmebot
         public async Task Dns01Precondition([ActivityTrigger] string[] hostNames)
         {
             // Azure DNS が存在するか確認
-            var zones = await _dnsManagementClient.Zones.ListAsync();
+            var zones = await _dnsManagementClient.Zones.ListAllAsync();
 
             foreach (var hostName in hostNames)
             {
@@ -135,9 +150,9 @@ namespace KeyVault.Acmebot
             var challengeValidationDetails = AuthorizationDecoder.ResolveChallengeForDns01(authz, challenge, acmeProtocolClient.Signer);
 
             // Azure DNS の TXT レコードを書き換え
-            var zone = (await _dnsManagementClient.Zones.ListAsync()).First(x => challengeValidationDetails.DnsRecordName.EndsWith(x.Name));
+            var zone = (await _dnsManagementClient.Zones.ListAllAsync()).First(x => challengeValidationDetails.DnsRecordName.EndsWith(x.Name));
 
-            var resourceId = ParseResourceId(zone.Id);
+            var resourceGroup = ExtractResourceGroup(zone.Id);
 
             // Challenge の詳細から Azure DNS 向けにレコード名を作成
             var acmeDnsRecordName = challengeValidationDetails.DnsRecordName.Replace("." + zone.Name, "");
@@ -146,7 +161,7 @@ namespace KeyVault.Acmebot
 
             try
             {
-                recordSet = await _dnsManagementClient.RecordSets.GetAsync(resourceId.resourceGroup, zone.Name, acmeDnsRecordName, RecordType.TXT);
+                recordSet = await _dnsManagementClient.RecordSets.GetAsync(resourceGroup, zone.Name, acmeDnsRecordName, RecordType.TXT);
             }
             catch
             {
@@ -187,7 +202,7 @@ namespace KeyVault.Acmebot
                 };
             }
 
-            await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(resourceId.resourceGroup, zone.Name, acmeDnsRecordName, RecordType.TXT, recordSet);
+            await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(resourceGroup, zone.Name, acmeDnsRecordName, RecordType.TXT, recordSet);
 
             return new ChallengeResult
             {
@@ -204,8 +219,8 @@ namespace KeyVault.Acmebot
             var queryResult = await _lookupClient.QueryAsync(challenge.DnsRecordName, QueryType.TXT);
 
             var txtRecords = queryResult.Answers
-                                       .OfType<DnsClient.Protocol.TxtRecord>()
-                                       .ToArray();
+                                        .OfType<DnsClient.Protocol.TxtRecord>()
+                                        .ToArray();
 
             // レコードが存在しなかった場合はエラー
             if (txtRecords.Length == 0)
@@ -264,7 +279,7 @@ namespace KeyVault.Acmebot
             try
             {
                 // Key Vault を使って CSR を作成
-                var request = await _keyVaultClient.CreateCertificateAsync(Settings.Default.VaultBaseUrl, certificateName, new CertificatePolicy
+                var request = await _keyVaultClient.CreateCertificateAsync(_options.VaultBaseUrl, certificateName, new CertificatePolicy
                 {
                     KeyProperties = new KeyProperties
                     {
@@ -284,7 +299,7 @@ namespace KeyVault.Acmebot
             }
             catch (KeyVaultErrorException ex) when (ex.Response.StatusCode == HttpStatusCode.Conflict)
             {
-                var base64Csr = await _keyVaultClient.GetPendingCertificateSigningRequestAsync(Settings.Default.VaultBaseUrl, certificateName);
+                var base64Csr = await _keyVaultClient.GetPendingCertificateSigningRequestAsync(_options.VaultBaseUrl, certificateName);
 
                 csr = Convert.FromBase64String(base64Csr);
             }
@@ -303,21 +318,14 @@ namespace KeyVault.Acmebot
 
             x509Certificates.ImportFromPem(certificateData);
 
-            await _keyVaultClient.MergeCertificateAsync(Settings.Default.VaultBaseUrl, certificateName, x509Certificates);
+            await _keyVaultClient.MergeCertificateAsync(_options.VaultBaseUrl, certificateName, x509Certificates);
         }
 
-        private static (string subscription, string resourceGroup, string provider) ParseResourceId(string resourceId)
+        private static string ExtractResourceGroup(string resourceId)
         {
-            var values = resourceId.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            var values = resourceId.Split('/', StringSplitOptions.RemoveEmptyEntries);
 
-            return (values[1], values[3], values[5]);
+            return values[3];
         }
-    }
-
-    public class ChallengeResult
-    {
-        public string Url { get; set; }
-        public string DnsRecordName { get; set; }
-        public string DnsRecordValue { get; set; }
     }
 }
