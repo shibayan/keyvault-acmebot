@@ -29,7 +29,7 @@ Use Key Vault for secure and centralized management of Let's Encrypt certificate
 - Azure CDN / Front Door
 - Azure Application Gateway v2
 - Subject Alternative Names (SANs) certificates (multi-domains support)
-- Wildcard certificates
+- Zone Apex and Wildcard certificates
 
 ## Requirements
 
