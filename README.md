@@ -105,6 +105,10 @@ After that, the certificate will automatically be renewed from Key Vault.
 - https://docs.microsoft.com/en-us/azure/cdn/cdn-custom-ssl?tabs=option-2-enable-https-with-your-own-certificate
 - https://docs.microsoft.com/en-us/azure/frontdoor/front-door-custom-domain-https#option-2-use-your-own-certificate
 
+### API Management
+
+- https://docs.microsoft.com/en-us/azure/api-management/configure-custom-domain
+
 ## Thanks
 
 - [ACMESharp Core](https://github.com/PKISharp/ACMESharpCore) by @ebekker
