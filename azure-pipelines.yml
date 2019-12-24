@@ -18,7 +18,7 @@ stages:
   jobs:
   - job: Build
     pool:
-      vmImage: 'windows-2019'
+      vmImage: 'windows-latest'
     steps:
     - task: UseDotNet@2
       inputs:
@@ -31,18 +31,18 @@ stages:
         command: 'publish'
         publishWebProjects: false
         arguments: '-c $(buildConfiguration) -o $(Build.SourcesDirectory)/latest'
+      displayName: 'Build for deployment'
 
     - publish: latest
       artifact: function
+      displayName: 'Upload artifacts'
 
 - stage: Deploy
-  dependsOn:
-  - Build
   condition: and(succeeded(), eq(variables['isGitHubTag'], true))
   jobs:
   - job: Deploy
     pool:
-      vmImage: 'windows-2019'
+      vmImage: 'windows-latest'
     steps:
       - checkout: none
       - download: current
@@ -54,3 +54,4 @@ stages:
           Destination: 'AzureBlob'
           storage: 'shibayan'
           ContainerName: 'azure-keyvault-letsencrypt'
+        displayName: 'Deploy to Storage Blob'
