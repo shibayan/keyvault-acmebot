@@ -114,11 +114,11 @@
             },
             {
               "name": "WEBSITE_RUN_FROM_PACKAGE",
-              "value": "https://shibayan.blob.core.windows.net/azure-keyvault-letsencrypt/latest.zip"
+              "value": "https://shibayan.blob.core.windows.net/azure-keyvault-letsencrypt/v3/latest.zip"
             },
             {
               "name": "FUNCTIONS_EXTENSION_VERSION",
-              "value": "~2"
+              "value": "~3"
             },
             {
               "name": "FUNCTIONS_WORKER_RUNTIME",

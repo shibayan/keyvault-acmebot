@@ -8,7 +8,7 @@ trigger:
 
 variables:
   buildConfiguration: Release
-  dotnetSdkVersion: '2.2.x'
+  dotnetSdkVersion: '3.1.x'
   isGitHubTag: $[startsWith(variables['Build.SourceBranch'], 'refs/tags/v')]
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   NUGET_XMLDOC_MODE: skip
@@ -49,9 +49,10 @@ stages:
 
       - task: AzureFileCopy@3
         inputs:
-          SourcePath: '$(Pipeline.Workspace)/function/latest.zip'
+          sourcePath: '$(Pipeline.Workspace)/**/latest.zip'
           azureSubscription: 'Visual Studio Enterprise'
-          Destination: 'AzureBlob'
+          destination: 'AzureBlob'
           storage: 'shibayan'
-          ContainerName: 'azure-keyvault-letsencrypt'
+          containerName: 'azure-keyvault-letsencrypt'
+          blobPrefix: 'v3'
         displayName: 'Deploy to Storage Blob'
