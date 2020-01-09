@@ -127,7 +127,7 @@ namespace KeyVault.Acmebot
 
             foreach (var hostName in hostNames)
             {
-                if (!zones.Any(x => hostName.EndsWith(x.Name)))
+                if (!zones.Any(x => string.Equals(hostName, x.Name, StringComparison.OrdinalIgnoreCase) || hostName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase)))
                 {
                     throw new InvalidOperationException($"Azure DNS zone \"{hostName}\" is not found");
                 }
@@ -149,12 +149,16 @@ namespace KeyVault.Acmebot
             var challengeValidationDetails = AuthorizationDecoder.ResolveChallengeForDns01(authz, challenge, acmeProtocolClient.Signer);
 
             // Azure DNS の TXT レコードを書き換え
-            var zone = (await _dnsManagementClient.Zones.ListAllAsync()).First(x => challengeValidationDetails.DnsRecordName.EndsWith(x.Name));
+            var zones = await _dnsManagementClient.Zones.ListAllAsync();
+
+            var zone = zones.Where(x => challengeValidationDetails.DnsRecordName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase))
+                            .OrderByDescending(x => x.Name.Length)
+                            .First();
 
             var resourceGroup = ExtractResourceGroup(zone.Id);
 
             // Challenge の詳細から Azure DNS 向けにレコード名を作成
-            var acmeDnsRecordName = challengeValidationDetails.DnsRecordName.Replace("." + zone.Name, "");
+            var acmeDnsRecordName = challengeValidationDetails.DnsRecordName.Replace($".{zone.Name}", "", StringComparison.OrdinalIgnoreCase);
 
             RecordSet recordSet;
 
