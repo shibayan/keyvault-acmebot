@@ -41,8 +41,6 @@ namespace KeyVault.Acmebot
             _dnsManagementClient = dnsManagementClient;
         }
 
-        private const string InstanceIdKey = "InstanceId";
-
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly LookupClient _lookupClient;
         private readonly IAcmeProtocolClientFactory _acmeProtocolClientFactory;
