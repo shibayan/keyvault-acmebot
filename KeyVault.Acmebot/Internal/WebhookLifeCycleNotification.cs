@@ -61,6 +61,15 @@ namespace KeyVault.Acmebot.Internal
                     }
                 };
             }
+            else if (_options.Webhook.Contains("outlook.office.com"))
+            {
+                model = new
+                {
+                    title = functionName,
+                    text = reason,
+                    themeColor = "A30200"
+                };
+            }
             else
             {
                 model = new
