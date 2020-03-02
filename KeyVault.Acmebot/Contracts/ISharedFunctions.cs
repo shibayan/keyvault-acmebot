@@ -23,15 +23,15 @@ namespace KeyVault.Acmebot.Contracts
 
         Task Dns01Precondition(string[] hostNames);
 
-        Task<AcmeChallengeResult> Dns01Authorization((string, string) input);
+        Task<IList<AcmeChallengeResult>> Dns01Authorization(string[] authorizationUrls);
 
         [RetryOptions("00:00:10", 6, HandlerType = typeof(RetryStrategy), HandlerMethodName = nameof(RetryStrategy.RetriableException))]
-        Task CheckDnsChallenge(AcmeChallengeResult challenge);
+        Task CheckDnsChallenge(IList<AcmeChallengeResult> challengeResults);
 
         [RetryOptions("00:00:05", 12, HandlerType = typeof(RetryStrategy), HandlerMethodName = nameof(RetryStrategy.RetriableException))]
         Task CheckIsReady(OrderDetails orderDetails);
 
-        Task AnswerChallenges(IList<AcmeChallengeResult> challenges);
+        Task AnswerChallenges(IList<AcmeChallengeResult> challengeResults);
 
         Task FinalizeOrder((string[], OrderDetails) input);
     }

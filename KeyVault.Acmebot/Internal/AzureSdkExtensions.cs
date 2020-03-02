@@ -45,5 +45,17 @@ namespace KeyVault.Acmebot.Internal
 
             return certificates;
         }
+
+        public static async Task<RecordSet> GetOrDefaultAsync(this IRecordSetsOperations operations, string resourceGroupName, string zoneName, string relativeRecordSetName, RecordType recordType)
+        {
+            try
+            {
+                return await operations.GetAsync(resourceGroupName, zoneName, relativeRecordSetName, RecordType.TXT);
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }
