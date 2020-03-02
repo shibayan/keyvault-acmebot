@@ -63,22 +63,14 @@ namespace KeyVault.Acmebot
             // 新しく ACME Order を作成する
             var orderDetails = await activity.Order(dnsNames);
 
-            // 複数の Authorizations を処理する
-            var challenges = new List<AcmeChallengeResult>();
+            // ACME Challenge を実行
+            var challengeResults = await activity.Dns01Authorization(orderDetails.Payload.Authorizations);
 
-            foreach (var authorization in orderDetails.Payload.Authorizations)
-            {
-                // ACME Challenge を実行
-                var result = await activity.Dns01Authorization((authorization, context.ParentInstanceId ?? context.InstanceId));
-
-                // Azure DNS で正しくレコードが引けるか確認
-                await activity.CheckDnsChallenge(result);
-
-                challenges.Add(result);
-            }
+            // Azure DNS で正しくレコードが引けるか確認
+            await activity.CheckDnsChallenge(challengeResults);
 
             // ACME Answer を実行
-            await activity.AnswerChallenges(challenges);
+            await activity.AnswerChallenges(challengeResults);
 
             // Order のステータスが ready になるまで 60 秒待機
             await activity.CheckIsReady(orderDetails);
@@ -135,106 +127,84 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(Dns01Authorization))]
-        public async Task<AcmeChallengeResult> Dns01Authorization([ActivityTrigger] (string, string) input)
+        public async Task<IList<AcmeChallengeResult>> Dns01Authorization([ActivityTrigger] string[] authorizationUrls)
         {
-            var (authzUrl, instanceId) = input;
-
             var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
-            var authz = await acmeProtocolClient.GetAuthorizationDetailsAsync(authzUrl);
+            var challengeResults = new List<AcmeChallengeResult>();
 
-            // DNS-01 Challenge の情報を拾う
-            var challenge = authz.Challenges.First(x => x.Type == "dns-01");
+            foreach (var authorizationUrl in authorizationUrls)
+            {
+                // Authorization の詳細を取得
+                var authorization = await acmeProtocolClient.GetAuthorizationDetailsAsync(authorizationUrl);
 
-            var challengeValidationDetails = AuthorizationDecoder.ResolveChallengeForDns01(authz, challenge, acmeProtocolClient.Signer);
+                // DNS-01 Challenge の情報を拾う
+                var challenge = authorization.Challenges.First(x => x.Type == "dns-01");
 
-            // Azure DNS の TXT レコードを書き換え
+                var challengeValidationDetails = AuthorizationDecoder.ResolveChallengeForDns01(authorization, challenge, acmeProtocolClient.Signer);
+
+                // Challenge の情報を保存する
+                challengeResults.Add(new AcmeChallengeResult
+                {
+                    Url = challenge.Url,
+                    DnsRecordName = challengeValidationDetails.DnsRecordName,
+                    DnsRecordValue = challengeValidationDetails.DnsRecordValue
+                });
+            }
+
+            // Azure DNS zone の一覧を取得する
             var zones = await _dnsManagementClient.Zones.ListAllAsync();
 
-            var zone = zones.Where(x => challengeValidationDetails.DnsRecordName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase))
-                            .OrderByDescending(x => x.Name.Length)
-                            .First();
-
-            var resourceGroup = ExtractResourceGroup(zone.Id);
-
-            // Challenge の詳細から Azure DNS 向けにレコード名を作成
-            var acmeDnsRecordName = challengeValidationDetails.DnsRecordName.Replace($".{zone.Name}", "", StringComparison.OrdinalIgnoreCase);
-
-            RecordSet recordSet;
-
-            try
+            // DNS-01 の検証レコード名毎に Azure DNS に TXT レコードを作成
+            foreach (var lookup in challengeResults.ToLookup(x => x.DnsRecordName))
             {
-                recordSet = await _dnsManagementClient.RecordSets.GetAsync(resourceGroup, zone.Name, acmeDnsRecordName, RecordType.TXT);
-            }
-            catch
-            {
-                recordSet = null;
-            }
+                var dnsRecordName = lookup.Key;
 
-            if (recordSet != null)
-            {
-                if (recordSet.Metadata == null || !recordSet.Metadata.TryGetValue(InstanceIdKey, out var dnsInstanceId) || dnsInstanceId != instanceId)
-                {
-                    recordSet.Metadata = new Dictionary<string, string>
-                    {
-                        { InstanceIdKey, instanceId }
-                    };
+                var zone = zones.Where(x => dnsRecordName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase))
+                                .OrderByDescending(x => x.Name.Length)
+                                .First();
 
-                    recordSet.TxtRecords.Clear();
-                }
+                var resourceGroup = ExtractResourceGroup(zone.Id);
 
+                // Challenge の詳細から Azure DNS 向けにレコード名を作成
+                var acmeDnsRecordName = dnsRecordName.Replace($".{zone.Name}", "", StringComparison.OrdinalIgnoreCase);
+
+                // 既存の TXT レコードがあれば取得する
+                var recordSet = await _dnsManagementClient.RecordSets.GetOrDefaultAsync(resourceGroup, zone.Name, acmeDnsRecordName, RecordType.TXT) ?? new RecordSet();
+
+                // TXT レコードに TTL と値をセットする
                 recordSet.TTL = 60;
+                recordSet.TxtRecords = lookup.Select(x => new TxtRecord(new[] { x.DnsRecordValue })).ToArray();
 
-                // 既存の TXT レコードに値を追加する
-                recordSet.TxtRecords.Add(new TxtRecord(new[] { challengeValidationDetails.DnsRecordValue }));
-            }
-            else
-            {
-                // 新しく TXT レコードを作成する
-                recordSet = new RecordSet
-                {
-                    TTL = 60,
-                    Metadata = new Dictionary<string, string>
-                    {
-                        { InstanceIdKey, instanceId }
-                    },
-                    TxtRecords = new[]
-                    {
-                        new TxtRecord(new[] { challengeValidationDetails.DnsRecordValue })
-                    }
-                };
+                await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(resourceGroup, zone.Name, acmeDnsRecordName, RecordType.TXT, recordSet);
             }
 
-            await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(resourceGroup, zone.Name, acmeDnsRecordName, RecordType.TXT, recordSet);
-
-            return new AcmeChallengeResult
-            {
-                Url = challenge.Url,
-                DnsRecordName = challengeValidationDetails.DnsRecordName,
-                DnsRecordValue = challengeValidationDetails.DnsRecordValue
-            };
+            return challengeResults;
         }
 
         [FunctionName(nameof(CheckDnsChallenge))]
-        public async Task CheckDnsChallenge([ActivityTrigger] AcmeChallengeResult challenge)
+        public async Task CheckDnsChallenge([ActivityTrigger] IList<AcmeChallengeResult> challengeResults)
         {
-            // 実際に ACME の TXT レコードを引いて確認する
-            var queryResult = await _lookupClient.QueryAsync(challenge.DnsRecordName, QueryType.TXT);
-
-            var txtRecords = queryResult.Answers
-                                        .OfType<DnsClient.Protocol.TxtRecord>()
-                                        .ToArray();
-
-            // レコードが存在しなかった場合はエラー
-            if (txtRecords.Length == 0)
+            foreach (var challengeResult in challengeResults)
             {
-                throw new RetriableActivityException($"{challenge.DnsRecordName} did not resolve.");
-            }
+                // 実際に ACME の TXT レコードを引いて確認する
+                var queryResult = await _lookupClient.QueryAsync(challengeResult.DnsRecordName, QueryType.TXT);
 
-            // レコードに今回のチャレンジが含まれていない場合もエラー
-            if (!txtRecords.Any(x => x.Text.Contains(challenge.DnsRecordValue)))
-            {
-                throw new RetriableActivityException($"{challenge.DnsRecordName} value is not correct.");
+                var txtRecords = queryResult.Answers
+                                            .OfType<DnsClient.Protocol.TxtRecord>()
+                                            .ToArray();
+
+                // レコードが存在しなかった場合はエラー
+                if (txtRecords.Length == 0)
+                {
+                    throw new RetriableActivityException($"{challengeResult.DnsRecordName} did not resolve.");
+                }
+
+                // レコードに今回のチャレンジが含まれていない場合もエラー
+                if (!txtRecords.Any(x => x.Text.Contains(challengeResult.DnsRecordValue)))
+                {
+                    throw new RetriableActivityException($"{challengeResult.DnsRecordName} value is not correct.");
+                }
             }
         }
 
@@ -259,14 +229,14 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(AnswerChallenges))]
-        public async Task AnswerChallenges([ActivityTrigger] IList<AcmeChallengeResult> challenges)
+        public async Task AnswerChallenges([ActivityTrigger] IList<AcmeChallengeResult> challengeResults)
         {
             var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
             // Answer の準備が出来たことを通知
-            foreach (var challenge in challenges)
+            foreach (var challengeResult in challengeResults)
             {
-                await acmeProtocolClient.AnswerChallengeAsync(challenge.Url);
+                await acmeProtocolClient.AnswerChallengeAsync(challengeResult.Url);
             }
         }
 
