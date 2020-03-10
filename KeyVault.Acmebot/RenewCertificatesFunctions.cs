@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 using DurableTask.TypedProxy;
 
@@ -31,10 +32,21 @@ namespace KeyVault.Acmebot
             // 証明書の更新を行う
             foreach (var certificate in certificates)
             {
+                var dnsNames = certificate.Policy.X509CertificateProperties.SubjectAlternativeNames.DnsNames;
+
                 log.LogInformation($"{certificate.Id} - {certificate.Attributes.Expires}");
 
-                // 証明書の更新処理を開始
-                await context.CallSubOrchestratorAsync(nameof(SharedFunctions.IssueCertificate), certificate.Policy.X509CertificateProperties.SubjectAlternativeNames.DnsNames);
+                try
+                {
+                    // 証明書の更新処理を開始
+                    await context.CallSubOrchestratorAsync(nameof(SharedFunctions.IssueCertificate), dnsNames);
+                }
+                catch (Exception ex)
+                {
+                    // 失敗した場合はログに詳細を書き出して続きを実行する
+                    log.LogError($"Failed sub orchestration with DNS names = {string.Join(",", dnsNames)}");
+                    log.LogError(ex.Message);
+                }
             }
         }
 
