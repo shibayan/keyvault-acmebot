@@ -37,7 +37,7 @@ stages:
     - task: DotNetCoreCLI@2
       inputs:
         command: 'build'
-        arguments: '-c $(buildConfiguration) -o $(Build.SourcesDirectory)/latest'
+        arguments: '-c $(buildConfiguration)'
       displayName: 'Build for test'
 
     - task: DotNetCoreCLI@2
