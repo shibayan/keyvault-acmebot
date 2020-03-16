@@ -14,9 +14,43 @@ variables:
   NUGET_XMLDOC_MODE: skip
 
 stages:
-- stage: Build
+- stage: Build_and_Test
+  condition: eq(variables['isGitHubTag'], false)
   jobs:
-  - job: Build
+  - job: Build_and_Test
+    pool:
+      vmImage: 'windows-latest'
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: $(dotnetSdkVersion)
+      displayName: 'Install .NET Core SDK $(dotnetSdkVersion)'
+
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'custom'
+        custom: 'tool'
+        arguments: 'update -g dotnet-format'
+      displayName: 'Install .NET Core format tool'
+
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'build'
+        arguments: '-c $(buildConfiguration) -o $(Build.SourcesDirectory)/latest'
+      displayName: 'Build for test'
+
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'custom'
+        custom: 'format'
+        arguments: '--dry-run --check --verbosity diagnostic'
+      displayName: 'Lint C# code'
+
+- stage: Publish
+  condition: eq(variables['isGitHubTag'], true)
+  jobs:
+  - job: Publish
     pool:
       vmImage: 'windows-latest'
     steps:
@@ -38,7 +72,8 @@ stages:
       displayName: 'Upload artifacts'
 
 - stage: Deploy
-  condition: and(succeeded(), eq(variables['isGitHubTag'], true))
+  dependsOn: Publish
+  condition: succeeded("Publish")
   jobs:
   - job: Deploy
     pool:
