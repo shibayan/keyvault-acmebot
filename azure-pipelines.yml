@@ -73,7 +73,7 @@ stages:
 
 - stage: Deploy
   dependsOn: Publish
-  condition: succeeded("Publish")
+  condition: succeeded('Publish')
   jobs:
   - job: Deploy
     pool:
