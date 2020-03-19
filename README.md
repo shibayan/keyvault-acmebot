@@ -14,6 +14,12 @@ This function provide easy automation of Let's Encrypt for Azure Key Vault. This
 
 Use Key Vault for secure and centralized management of Let's Encrypt certificates.
 
+## Notice
+
+### Upgrade to Acmebot v3
+
+https://github.com/shibayan/keyvault-acmebot/issues/80
+
 ## Table Of Contents
 
 - [Feature Support](#feature-support)
