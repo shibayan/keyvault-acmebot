@@ -79,15 +79,15 @@ stages:
     pool:
       vmImage: 'windows-latest'
     steps:
-      - checkout: none
-      - download: current
+    - checkout: none
+    - download: current
 
-      - task: AzureFileCopy@3
-        inputs:
-          sourcePath: '$(Pipeline.Workspace)/**/latest.zip'
-          azureSubscription: 'Visual Studio Enterprise'
-          destination: 'AzureBlob'
-          storage: 'shibayan'
-          containerName: 'azure-keyvault-letsencrypt'
-          blobPrefix: 'v3'
-        displayName: 'Deploy to Storage Blob'
+    - task: AzureFileCopy@3
+      inputs:
+        sourcePath: '$(Pipeline.Workspace)/**/latest.zip'
+        azureSubscription: 'Visual Studio Enterprise'
+        destination: 'AzureBlob'
+        storage: 'shibayan'
+        containerName: 'azure-keyvault-letsencrypt'
+        blobPrefix: 'v3'
+      displayName: 'Deploy to Storage Blob'
