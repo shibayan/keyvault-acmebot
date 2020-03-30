@@ -22,12 +22,12 @@ https://github.com/shibayan/keyvault-acmebot/issues/80
 
 ## 目次
 
-- [対応している機能](#feature-support)
-- [必要なもの](#requirements)
-- [開始する](#getting-started)
-- [使い方](#usage)
-- [謝辞](#thanks)
-- [ライセンス](#license)
+- [対応している機能](#対応している機能)
+- [必要なもの](#必要なもの)
+- [開始する](#開始する)
+- [使い方](#使い方)
+- [謝辞](#謝辞)
+- [ライセンス](#ライセンス)
 
 ## 対応している機能
 
