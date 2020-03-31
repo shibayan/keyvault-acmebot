@@ -40,7 +40,7 @@ https://github.com/shibayan/keyvault-acmebot/issues/80
 ## 必要なもの
 
 - Azure サブスクリプション
-- カスタムドメインを登録済みの App Service
+- Azure DNS と Azure Key Vault (Key Vault はデプロイ時に作成が可能)
 - E メールアドレス (Let's Encrypt の利用登録に必要)
 
 ## 開始する
