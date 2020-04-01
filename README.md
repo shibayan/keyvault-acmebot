@@ -64,7 +64,7 @@ Open the `Authentication / Authorization` menu in Azure Portal and enable App Se
 
 ![Enable App Service Authentication with AAD](https://user-images.githubusercontent.com/1356444/49693401-ecc7c400-fbb4-11e8-9ae1-5d376a4d8a05.png)
 
-Select Azure Active Directory as the authentication provider, select `Simple` as the management mode, and select OK.
+Select Azure Active Directory as the authentication provider, select `Express` as the management mode, and select OK.
 
 ![Create New Azure AD App](https://user-images.githubusercontent.com/1356444/49693412-6f508380-fbb5-11e8-81fb-6bbcbe47654e.png)
 
@@ -94,7 +94,7 @@ If the `Access Control (IAM)` setting is not correct, nothing will be shown in t
 
 ### App Service (Web Apps / Functions / Containers)
 
-You can import the Key Vault certificate to the App Service by opening the `TLS/SSL Settings` from Azure Portal and selecting the `Import Key Vault Certificate' button from the `Private Key Certificate (.pfx)'.
+You can import the Key Vault certificate to the App Service by opening the `TLS/SSL Settings` from Azure Portal and selecting the `Import Key Vault Certificate` button from the `Private Key Certificate (.pfx)`.
 
 ![image](https://user-images.githubusercontent.com/1356444/64438173-974c2380-d102-11e9-88c0-5ed34a5ce42a.png)
 
