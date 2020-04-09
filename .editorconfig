@@ -182,3 +182,11 @@ indent_size = 2
 end_of_line = lf
 [*.{cmd, bat}]
 end_of_line = crlf
+
+# JavaScript files
+[*.{js,json}]
+indent_size= 2
+
+# Html files
+[*.html]
+indent_size= 2
