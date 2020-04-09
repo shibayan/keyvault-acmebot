@@ -1,0 +1,177 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Key Vault Acmebot</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.8.1/css/bulma.min.css">
+  <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+</head>
+<body>
+  <section class="section">
+    <div class="container">
+      <h1 class="title">
+        Add Certificate
+      </h1>
+      <div id="app">
+        <div class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">DNS Zone</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control">
+                <div class="select" v-bind:class="{ 'is-loading': loading }">
+                  <select v-model="zoneName" v-on:change="reset">
+                    <option disabled value="">Please select one</option>
+                    <option v-for="zone in zones" :value="zone">{{ zone }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">Domains</label>
+          </div>
+          <div class="field-body">
+            <div class="field has-addons">
+              <p class="control">
+                <input v-model="recordName" class="input" type="text" placeholder="Record name">
+              </p>
+              <p class="control">
+                <a class="button is-static">
+                  .{{ zoneName }}
+                </a>
+              </p>
+              <p class="control">
+                <button class="button is-info" v-on:click="add">Add</button>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="field is-horizontal">
+          <div class="field-label"></div>
+          <div class="field-body">
+            <div class="content">
+              <div class="tags">
+                <span v-for="domain in domains" class="tag is-light is-medium">
+                  {{ domain }}
+                  <button class="delete is-small" v-on:click="remove(domain)"></button>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="field is-horizontal">
+          <div class="field-label"></div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control">
+                <button class="button is-primary" v-on:click="submit" v-bind:class="{ 'is-loading': sending }">Submit</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
+  <script>
+    const delay = (millisecondsDelay) => {
+      return new Promise(resolve => setTimeout(() => resolve(), millisecondsDelay));
+    }
+
+    const app = new Vue({
+      el: "#app",
+      data: {
+        zones: [],
+        zoneName: "",
+        domains: [],
+        recordName: "",
+        loading: false,
+        sending: false
+      },
+      methods: {
+        load: async function () {
+          this.loading = true;
+
+          try {
+            const response = await axios.get("/api/get-dns-zones");
+
+            if (response.status === 200) {
+              this.$set(this, "zones", response.data);
+            }
+          } catch (error) {
+            alert(error);
+          }
+
+          this.loading = false;
+        },
+        reload: function () {
+          this.zones = [];
+          this.zoneName = "";
+          this.domains = [];
+          this.recordName = "";
+
+          this.load();
+        },
+        add: function () {
+          if (this.zoneName === "") {
+            return;
+          }
+
+          const domain = this.recordName === "" ? this.zoneName : this.recordName + "." + this.zoneName;
+
+          if (this.domains.indexOf(domain) === -1) {
+            this.domains.push(domain);
+          }
+
+          this.recordName = "";
+        },
+        remove: function (domain) {
+          this.domains = this.domains.filter(x => x !== domain);
+        },
+        reset: function () {
+          this.domains = [];
+          this.recordName = "";
+        },
+        submit: async function () {
+          if (this.domains.length === 0) {
+            alert("At least one domain is required");
+            return;
+          }
+
+          this.sending = true;
+
+          var response = await axios.post("/api/add-certificate", { Domains: this.domains });
+
+          while (true) {
+            await delay(5000);
+
+            try {
+              response = await axios.get(response.headers["location"]);
+            } catch {
+              alert("An error has occurred. No certificate was issued.");
+              break;
+            }
+
+            if (response.status === 200) {
+              alert("The certificate was successfully issued.");
+              break;
+            }
+          }
+
+          this.reload();
+          this.sending = false;
+        }
+      },
+      beforeMount: function () {
+        this.load();
+      }
+    });
+  </script>
+</body>
+</html>

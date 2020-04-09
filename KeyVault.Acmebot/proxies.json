@@ -5,7 +5,7 @@
       "matchCondition": {
         "route": "add-certificate"
       },
-      "backendUri": "https://shibayan.blob.core.windows.net/azure-keyvault-letsencrypt/index.v2.html"
+      "backendUri": "http://localhost/api/static-page/index"
     }
   }
 }
