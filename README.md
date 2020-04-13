@@ -4,7 +4,7 @@
 [![Release](https://img.shields.io/github/release/shibayan/keyvault-acmebot.svg)](https://github.com/shibayan/keyvault-acmebot/releases/latest)
 [![License](https://img.shields.io/github/license/shibayan/keyvault-acmebot.svg)](https://github.com/shibayan/keyvault-acmebot/blob/master/LICENSE)
 
-This is an application to automate the issuance and renewal of Let's Encrypt certificates stored in the Azure Key Vault. We have started to address the following requirements:
+This is an application to automate the issuance and renewal of [Let's Encrypt](https://letsencrypt.org/) certificates stored in the Azure Key Vault. We have started to address the following requirements:
 
 - Using the Azure Key Vault to store certificates securely
 - Centralized management of a large number of certificates using a single Key Vault
