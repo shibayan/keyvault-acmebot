@@ -4,11 +4,11 @@
 [![Release](https://img.shields.io/github/release/shibayan/keyvault-acmebot.svg)](https://github.com/shibayan/keyvault-acmebot/releases/latest)
 [![License](https://img.shields.io/github/license/shibayan/keyvault-acmebot.svg)](https://github.com/shibayan/keyvault-acmebot/blob/master/LICENSE)
 
-This is an application to automate the issuance and renewal of Let's Encrypt certificates for the Azure Key Vault. We have started to solve the following issues
+This is an application to automate the issuance and renewal of [Let's Encrypt](https://letsencrypt.org/) certificates stored in the Azure Key Vault. We have started to address the following requirements:
 
-- Using the Key Vault to store certificates securely
+- Using the Azure Key Vault to store certificates securely
 - Centralized management of a large number of certificates using a single Key Vault
-- Easy to deploy and configure
+- Easy to deploy and configure solution
 - Highly reliable implementation
 - Ease of Monitoring (Application Insights, Webhook)
 
@@ -40,7 +40,8 @@ https://github.com/shibayan/keyvault-acmebot/issues/80
 ## Requirements
 
 - Azure Subscription
-- Azure DNS and Azure Key Vault (Key Vault can be created at deployment time)
+- Azure DNS 
+- Azure Key Vault (existing one or new Key Vault can be created at deployment time)
 - Email address (required to register with Let's Encrypt)
 
 ## Getting Started
@@ -53,6 +54,7 @@ https://github.com/shibayan/keyvault-acmebot/issues/80
 
 ### 2. Add application settings
 
+Update the following configuration settings of the Function App:
 - LetsEncrypt:VaultBaseUrl
   - DNS name of the Azure Key Vault (if you are using an existing Key Vault)
 - LetsEncrypt:Webhook
@@ -60,7 +62,7 @@ https://github.com/shibayan/keyvault-acmebot/issues/80
 
 ### 3. Enabling App Service Authentication
 
-Open the `Authentication / Authorization` menu in Azure Portal and enable App Service authentication. Select the `Login with Azure Active Directory` as the action to perform if the request is not authenticated. We recommend using Azure Active Directory as your authentication provider, but it works with other providers as well, although it's not supported.
+Open the Azure Portal, navigate to the `Authentication / Authorization` menu of the deployed Function App and enable App Service authentication. Select the `Login with Azure Active Directory` as the action to perform if the request is not authenticated. We recommend using Azure Active Directory as your authentication provider, but it works with other providers as well, although it's not supported.
 
 ![Enable App Service Authentication with AAD](https://user-images.githubusercontent.com/1356444/49693401-ecc7c400-fbb4-11e8-9ae1-5d376a4d8a05.png)
 
