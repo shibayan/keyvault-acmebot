@@ -4,19 +4,22 @@
 [![Release](https://img.shields.io/github/release/shibayan/keyvault-acmebot.svg)](https://github.com/shibayan/keyvault-acmebot/releases/latest)
 [![License](https://img.shields.io/github/license/shibayan/keyvault-acmebot.svg)](https://github.com/shibayan/keyvault-acmebot/blob/master/LICENSE)
 
-This is an application to automate the issuance and renewal of [Let's Encrypt](https://letsencrypt.org/) certificates stored in the Azure Key Vault. We have started to address the following requirements:
+This application automates the issuance and renewal of [Let's Encrypt](https://letsencrypt.org/) SSL/TLS certificates. The certificates are stored inside Azure Key Vault. Many Azure services such as Azure App Service, Application Gateway, CDN, etc. are able to import certificates directly from Key Vault. 
 
-- Using the Azure Key Vault to store certificates securely
-- Centralized management of a large number of certificates using a single Key Vault
+We have started to address the following requirements:
+
+- Use the Azure Key Vault to store SSL/TLS certificates securely
+- Centralize management of a large number of certificates using a single Key Vault
 - Easy to deploy and configure solution
 - Highly reliable implementation
 - Ease of Monitoring (Application Insights, Webhook)
 
-Key Vault allows for secure and centralized management of Let's Encrypt certificates.
+Key Vault allows for secure and centralized management of [Let's Encrypt](https://letsencrypt.org/) certificates.
 
 ## Caution
 
 ### Upgrading to Acmebot v3
+Key Vault Acmebot v3 has been released since December 31, 2019. Users deploying earlier than this are encouraged to upgrade to v3 by following the ugprade process described here:
 
 https://github.com/shibayan/keyvault-acmebot/issues/80
 
@@ -36,6 +39,7 @@ https://github.com/shibayan/keyvault-acmebot/issues/80
 - Azure Application Gateway v2
 - Issuing certificates with SANs (subject alternative names) (one certificate for multiple domains)
 - Issuing certificates and wildcard certificates for Zone Apex domains
+- Automated certificate renewal
 
 ## Requirements
 
@@ -61,6 +65,8 @@ Update the following configuration settings of the Function App:
   - Webhook destination URL (optional, Slack and Microsoft Teams are recommended)
 
 ### 3. Enabling App Service Authentication
+
+You must enable Authentication on the Function App that is deployed as part of this application. 
 
 Open the Azure Portal, navigate to the `Authentication / Authorization` menu of the deployed Function App and enable App Service authentication. Select the `Login with Azure Active Directory` as the action to perform if the request is not authenticated. We recommend using Azure Active Directory as your authentication provider, but it works with other providers as well, although it's not supported.
 
