@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Azure.WebJobs.Extensions.HttpApi;
+
 using DurableTask.TypedProxy;
 
 using KeyVault.Acmebot.Contracts;
@@ -16,8 +18,13 @@ using Microsoft.Extensions.Logging;
 
 namespace KeyVault.Acmebot
 {
-    public class GetDnsZonesFunctions
+    public class GetDnsZonesFunctions : HttpFunctionBase
     {
+        public GetDnsZonesFunctions(IHttpContextAccessor httpContextAccessor)
+            : base(httpContextAccessor)
+        {
+        }
+
         [FunctionName(nameof(GetDnsZones))]
         public async Task<IList<string>> GetDnsZones([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
@@ -34,9 +41,9 @@ namespace KeyVault.Acmebot
             [DurableClient] IDurableClient starter,
             ILogger log)
         {
-            if (!req.HttpContext.User.Identity.IsAuthenticated)
+            if (!User.Identity.IsAuthenticated)
             {
-                return new UnauthorizedResult();
+                return Unauthorized();
             }
 
             // Function input comes from the request content.

@@ -20,6 +20,11 @@ namespace KeyVault.Acmebot
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "static-page/index")] HttpRequest req,
             ILogger log)
         {
+            if (!User.Identity.IsAuthenticated)
+            {
+                return Forbid();
+            }
+
             return File("index.html", "text/html");
         }
     }
