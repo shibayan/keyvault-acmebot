@@ -145,15 +145,22 @@
           }
 
           this.sending = true;
+          var response;
 
-          var response = await axios.post("/api/add-certificate", { Domains: this.domains });
+          try {
+            response = await axios.post("/api/add-certificate", { Domains: this.domains });
+          } catch (error) {
+            alert("An error has occurred. No certificate was issued.");
+            this.sending = false;
+            return;
+          }
 
           while (true) {
             await delay(5000);
 
             try {
               response = await axios.get(response.headers["location"]);
-            } catch {
+            } catch (error) {
               alert("An error has occurred. No certificate was issued.");
               break;
             }
