@@ -17,7 +17,7 @@ namespace KeyVault.Acmebot.Contracts
     {
         Task<IList<CertificateBundle>> GetCertificates(DateTime currentDateTime);
 
-        Task<IList<Zone>> GetZones(object input = null);
+        Task<IList<string>> GetZones(object input = null);
 
         Task<OrderDetails> Order(string[] hostNames);
 

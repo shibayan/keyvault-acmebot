@@ -32,7 +32,7 @@ namespace KeyVault.Acmebot
 
             var zones = await activity.GetZones();
 
-            return zones.Select(x => x.Name).ToArray();
+            return zones;
         }
 
         [FunctionName(nameof(GetDnsZones_HttpStart))]
