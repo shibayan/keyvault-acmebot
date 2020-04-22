@@ -16,11 +16,10 @@ using DurableTask.TypedProxy;
 using KeyVault.Acmebot.Contracts;
 using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Models;
+using KeyVault.Acmebot.Providers;
 
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
-using Microsoft.Azure.Management.Dns;
-using Microsoft.Azure.Management.Dns.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Options;
@@ -29,24 +28,24 @@ namespace KeyVault.Acmebot
 {
     public class SharedFunctions : ISharedFunctions
     {
-        public SharedFunctions(IHttpClientFactory httpClientFactory, LookupClient lookupClient,
-                               IAcmeProtocolClientFactory acmeProtocolClientFactory, IOptions<LetsEncryptOptions> options,
-                               KeyVaultClient keyVaultClient, DnsManagementClient dnsManagementClient)
+        public SharedFunctions(IHttpClientFactory httpClientFactory, IAcmeProtocolClientFactory acmeProtocolClientFactory,
+                               IDnsProvider dnsProvider, LookupClient lookupClient,
+                               KeyVaultClient keyVaultClient, IOptions<LetsEncryptOptions> options)
         {
             _httpClientFactory = httpClientFactory;
-            _lookupClient = lookupClient;
             _acmeProtocolClientFactory = acmeProtocolClientFactory;
-            _options = options.Value;
+            _dnsProvider = dnsProvider;
+            _lookupClient = lookupClient;
             _keyVaultClient = keyVaultClient;
-            _dnsManagementClient = dnsManagementClient;
+            _options = options.Value;
         }
 
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly LookupClient _lookupClient;
         private readonly IAcmeProtocolClientFactory _acmeProtocolClientFactory;
-        private readonly LetsEncryptOptions _options;
+        private readonly IDnsProvider _dnsProvider;
+        private readonly LookupClient _lookupClient;
         private readonly KeyVaultClient _keyVaultClient;
-        private readonly DnsManagementClient _dnsManagementClient;
+        private readonly LetsEncryptOptions _options;
 
         [FunctionName(nameof(IssueCertificate))]
         public async Task IssueCertificate([OrchestrationTrigger] IDurableOrchestrationContext context)
@@ -64,7 +63,7 @@ namespace KeyVault.Acmebot
             // ACME Challenge を実行
             var challengeResults = await activity.Dns01Authorization(orderDetails.Payload.Authorizations);
 
-            // Azure DNS で正しくレコードが引けるか確認
+            // DNS で正しくレコードが引けるか確認
             await activity.CheckDnsChallenge(challengeResults);
 
             // ACME Answer を実行
@@ -96,9 +95,11 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(GetZones))]
-        public Task<IList<Zone>> GetZones([ActivityTrigger] object input = null)
+        public async Task<IList<string>> GetZones([ActivityTrigger] object input = null)
         {
-            return _dnsManagementClient.Zones.ListAllAsync();
+            var zones = await _dnsProvider.ListZonesAsync();
+
+            return zones.Select(x => x.Name).ToArray();
         }
 
         [FunctionName(nameof(Order))]
@@ -112,14 +113,14 @@ namespace KeyVault.Acmebot
         [FunctionName(nameof(Dns01Precondition))]
         public async Task Dns01Precondition([ActivityTrigger] string[] hostNames)
         {
-            // Azure DNS が存在するか確認
-            var zones = await _dnsManagementClient.Zones.ListAllAsync();
+            // DNS zone が存在するか確認
+            var zones = await _dnsProvider.ListZonesAsync();
 
             foreach (var hostName in hostNames)
             {
                 if (!zones.Any(x => string.Equals(hostName, x.Name, StringComparison.OrdinalIgnoreCase) || hostName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase)))
                 {
-                    throw new InvalidOperationException($"Azure DNS zone \"{hostName}\" is not found");
+                    throw new InvalidOperationException($"DNS zone \"{hostName}\" is not found");
                 }
             }
         }
@@ -150,10 +151,10 @@ namespace KeyVault.Acmebot
                 });
             }
 
-            // Azure DNS zone の一覧を取得する
-            var zones = await _dnsManagementClient.Zones.ListAllAsync();
+            // DNS zone の一覧を取得する
+            var zones = await _dnsProvider.ListZonesAsync();
 
-            // DNS-01 の検証レコード名毎に Azure DNS に TXT レコードを作成
+            // DNS-01 の検証レコード名毎に DNS に TXT レコードを作成
             foreach (var lookup in challengeResults.ToLookup(x => x.DnsRecordName))
             {
                 var dnsRecordName = lookup.Key;
@@ -162,19 +163,10 @@ namespace KeyVault.Acmebot
                                 .OrderByDescending(x => x.Name.Length)
                                 .First();
 
-                var resourceGroup = ExtractResourceGroup(zone.Id);
-
-                // Challenge の詳細から Azure DNS 向けにレコード名を作成
+                // Challenge の詳細から DNS 向けにレコード名を作成
                 var acmeDnsRecordName = dnsRecordName.Replace($".{zone.Name}", "", StringComparison.OrdinalIgnoreCase);
 
-                // 既存の TXT レコードがあれば取得する
-                var recordSet = await _dnsManagementClient.RecordSets.GetOrDefaultAsync(resourceGroup, zone.Name, acmeDnsRecordName, RecordType.TXT) ?? new RecordSet();
-
-                // TXT レコードに TTL と値をセットする
-                recordSet.TTL = 60;
-                recordSet.TxtRecords = lookup.Select(x => new TxtRecord(new[] { x.DnsRecordValue })).ToArray();
-
-                await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(resourceGroup, zone.Name, acmeDnsRecordName, RecordType.TXT, recordSet);
+                await _dnsProvider.UpsertTxtRecordAsync(zone, acmeDnsRecordName, lookup.Select(x => x.DnsRecordValue));
             }
 
             return challengeResults;
@@ -285,13 +277,6 @@ namespace KeyVault.Acmebot
             x509Certificates.ImportFromPem(certificateData);
 
             await _keyVaultClient.MergeCertificateAsync(_options.VaultBaseUrl, certificateName, x509Certificates);
-        }
-
-        private static string ExtractResourceGroup(string resourceId)
-        {
-            var values = resourceId.Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-            return values[3];
         }
     }
 }

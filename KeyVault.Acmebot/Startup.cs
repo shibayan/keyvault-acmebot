@@ -2,6 +2,7 @@
 
 using KeyVault.Acmebot;
 using KeyVault.Acmebot.Internal;
+using KeyVault.Acmebot.Providers;
 
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Azure.KeyVault;
@@ -50,6 +51,8 @@ namespace KeyVault.Acmebot
 
             builder.Services.AddSingleton<IAcmeProtocolClientFactory, AcmeProtocolClientFactory>();
             builder.Services.AddSingleton<ILifeCycleNotificationHelper, WebhookLifeCycleNotification>();
+
+            builder.Services.AddSingleton<IDnsProvider, AzureDnsProvider>();
 
             builder.Services.Configure<LetsEncryptOptions>(Configuration.GetSection("LetsEncrypt"));
         }
