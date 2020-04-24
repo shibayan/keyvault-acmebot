@@ -21,8 +21,8 @@
           <div class="field-body">
             <div class="field">
               <div class="control">
-                <div class="select" v-bind:class="{ 'is-loading': loading }">
-                  <select v-model="zoneName" v-on:change="reset">
+                <div class="select" :class="{ 'is-loading': loading }">
+                  <select v-model="zoneName" @change="reset">
                     <option disabled value="">Please select one</option>
                     <option v-for="zone in zones" :value="zone">{{ zone }}</option>
                   </select>
@@ -38,7 +38,7 @@
           <div class="field-body">
             <div class="field has-addons">
               <p class="control">
-                <input v-model="recordName" class="input" type="text" placeholder="Record name">
+                <input v-model="recordName" class="input" type="text" placeholder="Record name" :disabled="zoneName.length === 0">
               </p>
               <p class="control">
                 <a class="button is-static">
@@ -46,7 +46,7 @@
                 </a>
               </p>
               <p class="control">
-                <button class="button is-info" v-on:click="add">Add</button>
+                <button class="button is-info" @click="add" :disabled="zoneName.length === 0">Add</button>
               </p>
             </div>
           </div>
@@ -58,7 +58,7 @@
               <div class="tags">
                 <span v-for="domain in domains" class="tag is-light is-medium">
                   {{ domain }}
-                  <button class="delete is-small" v-on:click="remove(domain)"></button>
+                  <button class="delete is-small" @click="remove(domain)"></button>
                 </span>
               </div>
             </div>
@@ -69,7 +69,7 @@
           <div class="field-body">
             <div class="field">
               <div class="control">
-                <button class="button is-primary" v-on:click="submit" v-bind:class="{ 'is-loading': sending }">Submit</button>
+                <button class="button is-primary" @click="submit" :class="{ 'is-loading': sending }" :disabled="domains.length === 0">Submit</button>
               </div>
             </div>
           </div>
@@ -79,7 +79,7 @@
   </section>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
-  <script>
+<script>
     const delay = (millisecondsDelay) => {
       return new Promise(resolve => setTimeout(() => resolve(), millisecondsDelay));
     }
@@ -139,35 +139,34 @@
           this.recordName = "";
         },
         submit: async function () {
-          if (this.domains.length === 0) {
-            alert("At least one domain is required");
-            return;
-          }
-
           this.sending = true;
-          var response;
 
           try {
-            response = await axios.post("/api/add-certificate", { Domains: this.domains });
-          } catch (error) {
-            alert("An error has occurred. No certificate was issued.");
-            this.sending = false;
-            return;
-          }
+            let response = await axios.post("/api/add-certificate", { Domains: this.domains });
 
-          while (true) {
-            await delay(5000);
+            while (true) {
+              await delay(5000);
 
-            try {
               response = await axios.get(response.headers["location"]);
-            } catch (error) {
-              alert("An error has occurred. No certificate was issued.");
-              break;
-            }
 
-            if (response.status === 200) {
-              alert("The certificate was successfully issued.");
-              break;
+              if (response.status === 200) {
+                alert("The certificate was successfully issued.");
+                break;
+              }
+            }
+          } catch (error) {
+            const problem = error.response.data;
+
+            if (error.response.status === 400) {
+              const errors = [];
+
+              for (let key in problem.errors) {
+                errors.push(problem.errors[key][0]);
+              }
+
+              alert(errors.join("\n"));
+            } else {
+              alert(problem.detail)
             }
           }
 
