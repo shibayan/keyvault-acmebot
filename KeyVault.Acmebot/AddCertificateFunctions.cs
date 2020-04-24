@@ -33,7 +33,7 @@ namespace KeyVault.Acmebot
 
             if (!TryValidateModel(request))
             {
-                return BadRequest(ModelState);
+                return ValidationProblem(ModelState);
             }
 
             // Function input comes from the request content.
@@ -41,7 +41,40 @@ namespace KeyVault.Acmebot
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
-            return starter.CreateCheckStatusResponse(Request, instanceId, true);
+            return AcceptedAtFunction(nameof(AddCertificate_HttpPoll), new { instanceId }, null);
+        }
+
+        [FunctionName(nameof(AddCertificate_HttpPoll))]
+        public async Task<IActionResult> AddCertificate_HttpPoll(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "add-certificate/{instanceId}")] HttpRequest req,
+            string instanceId,
+            [DurableClient] IDurableClient starter)
+        {
+            if (!User.Identity.IsAuthenticated)
+            {
+                return Unauthorized();
+            }
+
+            var status = await starter.GetStatusAsync(instanceId);
+
+            if (status == null)
+            {
+                return BadRequest();
+            }
+
+            if (status.RuntimeStatus == OrchestrationRuntimeStatus.Failed)
+            {
+                return Problem(status.Output.ToString());
+            }
+
+            if (status.RuntimeStatus == OrchestrationRuntimeStatus.Running ||
+                status.RuntimeStatus == OrchestrationRuntimeStatus.Pending ||
+                status.RuntimeStatus == OrchestrationRuntimeStatus.ContinuedAsNew)
+            {
+                return AcceptedAtFunction(nameof(AddCertificate_HttpPoll), new { instanceId }, null);
+            }
+
+            return Ok();
         }
     }
 }
