@@ -18,7 +18,7 @@ Key Vault allows for secure and centralized management of [Let's Encrypt](https:
 
 ## Caution
 
-### Upgrading to Acmebot v3
+### Upgrade to Acmebot v3
 Key Vault Acmebot v3 has been released since December 31, 2019. Users deploying earlier than this are encouraged to upgrade to v3 by following the ugprade process described here:
 
 https://github.com/shibayan/keyvault-acmebot/issues/80
@@ -43,8 +43,9 @@ https://github.com/shibayan/keyvault-acmebot/issues/80
 
 ## Requirements
 
-- Azure Subscription
-- Azure DNS 
+You will need the follwing:
+- Azure Subscription (required to deploy this solution)
+- Azure DNS (required to host your public DNS zone)
 - Azure Key Vault (existing one or new Key Vault can be created at deployment time)
 - Email address (required to register with Let's Encrypt)
 
@@ -64,7 +65,7 @@ Update the following configuration settings of the Function App:
 - LetsEncrypt:Webhook
   - Webhook destination URL (optional, Slack and Microsoft Teams are recommended)
 
-### 3. Enabling App Service Authentication
+### 3. Enable App Service Authentication
 
 You must enable Authentication on the Function App that is deployed as part of this application. 
 
@@ -92,7 +93,7 @@ Open the access policy of the Key Vault and add the `Certificate management` acc
 
 ## Usage
 
-### Issuing a new certificate
+### Issue a new certificate
 
 Access `https://YOUR-FUNCTIONS.azurewebsites.net/add-certificate` with a browser and authenticate with Azure Active Directory and the Web UI will be displayed. Select the target domain from that screen, add the required subdomains, and run, and after a few tens of seconds, the certificate will be issued.
 
@@ -100,7 +101,12 @@ Access `https://YOUR-FUNCTIONS.azurewebsites.net/add-certificate` with a browser
 
 If the `Access Control (IAM)` setting is not correct, nothing will be shown in the drop-down list.
 
-### App Service (Web Apps / Functions / Containers)
+### Renew an existing certificate
+All existing Let's Encrypt certificates are automatically renewed 30 days before their expiration. 
+
+### How to use the issued certificate in Azure services
+
+#### App Service (Web Apps / Functions / Containers)
 
 You can import the Key Vault certificate to the App Service by opening the `TLS/SSL Settings` from Azure Portal and selecting the `Import Key Vault Certificate` button from the `Private Key Certificate (.pfx)`.
 
@@ -108,18 +114,24 @@ You can import the Key Vault certificate to the App Service by opening the `TLS/
 
 After importing, the App Service will automatically check for certificate updates.
 
-### Application Gateway v2
+#### Application Gateway v2
 
 - https://docs.microsoft.com/en-us/azure/application-gateway/key-vault-certs
 
-### Azure CDN / Front Door
+#### Azure CDN
 
 - https://docs.microsoft.com/en-us/azure/cdn/cdn-custom-ssl?tabs=option-2-enable-https-with-your-own-certificate
+
+#### Azure Front Door
+
 - https://docs.microsoft.com/en-us/azure/frontdoor/front-door-custom-domain-https#option-2-use-your-own-certificate
 
-### API Management
+#### API Management
 
 - https://docs.microsoft.com/en-us/azure/api-management/configure-custom-domain
+
+#### Other services
+The issued certificate can be downloaded from Key Vault and used elsewhere, either in Azure or outside Azure. 
 
 ## Thanks
 
