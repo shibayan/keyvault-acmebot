@@ -24,7 +24,7 @@
                 <div class="select" :class="{ 'is-loading': loading }">
                   <select v-model="zoneName" @change="reset">
                     <option disabled value="">Please select one</option>
-                    <option v-for="zone in zones" :value="zone">{{ zone }}</option>
+                    <option v-for="zone in zones" :value="zone">{{ zone | punycode }}</option>
                   </select>
                 </div>
               </div>
@@ -42,7 +42,7 @@
               </p>
               <p class="control">
                 <a class="button is-static">
-                  .{{ zoneName }}
+                  .{{ zoneName | punycode }}
                 </a>
               </p>
               <p class="control">
@@ -57,7 +57,7 @@
             <div class="content">
               <div class="tags">
                 <span v-for="domain in domains" class="tag is-light is-medium">
-                  {{ domain }}
+                  {{ domain | punycode }}
                   <button class="delete is-small" @click="remove(domain)"></button>
                 </span>
               </div>
@@ -79,10 +79,15 @@
   </section>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
-<script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/punycode/1.4.1/punycode.min.js"></script>
+  <script>
     const delay = (millisecondsDelay) => {
       return new Promise(resolve => setTimeout(() => resolve(), millisecondsDelay));
     }
+
+    Vue.filter("punycode", function (value) {
+      return punycode.toUnicode(value);
+    });
 
     const app = new Vue({
       el: "#app",
@@ -123,7 +128,7 @@
             return;
           }
 
-          const domain = this.recordName === "" ? this.zoneName : this.recordName + "." + this.zoneName;
+          const domain = this.recordName === "" ? this.zoneName : punycode.toASCII(this.recordName) + "." + this.zoneName;
 
           if (this.domains.indexOf(domain) === -1) {
             this.domains.push(domain);

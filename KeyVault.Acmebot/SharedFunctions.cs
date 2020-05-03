@@ -50,15 +50,15 @@ namespace KeyVault.Acmebot
         [FunctionName(nameof(IssueCertificate))]
         public async Task IssueCertificate([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            var dnsNames = context.GetInput<string[]>();
+            var hostNames = context.GetInput<string[]>();
 
             var activity = context.CreateActivityProxy<ISharedFunctions>();
 
             // 前提条件をチェック
-            await activity.Dns01Precondition(dnsNames);
+            await activity.Dns01Precondition(hostNames);
 
             // 新しく ACME Order を作成する
-            var orderDetails = await activity.Order(dnsNames);
+            var orderDetails = await activity.Order(hostNames);
 
             // ACME Challenge を実行
             var challengeResults = await activity.Dns01Authorization(orderDetails.Payload.Authorizations);
@@ -72,7 +72,7 @@ namespace KeyVault.Acmebot
             // Order のステータスが ready になるまで 60 秒待機
             await activity.CheckIsReady(orderDetails);
 
-            await activity.FinalizeOrder((dnsNames, orderDetails));
+            await activity.FinalizeOrder((hostNames, orderDetails));
         }
 
         [FunctionName(nameof(GetCertificates))]
