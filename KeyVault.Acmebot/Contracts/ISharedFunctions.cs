@@ -9,7 +9,6 @@ using DurableTask.TypedProxy;
 using KeyVault.Acmebot.Models;
 
 using Microsoft.Azure.KeyVault.Models;
-using Microsoft.Azure.Management.Dns.Models;
 
 namespace KeyVault.Acmebot.Contracts
 {
