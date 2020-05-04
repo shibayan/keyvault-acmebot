@@ -53,9 +53,9 @@ https://github.com/shibayan/keyvault-acmebot/issues/80
 
 ### 2. アプリケーション設定の追加
 
-- LetsEncrypt:VaultBaseUrl
+- Acmebot:VaultBaseUrl
   - Azure Key Vault の DNS 名 (既に存在する Key Vault を使う場合)
-- LetsEncrypt:Webhook
+- Acmebot:Webhook
   - Webhook 送信先の URL (オプション, Slack と Microsoft Teams を推奨)
 
 ### 3. App Service 認証を有効化する

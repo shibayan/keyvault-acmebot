@@ -19,6 +19,7 @@ Key Vault allows for secure and centralized management of [Let's Encrypt](https:
 ## Caution
 
 ### Upgrade to Acmebot v3
+
 Key Vault Acmebot v3 has been released since December 31, 2019. Users deploying earlier than this are encouraged to upgrade to v3 by following the ugprade process described here:
 
 https://github.com/shibayan/keyvault-acmebot/issues/80
@@ -60,9 +61,9 @@ You will need the follwing:
 ### 2. Add application settings
 
 Update the following configuration settings of the Function App:
-- LetsEncrypt:VaultBaseUrl
+- Acmebot:VaultBaseUrl
   - DNS name of the Azure Key Vault (if you are using an existing Key Vault)
-- LetsEncrypt:Webhook
+- Acmebot:Webhook
   - Webhook destination URL (optional, Slack and Microsoft Teams are recommended)
 
 ### 3. Enable App Service Authentication
@@ -102,6 +103,7 @@ Access `https://YOUR-FUNCTIONS.azurewebsites.net/add-certificate` with a browser
 If the `Access Control (IAM)` setting is not correct, nothing will be shown in the drop-down list.
 
 ### Renew an existing certificate
+
 All existing Let's Encrypt certificates are automatically renewed 30 days before their expiration. 
 
 ### How to use the issued certificate in Azure services
@@ -131,6 +133,7 @@ After importing, the App Service will automatically check for certificate update
 - https://docs.microsoft.com/en-us/azure/api-management/configure-custom-domain
 
 #### Other services
+
 The issued certificate can be downloaded from Key Vault and used elsewhere, either in Azure or outside Azure. 
 
 ## Thanks

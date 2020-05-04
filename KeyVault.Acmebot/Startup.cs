@@ -41,7 +41,7 @@ namespace KeyVault.Acmebot
 
             builder.Services.AddSingleton(provider =>
             {
-                var options = provider.GetRequiredService<IOptions<LetsEncryptOptions>>();
+                var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
 
                 return new DnsManagementClient(new TokenCredentials(new AppAuthenticationTokenProvider()))
                 {
@@ -54,7 +54,7 @@ namespace KeyVault.Acmebot
 
             builder.Services.AddSingleton<IDnsProvider, AzureDnsProvider>();
 
-            builder.Services.Configure<LetsEncryptOptions>(Configuration.GetSection("LetsEncrypt"));
+            builder.Services.Configure<AcmebotOptions>(Configuration.GetSection("Acmebot") ?? Configuration.GetSection("LetsEncrypt"));
         }
     }
 }

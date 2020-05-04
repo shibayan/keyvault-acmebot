@@ -30,7 +30,7 @@ namespace KeyVault.Acmebot
     {
         public SharedFunctions(IHttpClientFactory httpClientFactory, IAcmeProtocolClientFactory acmeProtocolClientFactory,
                                IDnsProvider dnsProvider, LookupClient lookupClient,
-                               KeyVaultClient keyVaultClient, IOptions<LetsEncryptOptions> options)
+                               KeyVaultClient keyVaultClient, IOptions<AcmebotOptions> options)
         {
             _httpClientFactory = httpClientFactory;
             _acmeProtocolClientFactory = acmeProtocolClientFactory;
@@ -45,7 +45,7 @@ namespace KeyVault.Acmebot
         private readonly IDnsProvider _dnsProvider;
         private readonly LookupClient _lookupClient;
         private readonly KeyVaultClient _keyVaultClient;
-        private readonly LetsEncryptOptions _options;
+        private readonly AcmebotOptions _options;
 
         [FunctionName(nameof(IssueCertificate))]
         public async Task IssueCertificate([OrchestrationTrigger] IDurableOrchestrationContext context)

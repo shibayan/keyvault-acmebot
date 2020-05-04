@@ -125,15 +125,15 @@
               "value": "dotnet"
             },
             {
-              "name": "LetsEncrypt:SubscriptionId",
+              "name": "Acmebot:SubscriptionId",
               "value": "[subscription().subscriptionId]"
             },
             {
-              "name": "LetsEncrypt:Contacts",
+              "name": "Acmebot:Contacts",
               "value": "[variables('mailAddress')]"
             },
             {
-              "name": "LetsEncrypt:VaultBaseUrl",
+              "name": "Acmebot:VaultBaseUrl",
               "value": "[if(parameters('createWithKeyVault'), concat('https://', variables('functionAppName'), '.vault.azure.net/'), '')]"
             }
           ],
