@@ -4,7 +4,7 @@
 [![Release](https://img.shields.io/github/release/shibayan/keyvault-acmebot.svg)](https://github.com/shibayan/keyvault-acmebot/releases/latest)
 [![License](https://img.shields.io/github/license/shibayan/keyvault-acmebot.svg)](https://github.com/shibayan/keyvault-acmebot/blob/master/LICENSE)
 
-This application automates the issuance and renewal of [Let's Encrypt](https://letsencrypt.org/) SSL/TLS certificates. The certificates are stored inside Azure Key Vault. Many Azure services such as Azure App Service, Application Gateway, CDN, etc. are able to import certificates directly from Key Vault. 
+This application automates the issuance and renewal of ACME SSL/TLS certificates. The certificates are stored inside Azure Key Vault. Many Azure services such as Azure App Service, Application Gateway, CDN, etc. are able to import certificates directly from Key Vault. 
 
 We have started to address the following requirements:
 
@@ -14,7 +14,7 @@ We have started to address the following requirements:
 - Highly reliable implementation
 - Ease of Monitoring (Application Insights, Webhook)
 
-Key Vault allows for secure and centralized management of [Let's Encrypt](https://letsencrypt.org/) certificates.
+Key Vault allows for secure and centralized management of ACME certificates.
 
 ## Caution
 
@@ -41,6 +41,9 @@ https://github.com/shibayan/keyvault-acmebot/issues/80
 - Issuing certificates with SANs (subject alternative names) (one certificate for multiple domains)
 - Issuing certificates and wildcard certificates for Zone Apex domains
 - Automated certificate renewal
+- ACME-compliant Certification Authorities
+  - [Let's Encrypt](https://letsencrypt.org/)
+  - [Buypass Go SSL](https://www.buypass.com/ssl/resources/acme-free-ssl)
 
 ## Requirements
 
@@ -48,7 +51,7 @@ You will need the follwing:
 - Azure Subscription (required to deploy this solution)
 - Azure DNS (required to host your public DNS zone)
 - Azure Key Vault (existing one or new Key Vault can be created at deployment time)
-- Email address (required to register with Let's Encrypt)
+- Email address (required to register with ACME)
 
 ## Getting Started
 
@@ -104,7 +107,7 @@ If the `Access Control (IAM)` setting is not correct, nothing will be shown in t
 
 ### Renew an existing certificate
 
-All existing Let's Encrypt certificates are automatically renewed 30 days before their expiration. 
+All existing ACME certificates are automatically renewed 30 days before their expiration. 
 
 ### How to use the issued certificate in Azure services
 
