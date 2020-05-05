@@ -56,6 +56,7 @@ namespace KeyVault.Acmebot.Internal
 
                 SaveState(account, "account.json");
                 SaveState(accountKey, "account_key.json");
+                SaveState(directory, "directory.json");
 
                 acmeProtocolClient.Account = account;
             }
