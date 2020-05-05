@@ -1,7 +1,9 @@
 ﻿namespace KeyVault.Acmebot
 {
-    public class LetsEncryptOptions
+    public class AcmebotOptions
     {
+        public string Endpoint { get; set; } = "https://acme-v02.api.letsencrypt.org/";
+
         public string Contacts { get; set; }
 
         public string SubscriptionId { get; set; }

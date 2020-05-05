@@ -8,14 +8,14 @@ namespace KeyVault.Acmebot.Internal
 {
     internal class WebhookLifeCycleNotification : ILifeCycleNotificationHelper
     {
-        public WebhookLifeCycleNotification(IHttpClientFactory httpClientFactory, IOptions<LetsEncryptOptions> options)
+        public WebhookLifeCycleNotification(IHttpClientFactory httpClientFactory, IOptions<AcmebotOptions> options)
         {
             _httpClientFactory = httpClientFactory;
             _options = options.Value;
         }
 
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly LetsEncryptOptions _options;
+        private readonly AcmebotOptions _options;
 
         public Task OrchestratorStartingAsync(string hubName, string functionName, string instanceId, bool isReplay)
         {

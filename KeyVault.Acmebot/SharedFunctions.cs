@@ -30,7 +30,7 @@ namespace KeyVault.Acmebot
     {
         public SharedFunctions(IHttpClientFactory httpClientFactory, IAcmeProtocolClientFactory acmeProtocolClientFactory,
                                IDnsProvider dnsProvider, LookupClient lookupClient,
-                               KeyVaultClient keyVaultClient, IOptions<LetsEncryptOptions> options)
+                               KeyVaultClient keyVaultClient, IOptions<AcmebotOptions> options)
         {
             _httpClientFactory = httpClientFactory;
             _acmeProtocolClientFactory = acmeProtocolClientFactory;
@@ -45,7 +45,10 @@ namespace KeyVault.Acmebot
         private readonly IDnsProvider _dnsProvider;
         private readonly LookupClient _lookupClient;
         private readonly KeyVaultClient _keyVaultClient;
-        private readonly LetsEncryptOptions _options;
+        private readonly AcmebotOptions _options;
+
+        private const string OldIssuerName = "letsencrypt.org";
+        private const string IssuerName = "Acmebot";
 
         [FunctionName(nameof(IssueCertificate))]
         public async Task IssueCertificate([OrchestrationTrigger] IDurableOrchestrationContext context)
@@ -80,7 +83,7 @@ namespace KeyVault.Acmebot
         {
             var certificates = await _keyVaultClient.GetAllCertificatesAsync(_options.VaultBaseUrl);
 
-            var list = certificates.Where(x => x.Tags != null && x.Tags.TryGetValue("Issuer", out var issuer) && issuer == "letsencrypt.org")
+            var list = certificates.Where(x => x.Tags != null && x.Tags.TryGetValue("Issuer", out var issuer) && (issuer == OldIssuerName || issuer == IssuerName))
                                    .Where(x => (x.Attributes.Expires.Value - currentDateTime).TotalDays < 30)
                                    .ToArray();
 
@@ -250,7 +253,7 @@ namespace KeyVault.Acmebot
                     }
                 }, tags: new Dictionary<string, string>
                 {
-                    { "Issuer", "letsencrypt.org" }
+                    { "Issuer", IssuerName }
                 });
 
                 csr = request.Csr;
