@@ -54,7 +54,9 @@ namespace KeyVault.Acmebot
 
             builder.Services.AddSingleton<IDnsProvider, AzureDnsProvider>();
 
-            builder.Services.Configure<AcmebotOptions>(Configuration.GetSection("Acmebot") ?? Configuration.GetSection("LetsEncrypt"));
+            var section = Configuration.GetSection("Acmebot");
+
+            builder.Services.Configure<AcmebotOptions>(section.Exists() ? section : Configuration.GetSection("LetsEncrypt"));
         }
     }
 }
