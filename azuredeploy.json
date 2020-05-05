@@ -15,6 +15,17 @@
         "description": "Email address for Let's Encrypt account."
       }
     },
+    "acmeEndpoint": {
+      "type": "string",
+      "allowedValues": [
+        "https://acme-v02.api.letsencrypt.org/",
+        "https://api.buypass.com/acme/"
+      ],
+      "defaultValue": "https://acme-v02.api.letsencrypt.org/",
+      "metadata": {
+        "description": "Certification authority ACME Endpoint."
+      }
+    },
     "createWithKeyVault": {
       "type": "bool",
       "defaultValue": true,
@@ -43,6 +54,7 @@
     "storageAccountName": "[concat(uniquestring(resourceGroup().id, deployment().name), 'azfunctions')]",
     "storageAccountId": "[concat(resourceGroup().id, '/providers/', 'Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
     "mailAddress": "[parameters('mailAddress')]",
+    "acmeEndpoint": "[parameters('acmeEndpoint')]",
     "keyVaultSkuName": "[parameters('keyVaultSkuName')]"
   },
   "resources": [
@@ -131,6 +143,10 @@
             {
               "name": "Acmebot:Contacts",
               "value": "[variables('mailAddress')]"
+            },
+            {
+              "name": "Acmebot:Endpoint",
+              "value": "[variables('acmeEndpoint')]"
             },
             {
               "name": "Acmebot:VaultBaseUrl",
