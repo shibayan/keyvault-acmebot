@@ -1,0 +1,34 @@
+name: Publish
+
+on:
+  push:
+    tags: [ v* ]
+
+env:
+  DOTNET_VERSION: 3.1.201
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Use .NET Core ${{ env.DOTNET_VERSION }}
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Setup Version
+      id: setup_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
+
+    - name: Publish Functions
+      run: dotnet publish -c Release -o ./dist -p:Version=${{ steps.setup_version.outputs.VERSION }}
+
+    - name: Zip Functions
+      run: 7z a latest.zip ./dist/*
+
+    - name: Upload to Blob
+      run: az storage blob upload -f latest.zip -c azure-keyvault-letsencrypt -n v3/latest.zip
+      env:
+      - AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
