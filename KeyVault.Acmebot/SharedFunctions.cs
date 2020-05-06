@@ -28,8 +28,9 @@ namespace KeyVault.Acmebot
 {
     public class SharedFunctions : ISharedFunctions
     {
-        public SharedFunctions(IHttpClientFactory httpClientFactory, IAcmeProtocolClientFactory acmeProtocolClientFactory,
-                               IDnsProvider dnsProvider, LookupClient lookupClient,
+        public SharedFunctions(IHttpClientFactory httpClientFactory, LookupClient lookupClient,
+                               IAcmeProtocolClientFactory acmeProtocolClientFactory,
+                               IDnsProvider dnsProvider,
                                KeyVaultClient keyVaultClient, IOptions<AcmebotOptions> options)
         {
             _httpClientFactory = httpClientFactory;
@@ -41,9 +42,9 @@ namespace KeyVault.Acmebot
         }
 
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly LookupClient _lookupClient;
         private readonly IAcmeProtocolClientFactory _acmeProtocolClientFactory;
         private readonly IDnsProvider _dnsProvider;
-        private readonly LookupClient _lookupClient;
         private readonly KeyVaultClient _keyVaultClient;
         private readonly AcmebotOptions _options;
 
@@ -253,7 +254,8 @@ namespace KeyVault.Acmebot
                     }
                 }, tags: new Dictionary<string, string>
                 {
-                    { "Issuer", IssuerName }
+                    { "Issuer", IssuerName },
+                    { "Endpoint", _options.Endpoint }
                 });
 
                 csr = request.Csr;
