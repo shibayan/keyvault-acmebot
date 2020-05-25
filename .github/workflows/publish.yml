@@ -31,4 +31,4 @@ jobs:
     - name: Upload to Blob
       run: az storage blob upload -f latest.zip -c azure-keyvault-letsencrypt -n v3/latest.zip
       env:
-      - AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+        AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
