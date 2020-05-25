@@ -1,0 +1,155 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Key Vault Acmebot</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.8.1/css/bulma.min.css">
+  <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+</head>
+<body>
+  <section class="section">
+    <div class="container">
+      <h1 class="title">
+        Renew Certificate
+      </h1>
+      <div id="app">
+        <div class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">Key Vault Certificate</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control">
+                <div class="select" :class="{ 'is-loading': loading }">
+                  <select v-model="certificate">
+                    <option disabled value="">Please select one</option>
+                    <option v-for="certificate in certificates" :value="certificate">{{ certificate.name }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-if="certificate !== ''" class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">Expire</label>
+          </div>
+          <div class="field-body">
+            <div class="content">
+              {{ certificate.expire }}
+            </div>
+          </div>
+        </div>
+        <div v-if="certificate !== ''" class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">Domains</label>
+          </div>
+          <div class="field-body">
+            <div class="content">
+              <div class="tags">
+                <span v-for="domain in certificate.domains" class="tag is-light is-medium">
+                  {{ domain | punycode }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="field is-horizontal">
+          <div class="field-label"></div>
+          <div class="field-body">
+            <div class="field">
+              <div class="control">
+                <button class="button is-primary" @click="submit" :class="{ 'is-loading': sending }" :disabled="certificate === ''">Renew</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/punycode/1.4.1/punycode.min.js"></script>
+  <script>
+    const delay = (millisecondsDelay) => {
+      return new Promise(resolve => setTimeout(() => resolve(), millisecondsDelay));
+    }
+
+    Vue.filter("punycode", function (value) {
+      return punycode.toUnicode(value);
+    });
+
+    const app = new Vue({
+      el: "#app",
+      data: {
+        certificates: [],
+        certificate: "",
+        loading: false,
+        sending: false
+      },
+      methods: {
+        load: async function () {
+          this.loading = true;
+
+          try {
+            const response = await axios.get("/api/get-certificates");
+
+            if (response.status === 200) {
+              this.$set(this, "certificates", response.data);
+            }
+          } catch (error) {
+            alert(error);
+          }
+
+          this.loading = false;
+        },
+        reload: function () {
+          this.certificates = [];
+          this.certificate = "";
+
+          this.load();
+        },
+        submit: async function () {
+          this.sending = true;
+
+          try {
+            let response = await axios.post("/api/add-certificate", { Domains: this.certificate.domains });
+
+            while (true) {
+              await delay(5000);
+
+              response = await axios.get(response.headers["location"]);
+
+              if (response.status === 200) {
+                alert("The certificate was successfully issued.");
+                break;
+              }
+            }
+          } catch (error) {
+            const problem = error.response.data;
+
+            if (error.response.status === 400) {
+              const errors = [];
+
+              for (let key in problem.errors) {
+                errors.push(problem.errors[key][0]);
+              }
+
+              alert(errors.join("\n"));
+            } else {
+              alert(problem.detail)
+            }
+          }
+
+          this.reload();
+          this.sending = false;
+        }
+      },
+      beforeMount: function () {
+        this.load();
+      }
+    });
+  </script>
+</body>
+</html>

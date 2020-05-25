@@ -5,22 +5,25 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ACMESharpCore" Version="2.1.0.113" />
-    <PackageReference Include="DnsClient" Version="1.3.1" />
+    <PackageReference Include="DnsClient" Version="1.3.2" />
     <PackageReference Include="DurableTask.TypedProxy" Version="2.0.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
     <PackageReference Include="Microsoft.Azure.KeyVault" Version="3.0.5" />
     <PackageReference Include="Microsoft.Azure.Management.Dns" Version="3.0.1" />
-    <PackageReference Include="Microsoft.Azure.Services.AppAuthentication" Version="1.4.0" />
+    <PackageReference Include="Microsoft.Azure.Services.AppAuthentication" Version="1.5.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.2.1" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="3.1.3" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="3.1.4" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.7" />
-    <PackageReference Include="WebJobs.Extensions.HttpApi" Version="1.0.2" />
+    <PackageReference Include="WebJobs.Extensions.HttpApi" Version="1.1.0" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="index.html">
+    <None Update="static\renew-certificate.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="static\add-certificate.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="local.settings.json">

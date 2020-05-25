@@ -19,7 +19,7 @@ namespace KeyVault.Acmebot
             var activity = context.CreateActivityProxy<ISharedFunctions>();
 
             // 期限切れまで 30 日以内の証明書を取得する
-            var certificates = await activity.GetCertificates(context.CurrentUtcDateTime);
+            var certificates = await activity.GetExpiringCertificates(context.CurrentUtcDateTime);
 
             // 更新対象となる証明書がない場合は終わる
             if (certificates.Count == 0)

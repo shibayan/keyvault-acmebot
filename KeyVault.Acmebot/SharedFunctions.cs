@@ -79,13 +79,31 @@ namespace KeyVault.Acmebot
             await activity.FinalizeOrder((hostNames, orderDetails));
         }
 
-        [FunctionName(nameof(GetCertificates))]
-        public async Task<IList<CertificateBundle>> GetCertificates([ActivityTrigger] DateTime currentDateTime)
+        [FunctionName(nameof(GetExpiringCertificates))]
+        public async Task<IList<CertificateBundle>> GetExpiringCertificates([ActivityTrigger] DateTime currentDateTime)
         {
             var certificates = await _keyVaultClient.GetAllCertificatesAsync(_options.VaultBaseUrl);
 
             var list = certificates.Where(x => x.Tags != null && x.Tags.TryGetValue("Issuer", out var issuer) && (issuer == OldIssuerName || issuer == IssuerName))
                                    .Where(x => (x.Attributes.Expires.Value - currentDateTime).TotalDays < 30)
+                                   .ToArray();
+
+            var bundles = new List<CertificateBundle>();
+
+            foreach (var item in list)
+            {
+                bundles.Add(await _keyVaultClient.GetCertificateAsync(item.Id));
+            }
+
+            return bundles;
+        }
+
+        [FunctionName(nameof(GetAllCertificates))]
+        public async Task<IList<CertificateBundle>> GetAllCertificates([ActivityTrigger] object input = null)
+        {
+            var certificates = await _keyVaultClient.GetAllCertificatesAsync(_options.VaultBaseUrl);
+
+            var list = certificates.Where(x => x.Tags != null && x.Tags.TryGetValue("Issuer", out var issuer) && (issuer == OldIssuerName || issuer == IssuerName))
                                    .ToArray();
 
             var bundles = new List<CertificateBundle>();
