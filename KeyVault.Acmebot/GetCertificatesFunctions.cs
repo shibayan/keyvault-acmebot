@@ -33,12 +33,7 @@ namespace KeyVault.Acmebot
 
             var certificates = await activity.GetAllCertificates();
 
-            return certificates.Select(x => new GetCertificateResponse
-                               {
-                                   Name = x.CertificateIdentifier.Name,
-                                   Domains = x.Policy.X509CertificateProperties.SubjectAlternativeNames.DnsNames,
-                                   Expire = x.Attributes.Expires
-                               })
+            return certificates.Select(x => new GetCertificateResponse(x))
                                .ToArray();
         }
 
