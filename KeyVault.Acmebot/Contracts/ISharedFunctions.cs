@@ -14,7 +14,9 @@ namespace KeyVault.Acmebot.Contracts
 {
     public interface ISharedFunctions
     {
-        Task<IList<CertificateBundle>> GetCertificates(DateTime currentDateTime);
+        Task<IList<CertificateBundle>> GetExpiringCertificates(DateTime currentDateTime);
+
+        Task<IList<CertificateBundle>> GetAllCertificates(object input = null);
 
         Task<IList<string>> GetZones(object input = null);
 

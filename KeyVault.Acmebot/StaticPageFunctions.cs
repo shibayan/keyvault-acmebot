@@ -15,9 +15,9 @@ namespace KeyVault.Acmebot
         {
         }
 
-        [FunctionName(nameof(StaticPage))]
-        public IActionResult StaticPage(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "static-page/index")] HttpRequest req,
+        [FunctionName(nameof(AddCertificatePage))]
+        public IActionResult AddCertificatePage(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "static-page/add-certificate")] HttpRequest req,
             ILogger log)
         {
             if (!User.Identity.IsAuthenticated)
@@ -25,7 +25,20 @@ namespace KeyVault.Acmebot
                 return Forbid();
             }
 
-            return File("index.html", "text/html");
+            return File("static/add-certificate.html");
+        }
+
+        [FunctionName(nameof(RenewCertificatePage))]
+        public IActionResult RenewCertificatePage(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "static-page/renew-certificate")] HttpRequest req,
+            ILogger log)
+        {
+            if (!User.Identity.IsAuthenticated)
+            {
+                return Forbid();
+            }
+
+            return File("static/renew-certificate.html");
         }
     }
 }
