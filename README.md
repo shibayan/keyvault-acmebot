@@ -47,7 +47,7 @@ https://github.com/shibayan/keyvault-acmebot/issues/80
 
 ## Requirements
 
-You will need the follwing:
+You will need the following:
 - Azure Subscription (required to deploy this solution)
 - Azure DNS (required to host your public DNS zone)
 - Azure Key Vault (existing one or new Key Vault can be created at deployment time)
