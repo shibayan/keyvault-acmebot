@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Key Vault Acmebot</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.8.1/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.8.2/css/bulma.min.css">
   <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
 </head>
 <body>
@@ -43,13 +43,13 @@
         </div>
         <div v-if="certificate !== ''" class="field is-horizontal">
           <div class="field-label">
-            <label class="label">Domains</label>
+            <label class="label">DNS Names</label>
           </div>
           <div class="field-body">
             <div class="content">
               <div class="tags">
-                <span v-for="domain in certificate.domains" class="tag is-light is-medium">
-                  {{ domain | punycode }}
+                <span v-for="dnsName in certificate.dnsNames" class="tag is-light is-medium">
+                  {{ dnsName | punycode }}
                 </span>
               </div>
             </div>
@@ -114,7 +114,7 @@
           this.sending = true;
 
           try {
-            let response = await axios.post("/api/add-certificate", { Domains: this.certificate.domains });
+            let response = await axios.post("/api/add-certificate", { DnsNames: this.certificate.dnsNames });
 
             while (true) {
               await delay(5000);

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Key Vault Acmebot</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.8.1/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.8.2/css/bulma.min.css">
   <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
 </head>
 <body>
@@ -33,7 +33,7 @@
         </div>
         <div class="field is-horizontal">
           <div class="field-label">
-            <label class="label">Domains</label>
+            <label class="label">DNS Names</label>
           </div>
           <div class="field-body">
             <div class="field has-addons">
@@ -56,9 +56,9 @@
           <div class="field-body">
             <div class="content">
               <div class="tags">
-                <span v-for="domain in domains" class="tag is-light is-medium">
-                  {{ domain | punycode }}
-                  <button class="delete is-small" @click="remove(domain)"></button>
+                <span v-for="dnsName in dnsNames" class="tag is-light is-medium">
+                  {{ dnsName | punycode }}
+                  <button class="delete is-small" @click="remove(dnsName)"></button>
                 </span>
               </div>
             </div>
@@ -69,7 +69,7 @@
           <div class="field-body">
             <div class="field">
               <div class="control">
-                <button class="button is-primary" @click="submit" :class="{ 'is-loading': sending }" :disabled="domains.length === 0">Submit</button>
+                <button class="button is-primary" @click="submit" :class="{ 'is-loading': sending }" :disabled="dnsNames.length === 0">Submit</button>
               </div>
             </div>
           </div>
@@ -94,7 +94,7 @@
       data: {
         zones: [],
         zoneName: "",
-        domains: [],
+        dnsNames: [],
         recordName: "",
         loading: false,
         sending: false
@@ -118,7 +118,7 @@
         reload: function () {
           this.zones = [];
           this.zoneName = "";
-          this.domains = [];
+          this.dnsNames = [];
           this.recordName = "";
 
           this.load();
@@ -128,26 +128,26 @@
             return;
           }
 
-          const domain = this.recordName === "" ? this.zoneName : punycode.toASCII(this.recordName) + "." + this.zoneName;
+          const dnsName = this.recordName === "" ? this.zoneName : punycode.toASCII(this.recordName) + "." + this.zoneName;
 
-          if (this.domains.indexOf(domain) === -1) {
-            this.domains.push(domain);
+          if (this.dnsNames.indexOf(dnsName) === -1) {
+            this.dnsNames.push(dnsName);
           }
 
           this.recordName = "";
         },
-        remove: function (domain) {
-          this.domains = this.domains.filter(x => x !== domain);
+        remove: function (dnsName) {
+          this.dnsNames = this.dnsNames.filter(x => x !== dnsName);
         },
         reset: function () {
-          this.domains = [];
+          this.dnsNames = [];
           this.recordName = "";
         },
         submit: async function () {
           this.sending = true;
 
           try {
-            let response = await axios.post("/api/add-certificate", { Domains: this.domains });
+            let response = await axios.post("/api/add-certificate", { DnsNames: this.dnsNames });
 
             while (true) {
               await delay(5000);

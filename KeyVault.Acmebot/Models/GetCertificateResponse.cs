@@ -12,15 +12,15 @@ namespace KeyVault.Acmebot.Models
         public GetCertificateResponse(CertificateBundle certificateBundle)
         {
             Name = certificateBundle.CertificateIdentifier.Name;
-            Domains = certificateBundle.Policy.X509CertificateProperties.SubjectAlternativeNames.DnsNames;
+            DnsNames = certificateBundle.Policy.X509CertificateProperties.SubjectAlternativeNames.DnsNames;
             Expire = certificateBundle.Attributes.Expires;
         }
 
         [JsonProperty("name")]
         public string Name { get; }
 
-        [JsonProperty("domains")]
-        public IList<string> Domains { get; }
+        [JsonProperty("dnsNames")]
+        public IList<string> DnsNames { get; }
 
         [JsonProperty("expire")]
         public DateTime? Expire { get; }
