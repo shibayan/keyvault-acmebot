@@ -54,15 +54,15 @@ namespace KeyVault.Acmebot
         [FunctionName(nameof(IssueCertificate))]
         public async Task IssueCertificate([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            var hostNames = context.GetInput<string[]>();
+            var dnsNames = context.GetInput<string[]>();
 
             var activity = context.CreateActivityProxy<ISharedFunctions>();
 
             // 前提条件をチェック
-            await activity.Dns01Precondition(hostNames);
+            await activity.Dns01Precondition(dnsNames);
 
             // 新しく ACME Order を作成する
-            var orderDetails = await activity.Order(hostNames);
+            var orderDetails = await activity.Order(dnsNames);
 
             // ACME Challenge を実行
             var challengeResults = await activity.Dns01Authorization(orderDetails.Payload.Authorizations);
@@ -76,7 +76,7 @@ namespace KeyVault.Acmebot
             // Order のステータスが ready になるまで 60 秒待機
             await activity.CheckIsReady(orderDetails);
 
-            await activity.FinalizeOrder((hostNames, orderDetails));
+            await activity.FinalizeOrder((dnsNames, orderDetails));
         }
 
         [FunctionName(nameof(GetExpiringCertificates))]
@@ -125,24 +125,24 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(Order))]
-        public async Task<OrderDetails> Order([ActivityTrigger] string[] hostNames)
+        public async Task<OrderDetails> Order([ActivityTrigger] string[] dnsNames)
         {
             var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
-            return await acmeProtocolClient.CreateOrderAsync(hostNames);
+            return await acmeProtocolClient.CreateOrderAsync(dnsNames);
         }
 
         [FunctionName(nameof(Dns01Precondition))]
-        public async Task Dns01Precondition([ActivityTrigger] string[] hostNames)
+        public async Task Dns01Precondition([ActivityTrigger] string[] dnsNames)
         {
             // DNS zone が存在するか確認
             var zones = await _dnsProvider.ListZonesAsync();
 
-            foreach (var hostName in hostNames)
+            foreach (var dnsName in dnsNames)
             {
-                if (!zones.Any(x => string.Equals(hostName, x.Name, StringComparison.OrdinalIgnoreCase) || hostName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase)))
+                if (!zones.Any(x => string.Equals(dnsName, x.Name, StringComparison.OrdinalIgnoreCase) || dnsName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase)))
                 {
-                    throw new InvalidOperationException($"DNS zone \"{hostName}\" is not found");
+                    throw new InvalidOperationException($"DNS zone \"{dnsName}\" is not found");
                 }
             }
         }
@@ -255,9 +255,9 @@ namespace KeyVault.Acmebot
         [FunctionName(nameof(FinalizeOrder))]
         public async Task FinalizeOrder([ActivityTrigger] (string[], OrderDetails) input)
         {
-            var (hostNames, orderDetails) = input;
+            var (dnsNames, orderDetails) = input;
 
-            var certificateName = hostNames[0].Replace("*", "wildcard").Replace(".", "-");
+            var certificateName = dnsNames[0].Replace("*", "wildcard").Replace(".", "-");
 
             byte[] csr;
 
@@ -268,7 +268,7 @@ namespace KeyVault.Acmebot
                 {
                     X509CertificateProperties = new X509CertificateProperties
                     {
-                        SubjectAlternativeNames = new SubjectAlternativeNames(dnsNames: hostNames)
+                        SubjectAlternativeNames = new SubjectAlternativeNames(dnsNames: dnsNames)
                     }
                 }, tags: new Dictionary<string, string>
                 {
