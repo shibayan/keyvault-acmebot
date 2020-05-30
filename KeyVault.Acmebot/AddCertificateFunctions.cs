@@ -37,7 +37,7 @@ namespace KeyVault.Acmebot
             }
 
             // Function input comes from the request content.
-            var instanceId = await starter.StartNewAsync(nameof(SharedFunctions.IssueCertificate), request.Domains);
+            var instanceId = await starter.StartNewAsync(nameof(SharedFunctions.IssueCertificate), request.DnsNames);
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 

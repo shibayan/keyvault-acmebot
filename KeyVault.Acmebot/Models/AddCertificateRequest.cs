@@ -5,13 +5,13 @@ namespace KeyVault.Acmebot.Models
 {
     public class AddCertificateRequest : IValidatableObject
     {
-        public string[] Domains { get; set; }
+        public string[] DnsNames { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            if (Domains == null || Domains.Length == 0)
+            if (DnsNames == null || DnsNames.Length == 0)
             {
-                yield return new ValidationResult($"The {nameof(Domains)} is required.", new[] { nameof(Domains) });
+                yield return new ValidationResult($"The {nameof(DnsNames)} is required.", new[] { nameof(DnsNames) });
             }
         }
     }
