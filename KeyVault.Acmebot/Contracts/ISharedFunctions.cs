@@ -20,9 +20,9 @@ namespace KeyVault.Acmebot.Contracts
 
         Task<IList<string>> GetZones(object input = null);
 
-        Task<OrderDetails> Order(string[] hostNames);
+        Task<OrderDetails> Order(string[] dnsNames);
 
-        Task Dns01Precondition(string[] hostNames);
+        Task Dns01Precondition(string[] dnsNames);
 
         Task<IList<AcmeChallengeResult>> Dns01Authorization(string[] authorizationUrls);
 
