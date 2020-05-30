@@ -11,7 +11,7 @@
     <PackageReference Include="Microsoft.Azure.KeyVault" Version="3.0.5" />
     <PackageReference Include="Microsoft.Azure.Management.Dns" Version="3.0.1" />
     <PackageReference Include="Microsoft.Azure.Services.AppAuthentication" Version="1.5.0" />
-    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.2.1" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.2.2" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="3.1.4" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.7" />
     <PackageReference Include="WebJobs.Extensions.HttpApi" Version="1.1.0" />
