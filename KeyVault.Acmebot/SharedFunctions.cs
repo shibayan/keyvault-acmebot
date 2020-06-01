@@ -30,14 +30,15 @@ namespace KeyVault.Acmebot
     {
         public SharedFunctions(IHttpClientFactory httpClientFactory, LookupClient lookupClient,
                                IAcmeProtocolClientFactory acmeProtocolClientFactory,
-                               IDnsProvider dnsProvider,
-                               KeyVaultClient keyVaultClient, IOptions<AcmebotOptions> options)
+                               IDnsProvider dnsProvider, KeyVaultClient keyVaultClient,
+                               WebhookClient webhookClient, IOptions<AcmebotOptions> options)
         {
             _httpClientFactory = httpClientFactory;
             _acmeProtocolClientFactory = acmeProtocolClientFactory;
             _dnsProvider = dnsProvider;
             _lookupClient = lookupClient;
             _keyVaultClient = keyVaultClient;
+            _webhookClient = webhookClient;
             _options = options.Value;
         }
 
@@ -46,6 +47,7 @@ namespace KeyVault.Acmebot
         private readonly IAcmeProtocolClientFactory _acmeProtocolClientFactory;
         private readonly IDnsProvider _dnsProvider;
         private readonly KeyVaultClient _keyVaultClient;
+        private readonly WebhookClient _webhookClient;
         private readonly AcmebotOptions _options;
 
         private const string OldIssuerName = "letsencrypt.org";
@@ -76,7 +78,10 @@ namespace KeyVault.Acmebot
             // Order のステータスが ready になるまで 60 秒待機
             await activity.CheckIsReady(orderDetails);
 
-            await activity.FinalizeOrder((dnsNames, orderDetails));
+            var certificate = await activity.FinalizeOrder((dnsNames, orderDetails));
+
+            // 証明書の更新が完了後に Webhook を送信する
+            await activity.SendCompletedEvent((certificate.SecretIdentifier.Name, certificate.Attributes.Expires, dnsNames));
         }
 
         [FunctionName(nameof(GetExpiringCertificates))]
@@ -253,7 +258,7 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(FinalizeOrder))]
-        public async Task FinalizeOrder([ActivityTrigger] (string[], OrderDetails) input)
+        public async Task<CertificateBundle> FinalizeOrder([ActivityTrigger] (string[], OrderDetails) input)
         {
             var (dnsNames, orderDetails) = input;
 
@@ -299,7 +304,15 @@ namespace KeyVault.Acmebot
 
             x509Certificates.ImportFromPem(certificateData);
 
-            await _keyVaultClient.MergeCertificateAsync(_options.VaultBaseUrl, certificateName, x509Certificates);
+            return await _keyVaultClient.MergeCertificateAsync(_options.VaultBaseUrl, certificateName, x509Certificates);
+        }
+
+        [FunctionName(nameof(SendCompletedEvent))]
+        public Task SendCompletedEvent([ActivityTrigger] (string, DateTime?, string[]) input)
+        {
+            var (certificateName, expirationDate, dnsNames) = input;
+
+            return _webhookClient.SendCompletedEventAsync(certificateName, expirationDate, dnsNames);
         }
     }
 }
