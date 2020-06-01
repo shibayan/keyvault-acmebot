@@ -50,6 +50,8 @@ namespace KeyVault.Acmebot
             });
 
             builder.Services.AddSingleton<IAcmeProtocolClientFactory, AcmeProtocolClientFactory>();
+
+            builder.Services.AddSingleton<WebhookClient>();
             builder.Services.AddSingleton<ILifeCycleNotificationHelper, WebhookLifeCycleNotification>();
 
             builder.Services.AddSingleton<IDnsProvider, AzureDnsProvider>();
