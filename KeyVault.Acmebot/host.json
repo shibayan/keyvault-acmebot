@@ -12,7 +12,12 @@
     "durableTask": {
       "hubName": "DurableFunctionsHub",
       "extendedSessionsEnabled": true,
-      "extendedSessionIdleTimeoutInSeconds": 60
+      "extendedSessionIdleTimeoutInSeconds": 120
+    },
+    "http": {
+      "customHeaders": {
+        "Cache-Control": "no-store"
+      }
     }
   }
 }
