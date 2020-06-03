@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
@@ -28,12 +27,10 @@ namespace KeyVault.Acmebot
 {
     public class SharedFunctions : ISharedFunctions
     {
-        public SharedFunctions(IHttpClientFactory httpClientFactory, LookupClient lookupClient,
-                               IAcmeProtocolClientFactory acmeProtocolClientFactory,
+        public SharedFunctions(LookupClient lookupClient, IAcmeProtocolClientFactory acmeProtocolClientFactory,
                                IDnsProvider dnsProvider, KeyVaultClient keyVaultClient,
                                WebhookClient webhookClient, IOptions<AcmebotOptions> options)
         {
-            _httpClientFactory = httpClientFactory;
             _acmeProtocolClientFactory = acmeProtocolClientFactory;
             _dnsProvider = dnsProvider;
             _lookupClient = lookupClient;
@@ -42,7 +39,6 @@ namespace KeyVault.Acmebot
             _options = options.Value;
         }
 
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly LookupClient _lookupClient;
         private readonly IAcmeProtocolClientFactory _acmeProtocolClientFactory;
         private readonly IDnsProvider _dnsProvider;
@@ -295,9 +291,8 @@ namespace KeyVault.Acmebot
 
             var finalize = await acmeProtocolClient.FinalizeOrderAsync(orderDetails.Payload.Finalize, csr);
 
-            var httpClient = _httpClientFactory.CreateClient();
-
-            var certificateData = await httpClient.GetByteArrayAsync(finalize.Payload.Certificate);
+            // 証明書をバイト配列としてダウンロード
+            var certificateData = await acmeProtocolClient.GetOrderCertificateAsync(finalize);
 
             // X509Certificate2Collection を作成
             var x509Certificates = new X509Certificate2Collection();

@@ -33,11 +33,13 @@ namespace KeyVault.Acmebot.Internal
             var accountKey = LoadState<AccountKey>("account_key.json");
             var directory = LoadState<ServiceDirectory>("directory.json");
 
-            var acmeProtocolClient = new AcmeProtocolClient(_baseUri, directory, account, accountKey?.GenerateSigner());
+            var acmeProtocolClient = new AcmeProtocolClient(_baseUri, directory, account, accountKey?.GenerateSigner(), usePostAsGet: true);
 
             if (directory == null)
             {
                 directory = await acmeProtocolClient.GetDirectoryAsync();
+
+                SaveState(directory, "directory.json");
 
                 acmeProtocolClient.Directory = directory;
             }
@@ -56,7 +58,6 @@ namespace KeyVault.Acmebot.Internal
 
                 SaveState(account, "account.json");
                 SaveState(accountKey, "account_key.json");
-                SaveState(directory, "directory.json");
 
                 acmeProtocolClient.Account = account;
             }
