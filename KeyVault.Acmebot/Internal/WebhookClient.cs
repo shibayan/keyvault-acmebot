@@ -19,6 +19,11 @@ namespace KeyVault.Acmebot.Internal
 
         public Task SendCompletedEventAsync(string certificateName, DateTime? expirationDate, string[] dnsNames)
         {
+            if (string.IsNullOrEmpty(_options.Webhook))
+            {
+                return Task.CompletedTask;
+            }
+
             object model;
 
             if (_options.Webhook.Contains("hooks.slack.com"))
@@ -79,6 +84,11 @@ namespace KeyVault.Acmebot.Internal
 
         public Task SendFailedEventAsync(string functionName, string reason)
         {
+            if (string.IsNullOrEmpty(_options.Webhook))
+            {
+                return Task.CompletedTask;
+            }
+
             object model;
 
             if (_options.Webhook.Contains("hooks.slack.com"))
@@ -119,11 +129,6 @@ namespace KeyVault.Acmebot.Internal
 
         private async Task SendEventAsync(object model)
         {
-            if (string.IsNullOrEmpty(_options.Webhook))
-            {
-                return;
-            }
-
             var httpClient = _httpClientFactory.CreateClient();
 
             await httpClient.PostAsJsonAsync(_options.Webhook, model);
