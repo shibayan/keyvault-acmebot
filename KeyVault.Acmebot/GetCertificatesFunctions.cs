@@ -33,8 +33,7 @@ namespace KeyVault.Acmebot
 
             var certificates = await activity.GetAllCertificates();
 
-            return certificates.Select(x => new GetCertificateResponse(x))
-                               .ToArray();
+            return certificates.Select(x => new GetCertificateResponse(x)).ToArray();
         }
 
         [FunctionName(nameof(GetCertificates_HttpStart))]
