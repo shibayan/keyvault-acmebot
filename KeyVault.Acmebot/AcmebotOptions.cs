@@ -18,5 +18,9 @@ namespace KeyVault.Acmebot
 
         [Url]
         public string Webhook { get; set; }
+
+        public string DnsProvider { get; set; }
+        public string DnsProviderUsername { get; set; }
+        public string DnsProviderPassword { get; set; }
     }
 }

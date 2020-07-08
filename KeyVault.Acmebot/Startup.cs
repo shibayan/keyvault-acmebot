@@ -42,24 +42,34 @@ namespace KeyVault.Acmebot
             builder.Services.AddSingleton(provider =>
                 new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(new AzureServiceTokenProvider().KeyVaultTokenCallback)));
 
-            builder.Services.AddSingleton(provider =>
-            {
-                var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
-
-                return new DnsManagementClient(new TokenCredentials(new AppAuthenticationTokenProvider()))
-                {
-                    SubscriptionId = options.Value.SubscriptionId
-                };
-            });
-
             builder.Services.AddSingleton<IAcmeProtocolClientFactory, AcmeProtocolClientFactory>();
 
             builder.Services.AddSingleton<WebhookClient>();
             builder.Services.AddSingleton<ILifeCycleNotificationHelper, WebhookLifeCycleNotification>();
 
-            builder.Services.AddSingleton<IDnsProvider, AzureDnsProvider>();
-
             var section = Configuration.GetSection("Acmebot");
+
+            // Select DNS Provider
+            var dnsProvider = section["DnsProvider"];
+
+            if (dnsProvider == "GratisDNS")
+                builder.Services.AddSingleton<IDnsProvider, GratisDnsProvider>();
+
+            else
+            {
+                // Default (Azure DNS)
+                builder.Services.AddSingleton(provider =>
+                {
+                    var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
+
+                    return new DnsManagementClient(new TokenCredentials(new AppAuthenticationTokenProvider()))
+                    {
+                        SubscriptionId = options.Value.SubscriptionId
+                    };
+                });
+
+                builder.Services.AddSingleton<IDnsProvider, AzureDnsProvider>();
+            }
 
             builder.Services.AddOptions<AcmebotOptions>()
                    .Bind(section.Exists() ? section : Configuration.GetSection("LetsEncrypt"))
