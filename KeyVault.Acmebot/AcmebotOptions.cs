@@ -10,13 +10,23 @@ namespace KeyVault.Acmebot
         [Required]
         public string Contacts { get; set; }
 
-        [Required]
-        public string SubscriptionId { get; set; }
+        public string SubscriptionId
+        {
+            set => DnsProvider.SubscriptionId = value;
+        }
 
         [Required]
         public string VaultBaseUrl { get; set; }
 
         [Url]
         public string Webhook { get; set; }
+
+        public AzureDnsOptions DnsProvider { get; set; } = new AzureDnsOptions();
+    }
+
+    public class AzureDnsOptions
+    {
+        [Required]
+        public string SubscriptionId { get; set; }
     }
 }

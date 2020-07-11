@@ -48,7 +48,7 @@ namespace KeyVault.Acmebot
 
                 return new DnsManagementClient(new TokenCredentials(new AppAuthenticationTokenProvider()))
                 {
-                    SubscriptionId = options.Value.SubscriptionId
+                    SubscriptionId = options.Value.DnsProvider.SubscriptionId
                 };
             });
 
