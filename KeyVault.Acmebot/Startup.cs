@@ -2,18 +2,17 @@
 
 using KeyVault.Acmebot;
 using KeyVault.Acmebot.Internal;
+using KeyVault.Acmebot.Options;
 using KeyVault.Acmebot.Providers;
 
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Azure.KeyVault;
-using Microsoft.Azure.Management.Dns;
 using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using Microsoft.Rest;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 
@@ -42,22 +41,22 @@ namespace KeyVault.Acmebot
             builder.Services.AddSingleton(provider =>
                 new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(new AzureServiceTokenProvider().KeyVaultTokenCallback)));
 
-            builder.Services.AddSingleton(provider =>
-            {
-                var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
-
-                return new DnsManagementClient(new TokenCredentials(new AppAuthenticationTokenProvider()))
-                {
-                    SubscriptionId = options.Value.SubscriptionId
-                };
-            });
-
             builder.Services.AddSingleton<IAcmeProtocolClientFactory, AcmeProtocolClientFactory>();
 
             builder.Services.AddSingleton<WebhookClient>();
             builder.Services.AddSingleton<ILifeCycleNotificationHelper, WebhookLifeCycleNotification>();
 
-            builder.Services.AddSingleton<IDnsProvider, AzureDnsProvider>();
+            builder.Services.AddSingleton<IDnsProvider>(provider =>
+            {
+                var options = provider.GetRequiredService<IOptions<AcmebotOptions>>().Value;
+
+                if (options.AzureDns != null || options.SubscriptionId != null)
+                {
+                    return new AzureDnsProvider(options);
+                }
+
+                throw new System.NotSupportedException();
+            });
 
             var section = Configuration.GetSection("Acmebot");
 

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace KeyVault.Acmebot
+namespace KeyVault.Acmebot.Options
 {
     public class AcmebotOptions
     {
@@ -10,7 +10,7 @@ namespace KeyVault.Acmebot
         [Required]
         public string Contacts { get; set; }
 
-        [Required]
+        // Backward compatibility
         public string SubscriptionId { get; set; }
 
         [Required]
@@ -18,5 +18,7 @@ namespace KeyVault.Acmebot
 
         [Url]
         public string Webhook { get; set; }
+
+        public AzureDnsOptions AzureDns { get; set; }
     }
 }
