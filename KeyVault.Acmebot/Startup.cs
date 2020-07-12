@@ -50,6 +50,11 @@ namespace KeyVault.Acmebot
             {
                 var options = provider.GetRequiredService<IOptions<AcmebotOptions>>().Value;
 
+                if (options.Cloudflare != null)
+                {
+                    return new CloudflareProvider(options);
+                }
+
                 if (options.AzureDns != null || options.SubscriptionId != null)
                 {
                     return new AzureDnsProvider(options);

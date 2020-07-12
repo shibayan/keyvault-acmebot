@@ -20,5 +20,7 @@ namespace KeyVault.Acmebot.Options
         public string Webhook { get; set; }
 
         public AzureDnsOptions AzureDns { get; set; }
+
+        public CloudflareOptions Cloudflare { get; set; }
     }
 }
