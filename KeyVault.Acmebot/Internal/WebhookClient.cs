@@ -2,6 +2,8 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 
+using KeyVault.Acmebot.Options;
+
 using Microsoft.Extensions.Options;
 
 namespace KeyVault.Acmebot.Internal

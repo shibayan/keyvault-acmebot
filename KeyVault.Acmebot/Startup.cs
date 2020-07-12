@@ -2,6 +2,7 @@
 
 using KeyVault.Acmebot;
 using KeyVault.Acmebot.Internal;
+using KeyVault.Acmebot.Options;
 using KeyVault.Acmebot.Providers;
 
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
@@ -42,22 +43,22 @@ namespace KeyVault.Acmebot
             builder.Services.AddSingleton(provider =>
                 new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(new AzureServiceTokenProvider().KeyVaultTokenCallback)));
 
-            builder.Services.AddSingleton(provider =>
-            {
-                var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
-
-                return new DnsManagementClient(new TokenCredentials(new AppAuthenticationTokenProvider()))
-                {
-                    SubscriptionId = options.Value.DnsProvider.SubscriptionId
-                };
-            });
-
             builder.Services.AddSingleton<IAcmeProtocolClientFactory, AcmeProtocolClientFactory>();
 
             builder.Services.AddSingleton<WebhookClient>();
             builder.Services.AddSingleton<ILifeCycleNotificationHelper, WebhookLifeCycleNotification>();
 
             builder.Services.AddSingleton<IDnsProvider, AzureDnsProvider>();
+
+            builder.Services.AddSingleton(provider =>
+            {
+                var options = provider.GetRequiredService<IOptions<AzureDnsOptions>>();
+
+                return new DnsManagementClient(new TokenCredentials(new AppAuthenticationTokenProvider()))
+                {
+                    SubscriptionId = options.Value.SubscriptionId
+                };
+            });
 
             var section = Configuration.GetSection("Acmebot");
 
