@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace KeyVault.Acmebot.Options
 {
@@ -12,10 +11,7 @@ namespace KeyVault.Acmebot.Options
         public string Contacts { get; set; }
 
         // Backward compatibility
-        public string SubscriptionId
-        {
-            set => (AzureDns ??= new AzureDnsOptions()).SubscriptionId = value;
-        }
+        public string SubscriptionId { get; set; }
 
         [Required]
         public string VaultBaseUrl { get; set; }
