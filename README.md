@@ -92,6 +92,10 @@ Open the `Access Control (IAM)` of the target DNS zone or resource group contain
 
 ![temp](https://user-images.githubusercontent.com/1356444/64354572-a9628f00-d03a-11e9-93c9-0c12992ca9bf.png)
 
+When using a DNS provider other than Azure DNS, please refer to the following page for configuration.
+
+https://github.com/shibayan/keyvault-acmebot/wiki/DNS-Provider-Configuration
+
 ### 5. Add to Key Vault access policies (if you use an existing Key Vault)
 
 Open the access policy of the Key Vault and add the `Certificate management` access policy for the deployed application.
