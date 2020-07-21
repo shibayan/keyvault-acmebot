@@ -12,9 +12,9 @@ namespace KeyVault.Acmebot.Providers
 {
     public class GratisDnsProvider : IDnsProvider
     {
-        public GratisDnsProvider(AcmebotOptions options)
+        public GratisDnsProvider(GratisDnsOptions options)
         {
-            _gratisDnsClient = new GratisDnsClient(options.GratisDns.Username, options.GratisDns.Password);
+            _gratisDnsClient = new GratisDnsClient(options.Username, options.Password);
         }
 
         private readonly GratisDnsClient _gratisDnsClient;
@@ -28,34 +28,37 @@ namespace KeyVault.Acmebot.Providers
 
         public async Task UpsertTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
+            var recordName = $"{relativeRecordName}.{zone.Name}";
+
             foreach (var value in values)
             {
-                await _gratisDnsClient.CreateTxtRecordAsync(zone.Name, $"{relativeRecordName}.{zone.Name}", value);
+                await _gratisDnsClient.CreateTxtRecordAsync(zone.Name, recordName, value);
             }
         }
 
         private class GratisDnsClient
         {
-            private const string BASE_ADDRESS = "https://admin.gratisdns.com";
-            private CookieContainer _cookieContainer;
-            private HttpClientHandler _handler;
-            private HttpClient _client;
-            private string _username;
-            private string _password;
-            private bool _isLoggedIn;
-
             public GratisDnsClient(string username, string password)
             {
                 _username = username;
                 _password = password;
-                _cookieContainer = new CookieContainer();
-                _handler = new HttpClientHandler() { CookieContainer = _cookieContainer };
-                _client = new HttpClient(_handler) { BaseAddress = new Uri(BASE_ADDRESS) };
+
+                _httpClient = new HttpClient(new HttpClientHandler { CookieContainer = new CookieContainer() })
+                {
+                    BaseAddress = new Uri("https://admin.gratisdns.com")
+                };
             }
+
+            private bool _isLoggedIn;
+
+            private readonly string _username;
+            private readonly string _password;
+            private readonly HttpClient _httpClient;
 
             private async Task LoginAsync()
             {
-                var homePageResult = _client.GetAsync("/").Result;
+                var homePageResult = await _httpClient.GetAsync("/");
+
                 homePageResult.EnsureSuccessStatusCode();
 
                 var loginForm = new FormUrlEncodedContent(new[]
@@ -65,34 +68,29 @@ namespace KeyVault.Acmebot.Providers
                     new KeyValuePair<string, string>("password", _password),
                 });
 
-                var loginResult = await _client.PostAsync("/", loginForm);
+                var loginResult = await _httpClient.PostAsync("/", loginForm);
+
                 loginResult.EnsureSuccessStatusCode();
 
                 _isLoggedIn = true;
             }
 
-            public async Task<string[]> ListDomainsAsync()
+            public async Task<IReadOnlyList<string>> ListDomainsAsync()
             {
                 if (!_isLoggedIn)
                 {
                     await LoginAsync();
                 }
 
-                var primaryDnsResult = await _client.GetAsync("/?action=dns_primarydns");
+                var primaryDnsResult = await _httpClient.GetAsync("/?action=dns_primarydns");
+
                 primaryDnsResult.EnsureSuccessStatusCode();
 
                 var primaryDnsContent = await primaryDnsResult.Content.ReadAsStringAsync();
 
                 var manageDomainLinks = Regex.Matches(primaryDnsContent, "\"\\?action=dns_primary_changeDNSsetup&user_domain=([^\"]+)\"");
 
-                var domains = new List<string>();
-
-                for (int i = 0; i < manageDomainLinks.Count; i++)
-                {
-                    domains.Add(manageDomainLinks[i].Groups[1].Value);
-                }
-
-                return domains.ToArray();
+                return manageDomainLinks.Select(x => x.Groups[1].Value).ToArray();
             }
 
             public async Task CreateTxtRecordAsync(string domain, string hostname, string textdata)
@@ -102,21 +100,7 @@ namespace KeyVault.Acmebot.Providers
                     await LoginAsync();
                 }
 
-                var primaryDnsResult = await _client.GetAsync("/?action=dns_primarydns");
-                primaryDnsResult.EnsureSuccessStatusCode();
-
-                var primaryDnsContent = await primaryDnsResult.Content.ReadAsStringAsync();
-
-                var manageDomainLinks = Regex.Matches(primaryDnsContent, "\"\\?action=dns_primary_changeDNSsetup&user_domain=([^\"]+)\"");
-
-                var domains = new List<string>();
-
-                for (int i = 0; i < manageDomainLinks.Count; i++)
-                {
-                    domains.Add(manageDomainLinks[i].Groups[1].Value);
-                }
-
-                var createTxtRecordForm = new FormUrlEncodedContent(new[]
+                var content = new FormUrlEncodedContent(new[]
                 {
                     new KeyValuePair<string, string>("user_domain", domain),
                     new KeyValuePair<string, string>("name", hostname),
@@ -125,8 +109,9 @@ namespace KeyVault.Acmebot.Providers
                     new KeyValuePair<string, string>("action", "dns_primary_record_added_txt"),
                 });
 
-                var createTxtRecordResult = _client.PostAsync("/", createTxtRecordForm).Result;
-                createTxtRecordResult.EnsureSuccessStatusCode();
+                var response = await _httpClient.PostAsync("/", content);
+
+                response.EnsureSuccessStatusCode();
             }
         }
     }

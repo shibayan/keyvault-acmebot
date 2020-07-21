@@ -2,6 +2,6 @@
 {
     public class CloudflareOptions
     {
-        public string ApiKey { get; set; }
+        public string ApiToken { get; set; }
     }
 }
