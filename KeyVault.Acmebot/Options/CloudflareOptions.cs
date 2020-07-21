@@ -2,5 +2,6 @@
 {
     public class CloudflareOptions
     {
+        public string ApiKey { get; set; }
     }
 }
