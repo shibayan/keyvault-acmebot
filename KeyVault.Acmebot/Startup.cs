@@ -55,7 +55,7 @@ namespace KeyVault.Acmebot
                     return new CloudflareProvider(options);
                 }
 
-                if (options.DnsProvider == "GratisDNS")
+                if (options.GratisDns != null)
                 {
                     return new GratisDnsProvider(options);
                 }

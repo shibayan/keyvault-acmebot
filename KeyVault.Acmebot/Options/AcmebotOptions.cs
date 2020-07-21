@@ -19,12 +19,10 @@ namespace KeyVault.Acmebot.Options
         [Url]
         public string Webhook { get; set; }
 
-        public string DnsProvider { get; set; }
-        public string DnsProviderUsername { get; set; }
-        public string DnsProviderPassword { get; set; }
-
         public AzureDnsOptions AzureDns { get; set; }
 
         public CloudflareOptions Cloudflare { get; set; }
+
+        public GratisDnsOptions GratisDns { get; set; }
     }
 }

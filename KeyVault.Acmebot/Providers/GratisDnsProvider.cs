@@ -12,29 +12,29 @@ namespace KeyVault.Acmebot.Providers
 {
     public class GratisDnsProvider : IDnsProvider
     {
-        private readonly GratisDnsClient _client;
-
         public GratisDnsProvider(AcmebotOptions options)
         {
-            _client = new GratisDnsClient(options.DnsProviderUsername, options.DnsProviderPassword);
+            _gratisDnsClient = new GratisDnsClient(options.GratisDns.Username, options.GratisDns.Password);
         }
+
+        private readonly GratisDnsClient _gratisDnsClient;
 
         public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
         {
-            var domains = await _client.ListDomainsAsync();
+            var domains = await _gratisDnsClient.ListDomainsAsync();
 
             return domains.Select(x => new DnsZone { Id = x, Name = x }).ToArray();
         }
 
-        public async Task UpsertTxtRecordAsync(DnsZone zone, string recordName, IEnumerable<string> values)
+        public async Task UpsertTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
             foreach (var value in values)
             {
-                await _client.CreateTxtRecordAsync(zone.Name, $"{recordName}.{zone.Name}", value);
+                await _gratisDnsClient.CreateTxtRecordAsync(zone.Name, $"{relativeRecordName}.{zone.Name}", value);
             }
         }
 
-        private class GratisDnsClient : IDisposable
+        private class GratisDnsClient
         {
             private const string BASE_ADDRESS = "https://admin.gratisdns.com";
             private CookieContainer _cookieContainer;
@@ -74,7 +74,9 @@ namespace KeyVault.Acmebot.Providers
             public async Task<string[]> ListDomainsAsync()
             {
                 if (!_isLoggedIn)
+                {
                     await LoginAsync();
+                }
 
                 var primaryDnsResult = await _client.GetAsync("/?action=dns_primarydns");
                 primaryDnsResult.EnsureSuccessStatusCode();
@@ -96,7 +98,9 @@ namespace KeyVault.Acmebot.Providers
             public async Task CreateTxtRecordAsync(string domain, string hostname, string textdata)
             {
                 if (!_isLoggedIn)
+                {
                     await LoginAsync();
+                }
 
                 var primaryDnsResult = await _client.GetAsync("/?action=dns_primarydns");
                 primaryDnsResult.EnsureSuccessStatusCode();
@@ -114,44 +118,16 @@ namespace KeyVault.Acmebot.Providers
 
                 var createTxtRecordForm = new FormUrlEncodedContent(new[]
                 {
-                        new KeyValuePair<string, string>("user_domain", domain),
-                        new KeyValuePair<string, string>("name", hostname),
-                        new KeyValuePair<string, string>("txtdata", textdata),
-                        new KeyValuePair<string, string>("ttl", "60"),
-                        new KeyValuePair<string, string>("action", "dns_primary_record_added_txt"),
-                    });
+                    new KeyValuePair<string, string>("user_domain", domain),
+                    new KeyValuePair<string, string>("name", hostname),
+                    new KeyValuePair<string, string>("txtdata", textdata),
+                    new KeyValuePair<string, string>("ttl", "60"),
+                    new KeyValuePair<string, string>("action", "dns_primary_record_added_txt"),
+                });
 
                 var createTxtRecordResult = _client.PostAsync("/", createTxtRecordForm).Result;
                 createTxtRecordResult.EnsureSuccessStatusCode();
             }
-
-            #region -- Disposable
-
-            private bool _disposedValue;
-
-            protected virtual void Dispose(bool disposing)
-            {
-                if (!_disposedValue)
-                {
-                    if (disposing)
-                    {
-                        _client?.Dispose(); _client = null;
-                        _handler?.Dispose(); _handler = null;
-                        _cookieContainer = null;
-                    }
-
-                    _disposedValue = true;
-                }
-            }
-
-            public void Dispose()
-            {
-                Dispose(disposing: true);
-                GC.SuppressFinalize(this);
-            }
-
-            #endregion
-
         }
     }
 }
