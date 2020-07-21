@@ -1,4 +1,6 @@
-﻿using DnsClient;
+﻿using System;
+
+using DnsClient;
 
 using KeyVault.Acmebot;
 using KeyVault.Acmebot.Internal;
@@ -52,20 +54,25 @@ namespace KeyVault.Acmebot
 
                 if (options.Cloudflare != null)
                 {
-                    return new CloudflareProvider(options);
+                    return new CloudflareProvider(options.Cloudflare);
                 }
 
                 if (options.GratisDns != null)
                 {
-                    return new GratisDnsProvider(options);
+                    return new GratisDnsProvider(options.GratisDns);
                 }
 
-                if (options.AzureDns != null || options.SubscriptionId != null)
+                if (options.AzureDns != null)
                 {
-                    return new AzureDnsProvider(options);
+                    return new AzureDnsProvider(options.AzureDns);
                 }
 
-                throw new System.NotSupportedException();
+                if (options.SubscriptionId != null)
+                {
+                    return new AzureDnsProvider(new AzureDnsOptions { SubscriptionId = options.SubscriptionId });
+                }
+
+                throw new NotSupportedException();
             });
 
             var section = Configuration.GetSection("Acmebot");

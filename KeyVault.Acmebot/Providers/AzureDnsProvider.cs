@@ -14,11 +14,11 @@ namespace KeyVault.Acmebot.Providers
 {
     public class AzureDnsProvider : IDnsProvider
     {
-        public AzureDnsProvider(AcmebotOptions options)
+        public AzureDnsProvider(AzureDnsOptions options)
         {
             _dnsManagementClient = new DnsManagementClient(new TokenCredentials(new AppAuthenticationTokenProvider()))
             {
-                SubscriptionId = options.AzureDns?.SubscriptionId ?? options.SubscriptionId
+                SubscriptionId = options.SubscriptionId
             };
         }
 

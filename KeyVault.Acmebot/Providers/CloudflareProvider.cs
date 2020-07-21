@@ -15,9 +15,9 @@ namespace KeyVault.Acmebot.Providers
 {
     public class CloudflareProvider : IDnsProvider
     {
-        public CloudflareProvider(AcmebotOptions options)
+        public CloudflareProvider(CloudflareOptions options)
         {
-            _cloudflareDnsClient = new CloudflareDnsClient(options.Cloudflare.ApiKey);
+            _cloudflareDnsClient = new CloudflareDnsClient(options.ApiKey);
         }
 
         private readonly CloudflareDnsClient _cloudflareDnsClient;

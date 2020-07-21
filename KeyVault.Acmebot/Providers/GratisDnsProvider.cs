@@ -12,9 +12,9 @@ namespace KeyVault.Acmebot.Providers
 {
     public class GratisDnsProvider : IDnsProvider
     {
-        public GratisDnsProvider(AcmebotOptions options)
+        public GratisDnsProvider(GratisDnsOptions options)
         {
-            _gratisDnsClient = new GratisDnsClient(options.GratisDns.Username, options.GratisDns.Password);
+            _gratisDnsClient = new GratisDnsClient(options.Username, options.Password);
         }
 
         private readonly GratisDnsClient _gratisDnsClient;
