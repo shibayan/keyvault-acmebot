@@ -76,7 +76,7 @@ namespace KeyVault.Acmebot.Providers
 
                     zones.AddRange(result.Result);
 
-                } while (page < result.ResultInfo.TotalPages);
+                } while (page++ < result.ResultInfo.TotalPages);
 
                 return zones;
             }
