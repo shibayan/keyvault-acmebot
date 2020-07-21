@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
 
 using KeyVault.Acmebot.Internal;
@@ -53,20 +52,21 @@ namespace KeyVault.Acmebot.Providers
         {
             public CloudflareDnsClient(string apiKey)
             {
-                _apiKey = apiKey;
+                _httpClient = new HttpClient
+                {
+                    BaseAddress = new Uri("https://api.cloudflare.com")
+                };
+
+                _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
             }
 
-            private readonly string _apiKey;
-
-            private static readonly HttpClient _httpClient = new HttpClient
-            {
-                BaseAddress = new Uri("https://api.cloudflare.com")
-            };
+            private readonly HttpClient _httpClient;
 
             public async Task<IReadOnlyList<ZoneResult>> ListAllZonesAsync()
             {
                 int page = 1;
-                var list = new List<ZoneResult>();
+                var zones = new List<ZoneResult>();
 
                 ApiResult<ZoneResult> result;
 
@@ -74,71 +74,45 @@ namespace KeyVault.Acmebot.Providers
                 {
                     result = await ListZonesAsync(page);
 
-                    list.AddRange(result.Result);
+                    zones.AddRange(result.Result);
 
                 } while (page < result.ResultInfo.TotalPages);
 
-                return list;
+                return zones;
             }
 
             public async Task<IReadOnlyList<DnsRecordResult>> GetDnsRecordsAsync(string zone, string name)
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"/client/v4/zones/{zone}/dns_records?type=TXT&name={name}&per_page=100");
-
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-
-                var response = await _httpClient.SendAsync(request);
+                var response = await _httpClient.GetAsync($"/client/v4/zones/{zone}/dns_records?type=TXT&name={name}&per_page=100");
 
                 response.EnsureSuccessStatusCode();
 
-                var content = await response.Content.ReadAsStringAsync();
-
-                var result = JsonConvert.DeserializeObject<ApiResult<DnsRecordResult>>(content);
+                var result = await response.Content.ReadAsAsync<ApiResult<DnsRecordResult>>();
 
                 return result.Result;
             }
 
             public async Task CreateDnsRecordAsync(string zone, string name, string content)
             {
-                var request = new HttpRequestMessage(HttpMethod.Post, $"/client/v4/zones/{zone}/dns_records");
-
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-
-                var json = JsonConvert.SerializeObject(new { type = "TXT", name, content, ttl = 60 });
-
-                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                var response = await _httpClient.SendAsync(request);
+                var response = await _httpClient.PostAsJsonAsync($"/client/v4/zones/{zone}/dns_records", new { type = "TXT", name, content, ttl = 60 });
 
                 response.EnsureSuccessStatusCode();
             }
 
             public async Task DeleteDnsRecordAsync(string zone, string id)
             {
-                var request = new HttpRequestMessage(HttpMethod.Delete, $"/client/v4/zones/{zone}/dns_records/{id}");
-
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-
-                var response = await _httpClient.SendAsync(request);
+                var response = await _httpClient.DeleteAsync($"/client/v4/zones/{zone}/dns_records/{id}");
 
                 response.EnsureSuccessStatusCode();
             }
 
             private async Task<ApiResult<ZoneResult>> ListZonesAsync(int page)
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"/client/v4/zones?page={page}&per_page=50&status=active");
-
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-
-                var response = await _httpClient.SendAsync(request);
+                var response = await _httpClient.GetAsync($"/client/v4/zones?page={page}&per_page=50&status=active");
 
                 response.EnsureSuccessStatusCode();
 
-                var content = await response.Content.ReadAsStringAsync();
-
-                var result = JsonConvert.DeserializeObject<ApiResult<ZoneResult>>(content);
-
-                return result;
+                return await response.Content.ReadAsAsync<ApiResult<ZoneResult>>();
             }
         }
 
