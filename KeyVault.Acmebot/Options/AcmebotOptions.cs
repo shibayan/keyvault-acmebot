@@ -22,5 +22,7 @@ namespace KeyVault.Acmebot.Options
         public AzureDnsOptions AzureDns { get; set; }
 
         public CloudflareOptions Cloudflare { get; set; }
+
+        public GratisDnsOptions GratisDns { get; set; }
     }
 }

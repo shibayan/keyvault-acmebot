@@ -55,6 +55,11 @@ namespace KeyVault.Acmebot
                     return new CloudflareProvider(options);
                 }
 
+                if (options.GratisDns != null)
+                {
+                    return new GratisDnsProvider(options);
+                }
+
                 if (options.AzureDns != null || options.SubscriptionId != null)
                 {
                     return new AzureDnsProvider(options);
