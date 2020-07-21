@@ -16,7 +16,7 @@ namespace KeyVault.Acmebot.Providers
     {
         public CloudflareProvider(CloudflareOptions options)
         {
-            _cloudflareDnsClient = new CloudflareDnsClient(options.ApiKey);
+            _cloudflareDnsClient = new CloudflareDnsClient(options.ApiToken);
         }
 
         private readonly CloudflareDnsClient _cloudflareDnsClient;
@@ -50,7 +50,7 @@ namespace KeyVault.Acmebot.Providers
 
         public class CloudflareDnsClient
         {
-            public CloudflareDnsClient(string apiKey)
+            public CloudflareDnsClient(string apiToken)
             {
                 _httpClient = new HttpClient
                 {
@@ -58,7 +58,7 @@ namespace KeyVault.Acmebot.Providers
                 };
 
                 _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiToken);
             }
 
             private readonly HttpClient _httpClient;
