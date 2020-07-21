@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace KeyVault.Acmebot
+namespace KeyVault.Acmebot.Options
 {
     public class AcmebotOptions
     {
@@ -10,7 +10,7 @@ namespace KeyVault.Acmebot
         [Required]
         public string Contacts { get; set; }
 
-        [Required]
+        // Backward compatibility
         public string SubscriptionId { get; set; }
 
         [Required]
@@ -22,5 +22,9 @@ namespace KeyVault.Acmebot
         public string DnsProvider { get; set; }
         public string DnsProviderUsername { get; set; }
         public string DnsProviderPassword { get; set; }
+
+        public AzureDnsOptions AzureDns { get; set; }
+
+        public CloudflareOptions Cloudflare { get; set; }
     }
 }

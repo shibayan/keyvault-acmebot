@@ -5,7 +5,8 @@ using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
+
+using KeyVault.Acmebot.Options;
 
 namespace KeyVault.Acmebot.Providers
 {
@@ -13,12 +14,12 @@ namespace KeyVault.Acmebot.Providers
     {
         private readonly GratisDnsClient _client;
 
-        public GratisDnsProvider(IOptions<AcmebotOptions> options)
+        public GratisDnsProvider(AcmebotOptions options)
         {
-            _client = new GratisDnsClient(options.Value.DnsProviderUsername, options.Value.DnsProviderPassword);
+            _client = new GratisDnsClient(options.DnsProviderUsername, options.DnsProviderPassword);
         }
 
-        public async Task<IList<DnsZone>> ListZonesAsync()
+        public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
         {
             var domains = await _client.ListDomainsAsync();
 
