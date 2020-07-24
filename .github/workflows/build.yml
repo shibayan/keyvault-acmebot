@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 env:
-  DOTNET_VERSION: 3.1.302
+  DOTNET_VERSION: 3.1.x
 
 jobs:
   build:
