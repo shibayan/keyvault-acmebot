@@ -49,8 +49,11 @@ https://github.com/shibayan/keyvault-acmebot/issues/80
 
 You will need the following:
 - Azure Subscription (required to deploy this solution)
-- Azure DNS (required to host your public DNS zone)
 - Azure Key Vault (existing one or new Key Vault can be created at deployment time)
+- DNS provider (required to host your public DNS zone)
+  - Azure DNS
+  - Cloudflare
+  - GratisDNS
 - Email address (required to register with ACME)
 
 ## Getting Started
@@ -88,6 +91,10 @@ Finally, you can save your previous settings to enable App Service authenticatio
 Open the `Access Control (IAM)` of the target DNS zone or resource group containing the DNS zone, and assign the role of `DNS Zone Contributor` to the deployed application.
 
 ![temp](https://user-images.githubusercontent.com/1356444/64354572-a9628f00-d03a-11e9-93c9-0c12992ca9bf.png)
+
+When using a DNS provider other than Azure DNS, please refer to the following page for configuration.
+
+https://github.com/shibayan/keyvault-acmebot/wiki/DNS-Provider-Configuration
 
 ### 5. Add to Key Vault access policies (if you use an existing Key Vault)
 

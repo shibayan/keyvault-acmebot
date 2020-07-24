@@ -137,7 +137,7 @@
               "value": "dotnet"
             },
             {
-              "name": "Acmebot:SubscriptionId",
+              "name": "Acmebot:AzureDns:SubscriptionId",
               "value": "[subscription().subscriptionId]"
             },
             {
