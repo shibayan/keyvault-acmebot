@@ -5,7 +5,7 @@ on:
     tags: [ v* ]
 
 env:
-  DOTNET_VERSION: 3.1.201
+  DOTNET_VERSION: 3.1.x
 
 jobs:
   publish:
