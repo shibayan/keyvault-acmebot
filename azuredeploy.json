@@ -12,7 +12,7 @@
     "mailAddress": {
       "type": "string",
       "metadata": {
-        "description": "Email address for Let's Encrypt account."
+        "description": "Email address for ACME account."
       }
     },
     "acmeEndpoint": {
@@ -54,7 +54,7 @@
     "appServicePlanName": "[concat('plan-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
     "appInsightsName": "[concat('appi-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
     "storageAccountName": "[concat('st', uniquestring(resourceGroup().id, deployment().name), 'func')]",
-    "storageAccountId": "[concat(resourceGroup().id, '/providers/', 'Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
+    "storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
     "keyVaultName": "[concat('kv-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
     "keyVaultSkuName": "[parameters('keyVaultSkuName')]",
     "mailAddress": "[parameters('mailAddress')]",
@@ -64,27 +64,31 @@
     {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('storageAccountName')]",
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "2018-11-01",
       "location": "[resourceGroup().location]",
-      "properties": {
-        "accountType": "Standard_LRS"
+      "sku": {
+        "name": "Standard_LRS"
       }
     },
     {
       "type": "Microsoft.Web/serverfarms",
       "name": "[variables('appServicePlanName')]",
-      "apiVersion": "2015-04-01",
+      "apiVersion": "2018-02-01",
       "location": "[resourceGroup().location]",
       "properties": {
-        "name": "[variables('appServicePlanName')]",
-        "computeMode": "Dynamic",
-        "sku": "Dynamic"
+        "name": "[variables('appServicePlanName')]"
+      },
+      "sku": {
+        "name": "Y1",
+        "tier": "Dynamic",
+        "size": "Y1",
+        "family": "Y"
       }
     },
     {
       "type": "Microsoft.Insights/components",
       "name": "[variables('appInsightsName')]",
-      "apiVersion": "2014-04-01",
+      "apiVersion": "2015-05-01",
       "location": "[resourceGroup().location]",
       "tags": {
         "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('functionAppName'))]": "Resource"
@@ -96,7 +100,7 @@
     {
       "type": "Microsoft.Web/sites",
       "name": "[variables('functionAppName')]",
-      "apiVersion": "2016-03-01",
+      "apiVersion": "2018-02-01",
       "location": "[resourceGroup().location]",
       "kind": "functionapp",
       "identity": {
@@ -117,11 +121,11 @@
             },
             {
               "name": "AzureWebJobsStorage",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'), '2018-11-01').keys[0].value)]"
             },
             {
               "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'), '2018-11-01').keys[0].value)]"
             },
             {
               "name": "WEBSITE_CONTENTSHARE",
@@ -161,14 +165,14 @@
       },
       "resources": [
         {
-          "apiVersion": "2015-08-01",
+          "apiVersion": "2018-02-01",
           "name": "metadata",
           "type": "config",
           "dependsOn": [
             "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]"
           ],
           "properties": {
-            "synctriggersstatus": "[listsyncfunctiontriggerstatus(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2015-08-01').status]"
+            "synctriggersstatus": "[listsyncfunctiontriggerstatus(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2018-02-01').status]"
           }
         }
       ]
