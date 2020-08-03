@@ -61,7 +61,7 @@ You will need the following:
 ### 1. Deploy Acmebot
 
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fshibayan%2Fkeyvault-acmebot%2Fmaster%2Fazuredeploy.json" target="_blank">
-  <img src="https://azuredeploy.net/deploybutton.png" />
+  <img src="https://aka.ms/deploytoazurebutton" />
 </a>
 
 ### 2. Add application settings
