@@ -24,7 +24,7 @@ Key Vault Acmebot v3 は 2019 年 12 月 31 日にリリースされました。
 
 https://github.com/shibayan/keyvault-acmebot/issues/80
 
-## Azure CDN / Front Door への証明書デプロイを自動化
+### Azure CDN / Front Door への証明書デプロイを自動化
 
 2020 年 8 月の時点で、Azure CDN / Front Door は新しい Key Vault 証明書を自動的にデプロイしません。自動的に新しいバージョンの証明書をデプロイするための補助アプリケーションを公開しています。
 
@@ -73,12 +73,16 @@ https://github.com/shibayan/keyvault-certificate-rotation
 
 ### 2. アプリケーション設定の追加
 
+Function App のアプリケーション設定から以下の項目を更新します。
+
 - Acmebot:VaultBaseUrl
   - Azure Key Vault の DNS 名 (既に存在する Key Vault を使う場合)
 - Acmebot:Webhook
   - Webhook 送信先の URL (オプション, Slack と Microsoft Teams を推奨)
 
 ### 3. App Service 認証を有効化する
+
+このアプリケーションの一部としてデプロイされている Function App で認証を有効にする必要があります。
 
 Azure Portal にて `認証/承認` メニューを開き、App Service 認証を有効化します。「要求が認証されない場合に実行するアクション」として `Azure Active Directory でのログイン` を選択します。認証プロバイダーとして Azure Active Directory を利用することを推奨していますが、他のプロバイダーでもサポート外ですが動作します。
 
@@ -132,16 +136,19 @@ Azure Portal から `TLS/SSL の設定` を開き、「秘密キー証明書 (.p
 
 #### Application Gateway v2
 
-- https://docs.microsoft.com/en-us/azure/application-gateway/key-vault-certs
+- https://docs.microsoft.com/ja-jp/azure/application-gateway/key-vault-certs
 
-#### Azure CDN / Front Door
+#### Azure CDN
 
-- https://docs.microsoft.com/en-us/azure/cdn/cdn-custom-ssl?tabs=option-2-enable-https-with-your-own-certificate
-- https://docs.microsoft.com/en-us/azure/frontdoor/front-door-custom-domain-https#option-2-use-your-own-certificate
+- https://docs.microsoft.com/ja-jp/azure/cdn/cdn-custom-ssl?tabs=option-2-enable-https-with-your-own-certificate
+
+#### Azure Front Door
+
+- https://docs.microsoft.com/ja-jp/azure/frontdoor/front-door-custom-domain-https#option-2-use-your-own-certificate
 
 #### API Management
 
-- https://docs.microsoft.com/en-us/azure/api-management/configure-custom-domain
+- https://docs.microsoft.com/ja-jp/azure/api-management/configure-custom-domain
 
 #### その他のサービス
 
