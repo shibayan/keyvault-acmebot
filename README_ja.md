@@ -56,7 +56,7 @@ https://github.com/shibayan/keyvault-certificate-rotation
 利用するためには以下のものが必要です。
 
 - Azure サブスクリプション (このアプリケーションのデプロイに必要)
-- Azure DNS と Azure Key Vault (Key Vault はデプロイ時に作成が可能)
+- Azure Key Vault (作成済み、もしくは Key Vault はデプロイ時に作成が可能)
 - DNS プロバイダー (公開 DNS ゾーンにあるホスト)
   - Azure DNS
   - Cloudflare
