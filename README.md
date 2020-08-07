@@ -4,7 +4,7 @@
 [![Release](https://img.shields.io/github/release/shibayan/keyvault-acmebot.svg)](https://github.com/shibayan/keyvault-acmebot/releases/latest)
 [![License](https://img.shields.io/github/license/shibayan/keyvault-acmebot.svg)](https://github.com/shibayan/keyvault-acmebot/blob/master/LICENSE)
 
-This application automates the issuance and renewal of ACME SSL/TLS certificates. The certificates are stored inside Azure Key Vault. Many Azure services such as Azure App Service, Application Gateway, CDN, etc. are able to import certificates directly from Key Vault. 
+This application automates the issuance and renewal of ACME SSL/TLS certificates. The certificates are stored inside Azure Key Vault. Many Azure services such as Azure App Service, Application Gateway, CDN, etc. are able to import certificates directly from Key Vault.
 
 We have started to address the following requirements:
 
@@ -16,13 +16,19 @@ We have started to address the following requirements:
 
 Key Vault allows for secure and centralized management of ACME certificates.
 
-## Caution
+## Announcements
 
 ### Upgrade to Acmebot v3
 
 Key Vault Acmebot v3 has been released since December 31, 2019. Users deploying earlier than this are encouraged to upgrade to v3 by following the ugprade process described here:
 
 https://github.com/shibayan/keyvault-acmebot/issues/80
+
+### Automate Azure CDN / Front Door certificates deployment
+
+As of August 2020, Azure CDN / Front Door does not automatically deploy new Key Vault certificates. I develop an utility application to automatically deploy a new version of the certificate.
+
+https://github.com/shibayan/keyvault-certificate-rotation
 
 ## Table Of Contents
 
@@ -48,6 +54,7 @@ https://github.com/shibayan/keyvault-acmebot/issues/80
 ## Requirements
 
 You will need the following:
+
 - Azure Subscription (required to deploy this solution)
 - Azure Key Vault (existing one or new Key Vault can be created at deployment time)
 - DNS provider (required to host your public DNS zone)
@@ -67,6 +74,7 @@ You will need the following:
 ### 2. Add application settings
 
 Update the following configuration settings of the Function App:
+
 - Acmebot:VaultBaseUrl
   - DNS name of the Azure Key Vault (if you are using an existing Key Vault)
 - Acmebot:Webhook
@@ -74,7 +82,7 @@ Update the following configuration settings of the Function App:
 
 ### 3. Enable App Service Authentication
 
-You must enable Authentication on the Function App that is deployed as part of this application. 
+You must enable Authentication on the Function App that is deployed as part of this application.
 
 Open the Azure Portal, navigate to the `Authentication / Authorization` menu of the deployed Function App and enable App Service authentication. Select the `Login with Azure Active Directory` as the action to perform if the request is not authenticated. We recommend using Azure Active Directory as your authentication provider, but it works with other providers as well, although it's not supported.
 
@@ -114,7 +122,7 @@ If the `Access Control (IAM)` setting is not correct, nothing will be shown in t
 
 ### Renew an existing certificate
 
-All existing ACME certificates are automatically renewed 30 days before their expiration. 
+All existing ACME certificates are automatically renewed 30 days before their expiration.
 
 ### How to use the issued certificate in Azure services
 
@@ -144,7 +152,7 @@ After importing, the App Service will automatically check for certificate update
 
 #### Other services
 
-The issued certificate can be downloaded from Key Vault and used elsewhere, either in Azure or outside Azure. 
+The issued certificate can be downloaded from Key Vault and used elsewhere, either in Azure or outside Azure.
 
 ## Thanks
 
