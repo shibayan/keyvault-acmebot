@@ -97,6 +97,7 @@ namespace KeyVault.Acmebot.Internal
             {
                 model = new
                 {
+                    username = "Acmebot",
                     attachments = new[]
                     {
                         new

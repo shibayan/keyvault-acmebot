@@ -85,8 +85,7 @@ namespace KeyVault.Acmebot
         {
             var certificates = await _keyVaultClient.GetAllCertificatesAsync(_options.VaultBaseUrl);
 
-            var list = certificates.Where(x => x.Tags.TryGetValue("Issuer", out var issuer) && issuer == IssuerName)
-                                   .Where(x => x.Tags.TryGetValue("Endpoint", out var endpoint) && endpoint == _options.Endpoint)
+            var list = certificates.Where(x => x.TagsFilter(IssuerName, _options.Endpoint))
                                    .Where(x => (x.Attributes.Expires.Value - currentDateTime).TotalDays < 30)
                                    .ToArray();
 
@@ -105,8 +104,7 @@ namespace KeyVault.Acmebot
         {
             var certificates = await _keyVaultClient.GetAllCertificatesAsync(_options.VaultBaseUrl);
 
-            var list = certificates.Where(x => x.Tags.TryGetValue("Issuer", out var issuer) && issuer == IssuerName)
-                                   .Where(x => x.Tags.TryGetValue("Endpoint", out var endpoint) && endpoint == _options.Endpoint)
+            var list = certificates.Where(x => x.TagsFilter(IssuerName, _options.Endpoint))
                                    .ToArray();
 
             var bundles = new List<CertificateBundle>();
