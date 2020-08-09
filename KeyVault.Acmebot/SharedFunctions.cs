@@ -104,12 +104,9 @@ namespace KeyVault.Acmebot
         {
             var certificates = await _keyVaultClient.GetAllCertificatesAsync(_options.VaultBaseUrl);
 
-            var list = certificates.Where(x => x.TagsFilter(IssuerName, _options.Endpoint))
-                                   .ToArray();
-
             var bundles = new List<CertificateBundle>();
 
-            foreach (var item in list)
+            foreach (var item in certificates)
             {
                 bundles.Add(await _keyVaultClient.GetCertificateAsync(item.Id));
             }
