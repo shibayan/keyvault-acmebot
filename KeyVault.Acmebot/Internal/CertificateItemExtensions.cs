@@ -13,17 +13,17 @@ namespace KeyVault.Acmebot.Internal
                 return false;
             }
 
-            if (tags.TryGetValue("Issuer", out var tagIssuer) && tagIssuer == issuer)
+            if (!tags.TryGetValue("Issuer", out var tagIssuer) || tagIssuer != issuer)
             {
-                return true;
+                return false;
             }
 
-            if (tags.TryGetValue("Endpoint", out var tagEndpoint) && tagEndpoint == endpoint)
+            if (!tags.TryGetValue("Endpoint", out var tagEndpoint) || tagEndpoint != endpoint)
             {
-                return true;
+                return false;
             }
 
-            return false;
+            return true;
         }
     }
 }
