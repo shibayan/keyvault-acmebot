@@ -19,6 +19,9 @@ namespace KeyVault.Acmebot.Options
         [Url]
         public string Webhook { get; set; }
 
+        [Required]
+        public string Environment { get; set; } = "AzureCloud";
+
         public AzureDnsOptions AzureDns { get; set; }
 
         public CloudflareOptions Cloudflare { get; set; }
