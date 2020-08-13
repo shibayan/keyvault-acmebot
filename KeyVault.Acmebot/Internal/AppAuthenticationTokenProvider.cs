@@ -9,11 +9,18 @@ namespace KeyVault.Acmebot.Internal
 {
     internal class AppAuthenticationTokenProvider : ITokenProvider
     {
-        private readonly AzureServiceTokenProvider _tokenProvider = new AzureServiceTokenProvider();
+        public AppAuthenticationTokenProvider(IAzureEnvironment environment)
+        {
+            _environment = environment;
+            _tokenProvider = new AzureServiceTokenProvider(azureAdInstance: _environment.ActiveDirectory);
+        }
+
+        private readonly IAzureEnvironment _environment;
+        private readonly AzureServiceTokenProvider _tokenProvider;
 
         public async Task<AuthenticationHeaderValue> GetAuthenticationHeaderAsync(CancellationToken cancellationToken)
         {
-            var accessToken = await _tokenProvider.GetAccessTokenAsync("https://management.azure.com/", cancellationToken: cancellationToken);
+            var accessToken = await _tokenProvider.GetAccessTokenAsync(_environment.ResourceManager, cancellationToken: cancellationToken);
 
             return new AuthenticationHeaderValue("Bearer", accessToken);
         }

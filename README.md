@@ -67,7 +67,21 @@ You will need the following:
 
 ### 1. Deploy Acmebot
 
+For Azure Cloud
+
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fshibayan%2Fkeyvault-acmebot%2Fmaster%2Fazuredeploy.json" target="_blank">
+  <img src="https://aka.ms/deploytoazurebutton" />
+</a>
+
+For Azure China
+
+<a href="https://portal.azure.cn/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fshibayan%2Fkeyvault-acmebot%2Fmaster%2Fazuredeploy.json" target="_blank">
+  <img src="https://aka.ms/deploytoazurebutton" />
+</a>
+
+For Azure Government
+
+<a href="https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fshibayan%2Fkeyvault-acmebot%2Fmaster%2Fazuredeploy.json" target="_blank">
   <img src="https://aka.ms/deploytoazurebutton" />
 </a>
 

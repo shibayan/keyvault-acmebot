@@ -40,8 +40,20 @@ namespace KeyVault.Acmebot
 
             builder.Services.AddSingleton(new LookupClient(new LookupClientOptions { UseCache = false }));
 
+            builder.Services.AddSingleton<IAzureEnvironment>(provider =>
+            {
+                var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
+
+                return AzureEnvironment.Get(options.Value.Environment);
+            });
+
             builder.Services.AddSingleton(provider =>
-                new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(new AzureServiceTokenProvider().KeyVaultTokenCallback)));
+            {
+                var environment = provider.GetRequiredService<IAzureEnvironment>();
+                var tokenProvider = new AzureServiceTokenProvider(azureAdInstance: environment.ActiveDirectory);
+
+                return new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(tokenProvider.KeyVaultTokenCallback));
+            });
 
             builder.Services.AddSingleton<IAcmeProtocolClientFactory, AcmeProtocolClientFactory>();
 
@@ -51,6 +63,7 @@ namespace KeyVault.Acmebot
             builder.Services.AddSingleton<IDnsProvider>(provider =>
             {
                 var options = provider.GetRequiredService<IOptions<AcmebotOptions>>().Value;
+                var environment = provider.GetRequiredService<IAzureEnvironment>();
 
                 if (options.Cloudflare != null)
                 {
@@ -64,12 +77,12 @@ namespace KeyVault.Acmebot
 
                 if (options.AzureDns != null)
                 {
-                    return new AzureDnsProvider(options.AzureDns);
+                    return new AzureDnsProvider(options.AzureDns, environment);
                 }
 
                 if (options.SubscriptionId != null)
                 {
-                    return new AzureDnsProvider(new AzureDnsOptions { SubscriptionId = options.SubscriptionId });
+                    return new AzureDnsProvider(new AzureDnsOptions { SubscriptionId = options.SubscriptionId }, environment);
                 }
 
                 throw new NotSupportedException();
