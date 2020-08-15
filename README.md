@@ -94,6 +94,14 @@ Update the following configuration settings of the Function App:
 - Acmebot:Webhook
   - Webhook destination URL (optional, Slack and Microsoft Teams are recommended)
 
+There are also additional settings that will be automatically created by Key Vault Acmebot
+- Acmebot:Endpoint
+  - The letsencrypt endpoint used to renew certificates
+- Acmebot:Contacts
+  - The email address (required) used in letsencrypt requests
+- Acmebot:AzureDns:SubscriptionId
+  - Your Azure subscription ID in order to identify which DNS resources can be used for let's encrypt
+  
 ### 3. Enable App Service Authentication
 
 You must enable Authentication on the Function App that is deployed as part of this application.
@@ -167,6 +175,15 @@ After importing, the App Service will automatically check for certificate update
 #### Other services
 
 The issued certificate can be downloaded from Key Vault and used elsewhere, either in Azure or outside Azure.
+
+#### Remove a Certificate
+
+To Remove a certificate from the system delete it from the key vault. Key Vault Acmebot
+ will no longer renew the certificate.
+
+#### Reinstalling Or Updating Key Vault Acmebot
+
+To Reinstall or Upgrade Key Vault Acmebot without removing your certificates, ensure that the keyvault is not removed. Key Vault Acmebot will use the exisiting certificates and vault after upgrade or reinstall
 
 ## Thanks
 
