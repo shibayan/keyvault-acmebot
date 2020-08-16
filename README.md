@@ -176,11 +176,13 @@ After importing, the App Service will automatically check for certificate update
 
 The issued certificate can be downloaded from Key Vault and used elsewhere, either in Azure or outside Azure.
 
-#### Remove a Certificate
+## Frequently Asked Questions
+
+### Remove a Certificate
 
 To Remove a certificate from the system delete it from the Key Vault. Key Vault Acmebot will no longer renew the certificate.
 
-#### Reinstalling Or Updating Key Vault Acmebot
+### Reinstalling Or Updating Key Vault Acmebot
 
 To Reinstall or Upgrade Key Vault Acmebot without removing your certificates, ensure that the Key Vault is not removed. Key Vault Acmebot will use the exisiting certificates and vault after upgrade or reinstall
 
