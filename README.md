@@ -96,7 +96,7 @@ Update the following configuration settings of the Function App:
 
 There are also additional settings that will be automatically created by Key Vault Acmebot
 - Acmebot:Endpoint
-  - The letsencrypt endpoint used to renew certificates
+  - The ACME endpoint used to issue certificates
 - Acmebot:Contacts
   - The email address (required) used in letsencrypt requests
 - Acmebot:AzureDns:SubscriptionId
