@@ -178,8 +178,7 @@ The issued certificate can be downloaded from Key Vault and used elsewhere, eith
 
 #### Remove a Certificate
 
-To Remove a certificate from the system delete it from the key vault. Key Vault Acmebot
- will no longer renew the certificate.
+To Remove a certificate from the system delete it from the Key Vault. Key Vault Acmebot will no longer renew the certificate.
 
 #### Reinstalling Or Updating Key Vault Acmebot
 
