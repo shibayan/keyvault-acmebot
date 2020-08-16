@@ -100,7 +100,7 @@ There are also additional settings that will be automatically created by Key Vau
 - Acmebot:Contacts
   - The email address (required) used in ACME account registration
 - Acmebot:AzureDns:SubscriptionId
-  - Your Azure subscription ID in order to identify which DNS resources can be used for let's encrypt
+  - Your Azure subscription ID in order to identify which DNS resources can be used for ACME
   
 ### 3. Enable App Service Authentication
 
