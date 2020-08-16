@@ -182,7 +182,7 @@ To Remove a certificate from the system delete it from the Key Vault. Key Vault 
 
 #### Reinstalling Or Updating Key Vault Acmebot
 
-To Reinstall or Upgrade Key Vault Acmebot without removing your certificates, ensure that the keyvault is not removed. Key Vault Acmebot will use the exisiting certificates and vault after upgrade or reinstall
+To Reinstall or Upgrade Key Vault Acmebot without removing your certificates, ensure that the Key Vault is not removed. Key Vault Acmebot will use the exisiting certificates and vault after upgrade or reinstall
 
 ## Thanks
 
