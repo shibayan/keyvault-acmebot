@@ -1,12 +1,12 @@
-﻿using Microsoft.Azure.KeyVault.Models;
+﻿using Azure.Security.KeyVault.Certificates;
 
 namespace KeyVault.Acmebot.Internal
 {
-    internal static class CertificateItemExtensions
+    internal static class CertificatePropertiesExtensions
     {
-        public static bool TagsFilter(this CertificateItem certificate, string issuer, string endpoint)
+        public static bool TagsFilter(this CertificateProperties properties, string issuer, string endpoint)
         {
-            var tags = certificate.Tags;
+            var tags = properties.Tags;
 
             if (tags == null)
             {

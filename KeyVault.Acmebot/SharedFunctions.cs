@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using ACMESharp.Authorizations;
 using ACMESharp.Protocol;
 
+using Azure.Security.KeyVault.Certificates;
+
 using DnsClient;
 
 using DurableTask.TypedProxy;
@@ -18,8 +20,6 @@ using KeyVault.Acmebot.Models;
 using KeyVault.Acmebot.Options;
 using KeyVault.Acmebot.Providers;
 
-using Microsoft.Azure.KeyVault;
-using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Options;
@@ -29,13 +29,13 @@ namespace KeyVault.Acmebot
     public class SharedFunctions : ISharedFunctions
     {
         public SharedFunctions(LookupClient lookupClient, IAcmeProtocolClientFactory acmeProtocolClientFactory,
-                               IDnsProvider dnsProvider, KeyVaultClient keyVaultClient,
+                               IDnsProvider dnsProvider, CertificateClient certificateClient,
                                WebhookClient webhookClient, IOptions<AcmebotOptions> options)
         {
             _acmeProtocolClientFactory = acmeProtocolClientFactory;
             _dnsProvider = dnsProvider;
             _lookupClient = lookupClient;
-            _keyVaultClient = keyVaultClient;
+            _certificateClient = certificateClient;
             _webhookClient = webhookClient;
             _options = options.Value;
         }
@@ -43,7 +43,7 @@ namespace KeyVault.Acmebot
         private readonly LookupClient _lookupClient;
         private readonly IAcmeProtocolClientFactory _acmeProtocolClientFactory;
         private readonly IDnsProvider _dnsProvider;
-        private readonly KeyVaultClient _keyVaultClient;
+        private readonly CertificateClient _certificateClient;
         private readonly WebhookClient _webhookClient;
         private readonly AcmebotOptions _options;
 
@@ -77,41 +77,47 @@ namespace KeyVault.Acmebot
             var certificate = await activity.FinalizeOrder((dnsNames, orderDetails));
 
             // 証明書の更新が完了後に Webhook を送信する
-            await activity.SendCompletedEvent((certificate.SecretIdentifier.Name, certificate.Attributes.Expires, dnsNames));
+            await activity.SendCompletedEvent((certificate.Name, certificate.Properties.ExpiresOn, dnsNames));
         }
 
         [FunctionName(nameof(GetExpiringCertificates))]
-        public async Task<IList<CertificateBundle>> GetExpiringCertificates([ActivityTrigger] DateTime currentDateTime)
+        public async Task<IList<KeyVaultCertificateWithPolicy>> GetExpiringCertificates([ActivityTrigger] DateTime currentDateTime)
         {
-            var certificates = await _keyVaultClient.GetAllCertificatesAsync(_options.VaultBaseUrl);
+            var certificates = _certificateClient.GetPropertiesOfCertificatesAsync();
 
-            var list = certificates.Where(x => x.TagsFilter(IssuerName, _options.Endpoint))
-                                   .Where(x => (x.Attributes.Expires.Value - currentDateTime).TotalDays < 30)
-                                   .ToArray();
+            var result = new List<KeyVaultCertificateWithPolicy>();
 
-            var bundles = new List<CertificateBundle>();
-
-            foreach (var item in list)
+            await foreach (var certificate in certificates)
             {
-                bundles.Add(await _keyVaultClient.GetCertificateAsync(item.Id));
+                if (!certificate.TagsFilter(IssuerName, _options.Endpoint))
+                {
+                    continue;
+                }
+
+                if ((certificate.ExpiresOn.Value - currentDateTime).TotalDays < 30)
+                {
+                    continue;
+                }
+
+                result.Add(await _certificateClient.GetCertificateAsync(certificate.Name));
             }
 
-            return bundles;
+            return result;
         }
 
         [FunctionName(nameof(GetAllCertificates))]
-        public async Task<IList<CertificateBundle>> GetAllCertificates([ActivityTrigger] object input = null)
+        public async Task<IList<KeyVaultCertificateWithPolicy>> GetAllCertificates([ActivityTrigger] object input = null)
         {
-            var certificates = await _keyVaultClient.GetAllCertificatesAsync(_options.VaultBaseUrl);
+            var certificates = _certificateClient.GetPropertiesOfCertificatesAsync();
 
-            var bundles = new List<CertificateBundle>();
+            var result = new List<KeyVaultCertificateWithPolicy>();
 
-            foreach (var item in certificates)
+            await foreach (var certificate in certificates)
             {
-                bundles.Add(await _keyVaultClient.GetCertificateAsync(item.Id));
+                result.Add(await _certificateClient.GetCertificateAsync(certificate.Name));
             }
 
-            return bundles;
+            return result;
         }
 
         [FunctionName(nameof(GetZones))]
@@ -251,7 +257,7 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(FinalizeOrder))]
-        public async Task<CertificateBundle> FinalizeOrder([ActivityTrigger] (string[], OrderDetails) input)
+        public async Task<KeyVaultCertificateWithPolicy> FinalizeOrder([ActivityTrigger] (string[], OrderDetails) input)
         {
             var (dnsNames, orderDetails) = input;
 
@@ -262,25 +268,21 @@ namespace KeyVault.Acmebot
             try
             {
                 // Key Vault を使って CSR を作成
-                var request = await _keyVaultClient.CreateCertificateAsync(_options.VaultBaseUrl, certificateName, new CertificatePolicy
-                {
-                    X509CertificateProperties = new X509CertificateProperties
-                    {
-                        SubjectAlternativeNames = new SubjectAlternativeNames(dnsNames: dnsNames)
-                    }
-                }, tags: new Dictionary<string, string>
+                var policy = new CertificatePolicy(WellKnownIssuerNames.Unknown, new SubjectAlternativeNames());
+
+                var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificateName, policy, tags: new Dictionary<string, string>
                 {
                     { "Issuer", IssuerName },
                     { "Endpoint", _options.Endpoint }
                 });
 
-                csr = request.Csr;
+                csr = certificateOperation.Properties.Csr;
             }
-            catch (KeyVaultErrorException ex) when (ex.Response.StatusCode == HttpStatusCode.Conflict)
+            catch
             {
-                var base64Csr = await _keyVaultClient.GetPendingCertificateSigningRequestAsync(_options.VaultBaseUrl, certificateName);
+                var certificateOperation = await _certificateClient.GetCertificateOperationAsync(certificateName);
 
-                csr = Convert.FromBase64String(base64Csr);
+                csr = certificateOperation.Properties.Csr;
             }
 
             // Order の最終処理を実行し、証明書を作成
@@ -296,11 +298,14 @@ namespace KeyVault.Acmebot
 
             x509Certificates.ImportFromPem(certificateData);
 
-            return await _keyVaultClient.MergeCertificateAsync(_options.VaultBaseUrl, certificateName, x509Certificates);
+            return await _certificateClient.MergeCertificateAsync(new MergeCertificateOptions(
+                certificateName,
+                x509Certificates.OfType<X509Certificate2>().Select(x => x.Export(X509ContentType.Pfx))
+            ));
         }
 
         [FunctionName(nameof(SendCompletedEvent))]
-        public Task SendCompletedEvent([ActivityTrigger] (string, DateTime?, string[]) input)
+        public Task SendCompletedEvent([ActivityTrigger] (string, DateTimeOffset?, string[]) input)
         {
             var (certificateName, expirationDate, dnsNames) = input;
 

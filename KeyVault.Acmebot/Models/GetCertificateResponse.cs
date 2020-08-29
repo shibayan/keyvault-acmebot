@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using Microsoft.Azure.KeyVault.Models;
+using Azure.Security.KeyVault.Certificates;
 
 using Newtonsoft.Json;
 
@@ -9,11 +9,11 @@ namespace KeyVault.Acmebot.Models
 {
     public class GetCertificateResponse
     {
-        public GetCertificateResponse(CertificateBundle certificateBundle)
+        public GetCertificateResponse(KeyVaultCertificateWithPolicy certificateBundle)
         {
-            Name = certificateBundle.CertificateIdentifier.Name;
-            DnsNames = certificateBundle.Policy.X509CertificateProperties.SubjectAlternativeNames.DnsNames;
-            Expire = certificateBundle.Attributes.Expires;
+            Name = certificateBundle.Name;
+            DnsNames = certificateBundle.Policy.SubjectAlternativeNames.DnsNames;
+            Expire = certificateBundle.Properties.ExpiresOn;
         }
 
         [JsonProperty("name")]
@@ -23,6 +23,6 @@ namespace KeyVault.Acmebot.Models
         public IList<string> DnsNames { get; }
 
         [JsonProperty("expire")]
-        public DateTime? Expire { get; }
+        public DateTimeOffset? Expire { get; }
     }
 }

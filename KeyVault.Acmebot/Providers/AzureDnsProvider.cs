@@ -16,7 +16,7 @@ namespace KeyVault.Acmebot.Providers
     {
         public AzureDnsProvider(AzureDnsOptions options, IAzureEnvironment environment)
         {
-            _dnsManagementClient = new DnsManagementClient(new Uri(environment.ResourceManager), new TokenCredentials(new AppAuthenticationTokenProvider(environment)))
+            _dnsManagementClient = new DnsManagementClient(new Uri(environment.ResourceManager), new TokenCredentials(new ManagedIdentityTokenProvider(environment)))
             {
                 SubscriptionId = options.SubscriptionId
             };

@@ -4,19 +4,19 @@ using System.Threading.Tasks;
 
 using ACMESharp.Protocol;
 
+using Azure.Security.KeyVault.Certificates;
+
 using DurableTask.TypedProxy;
 
 using KeyVault.Acmebot.Models;
-
-using Microsoft.Azure.KeyVault.Models;
 
 namespace KeyVault.Acmebot.Contracts
 {
     public interface ISharedFunctions
     {
-        Task<IList<CertificateBundle>> GetExpiringCertificates(DateTime currentDateTime);
+        Task<IList<KeyVaultCertificateWithPolicy>> GetExpiringCertificates(DateTime currentDateTime);
 
-        Task<IList<CertificateBundle>> GetAllCertificates(object input = null);
+        Task<IList<KeyVaultCertificateWithPolicy>> GetAllCertificates(object input = null);
 
         Task<IList<string>> GetZones(object input = null);
 
@@ -34,8 +34,8 @@ namespace KeyVault.Acmebot.Contracts
 
         Task AnswerChallenges(IList<AcmeChallengeResult> challengeResults);
 
-        Task<CertificateBundle> FinalizeOrder((string[], OrderDetails) input);
+        Task<KeyVaultCertificateWithPolicy> FinalizeOrder((string[], OrderDetails) input);
 
-        Task SendCompletedEvent((string, DateTime?, string[]) input);
+        Task SendCompletedEvent((string, DateTimeOffset?, string[]) input);
     }
 }

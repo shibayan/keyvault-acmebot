@@ -1,5 +1,8 @@
 ﻿using System;
 
+using Azure.Identity;
+using Azure.Security.KeyVault.Certificates;
+
 using DnsClient;
 
 using KeyVault.Acmebot;
@@ -8,8 +11,6 @@ using KeyVault.Acmebot.Options;
 using KeyVault.Acmebot.Providers;
 
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
-using Microsoft.Azure.KeyVault;
-using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,10 +40,15 @@ namespace KeyVault.Acmebot
 
             builder.Services.AddSingleton(provider =>
             {
+                var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
                 var environment = provider.GetRequiredService<IAzureEnvironment>();
-                var tokenProvider = new AzureServiceTokenProvider(azureAdInstance: environment.ActiveDirectory);
 
-                return new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(tokenProvider.KeyVaultTokenCallback));
+                var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
+                {
+                    AuthorityHost = new Uri(environment.ActiveDirectory)
+                });
+
+                return new CertificateClient(new Uri(options.Value.VaultBaseUrl), credential);
             });
 
             builder.Services.AddSingleton<IAcmeProtocolClientFactory, AcmeProtocolClientFactory>();
