@@ -32,9 +32,9 @@ namespace KeyVault.Acmebot
             // 証明書の更新を行う
             foreach (var certificate in certificates)
             {
-                var dnsNames = certificate.Policy.SubjectAlternativeNames.DnsNames;
+                var dnsNames = certificate.DnsNames;
 
-                log.LogInformation($"{certificate.Id} - {certificate.Properties.ExpiresOn}");
+                log.LogInformation($"{certificate.Id} - {certificate.ExpiresOn}");
 
                 try
                 {

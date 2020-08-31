@@ -77,15 +77,15 @@ namespace KeyVault.Acmebot
             var certificate = await activity.FinalizeOrder((dnsNames, orderDetails));
 
             // 証明書の更新が完了後に Webhook を送信する
-            await activity.SendCompletedEvent((certificate.Name, certificate.Properties.ExpiresOn, dnsNames));
+            await activity.SendCompletedEvent((certificate.Name, certificate.ExpiresOn, dnsNames));
         }
 
         [FunctionName(nameof(GetExpiringCertificates))]
-        public async Task<IList<KeyVaultCertificateWithPolicy>> GetExpiringCertificates([ActivityTrigger] DateTime currentDateTime)
+        public async Task<IList<CertificateItem>> GetExpiringCertificates([ActivityTrigger] DateTime currentDateTime)
         {
             var certificates = _certificateClient.GetPropertiesOfCertificatesAsync();
 
-            var result = new List<KeyVaultCertificateWithPolicy>();
+            var result = new List<CertificateItem>();
 
             await foreach (var certificate in certificates)
             {
@@ -99,22 +99,22 @@ namespace KeyVault.Acmebot
                     continue;
                 }
 
-                result.Add(await _certificateClient.GetCertificateAsync(certificate.Name));
+                result.Add((await _certificateClient.GetCertificateAsync(certificate.Name)).Value.ToCertificateItem());
             }
 
             return result;
         }
 
         [FunctionName(nameof(GetAllCertificates))]
-        public async Task<IList<KeyVaultCertificateWithPolicy>> GetAllCertificates([ActivityTrigger] object input = null)
+        public async Task<IList<CertificateItem>> GetAllCertificates([ActivityTrigger] object input = null)
         {
             var certificates = _certificateClient.GetPropertiesOfCertificatesAsync();
 
-            var result = new List<KeyVaultCertificateWithPolicy>();
+            var result = new List<CertificateItem>();
 
             await foreach (var certificate in certificates)
             {
-                result.Add(await _certificateClient.GetCertificateAsync(certificate.Name));
+                result.Add((await _certificateClient.GetCertificateAsync(certificate.Name)).Value.ToCertificateItem());
             }
 
             return result;
@@ -257,7 +257,7 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(FinalizeOrder))]
-        public async Task<KeyVaultCertificateWithPolicy> FinalizeOrder([ActivityTrigger] (string[], OrderDetails) input)
+        public async Task<CertificateItem> FinalizeOrder([ActivityTrigger] (string[], OrderDetails) input)
         {
             var (dnsNames, orderDetails) = input;
 
@@ -298,10 +298,12 @@ namespace KeyVault.Acmebot
 
             x509Certificates.ImportFromPem(certificateData);
 
-            return await _certificateClient.MergeCertificateAsync(new MergeCertificateOptions(
+            var mergeCertificateOptions = new MergeCertificateOptions(
                 certificateName,
                 x509Certificates.OfType<X509Certificate2>().Select(x => x.Export(X509ContentType.Pfx))
-            ));
+            );
+
+            return (await _certificateClient.MergeCertificateAsync(mergeCertificateOptions)).Value.ToCertificateItem();
         }
 
         [FunctionName(nameof(SendCompletedEvent))]

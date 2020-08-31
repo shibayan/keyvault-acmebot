@@ -1,8 +1,10 @@
 ﻿using Azure.Security.KeyVault.Certificates;
 
+using KeyVault.Acmebot.Models;
+
 namespace KeyVault.Acmebot.Internal
 {
-    internal static class CertificatePropertiesExtensions
+    internal static class CertificateExtensions
     {
         public static bool TagsFilter(this CertificateProperties properties, string issuer, string endpoint)
         {
@@ -24,6 +26,17 @@ namespace KeyVault.Acmebot.Internal
             }
 
             return true;
+        }
+
+        public static CertificateItem ToCertificateItem(this KeyVaultCertificateWithPolicy certificate)
+        {
+            return new CertificateItem
+            {
+                Id = certificate.Id,
+                Name = certificate.Name,
+                DnsNames = certificate.Policy.SubjectAlternativeNames.DnsNames,
+                ExpiresOn = certificate.Properties.ExpiresOn.Value
+            };
         }
     }
 }

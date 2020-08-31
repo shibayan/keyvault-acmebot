@@ -14,9 +14,9 @@ namespace KeyVault.Acmebot.Contracts
 {
     public interface ISharedFunctions
     {
-        Task<IList<KeyVaultCertificateWithPolicy>> GetExpiringCertificates(DateTime currentDateTime);
+        Task<IList<CertificateItem>> GetExpiringCertificates(DateTime currentDateTime);
 
-        Task<IList<KeyVaultCertificateWithPolicy>> GetAllCertificates(object input = null);
+        Task<IList<CertificateItem>> GetAllCertificates(object input = null);
 
         Task<IList<string>> GetZones(object input = null);
 
@@ -34,7 +34,7 @@ namespace KeyVault.Acmebot.Contracts
 
         Task AnswerChallenges(IList<AcmeChallengeResult> challengeResults);
 
-        Task<KeyVaultCertificateWithPolicy> FinalizeOrder((string[], OrderDetails) input);
+        Task<CertificateItem> FinalizeOrder((string[], OrderDetails) input);
 
         Task SendCompletedEvent((string, DateTimeOffset?, string[]) input);
     }
