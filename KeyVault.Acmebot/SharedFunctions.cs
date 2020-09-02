@@ -94,7 +94,7 @@ namespace KeyVault.Acmebot
                     continue;
                 }
 
-                if ((certificate.ExpiresOn.Value - currentDateTime).TotalDays < 30)
+                if ((certificate.ExpiresOn.Value - currentDateTime).TotalDays > 30)
                 {
                     continue;
                 }
@@ -268,7 +268,14 @@ namespace KeyVault.Acmebot
             try
             {
                 // Key Vault を使って CSR を作成
-                var policy = new CertificatePolicy(WellKnownIssuerNames.Unknown, new SubjectAlternativeNames());
+                var subjectAlternativeNames = new SubjectAlternativeNames();
+
+                foreach (var dnsName in dnsNames)
+                {
+                    subjectAlternativeNames.DnsNames.Add(dnsName);
+                }
+
+                var policy = new CertificatePolicy(WellKnownIssuerNames.Unknown, subjectAlternativeNames);
 
                 var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificateName, policy, tags: new Dictionary<string, string>
                 {
