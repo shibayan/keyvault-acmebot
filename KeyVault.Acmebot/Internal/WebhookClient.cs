@@ -19,7 +19,7 @@ namespace KeyVault.Acmebot.Internal
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly AcmebotOptions _options;
 
-        public Task SendCompletedEventAsync(string certificateName, DateTime? expirationDate, string[] dnsNames)
+        public Task SendCompletedEventAsync(string certificateName, DateTimeOffset? expirationDate, string[] dnsNames)
         {
             if (string.IsNullOrEmpty(_options.Webhook))
             {

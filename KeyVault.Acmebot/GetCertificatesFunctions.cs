@@ -27,13 +27,11 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(GetCertificates))]
-        public async Task<IList<GetCertificateResponse>> GetCertificates([OrchestrationTrigger] IDurableOrchestrationContext context)
+        public Task<IList<CertificateItem>> GetCertificates([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             var activity = context.CreateActivityProxy<ISharedFunctions>();
 
-            var certificates = await activity.GetAllCertificates();
-
-            return certificates.Select(x => new GetCertificateResponse(x)).ToArray();
+            return activity.GetAllCertificates();
         }
 
         [FunctionName(nameof(GetCertificates_HttpStart))]
