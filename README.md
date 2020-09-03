@@ -36,6 +36,7 @@ https://github.com/shibayan/keyvault-certificate-rotation
 - [Requirements](#requirements)
 - [Getting Started](#getting-started)
 - [Usage](#usage)
+- [Frequently Asked Questions](#frequently-asked-questions)
 - [Thanks](#thanks)
 - [License](#license)
 
