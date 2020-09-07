@@ -36,6 +36,11 @@ namespace KeyVault.Acmebot.Providers
             }
         }
 
+        public Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
+        {
+            return Task.CompletedTask;
+        }
+
         private class GratisDnsClient
         {
             public GratisDnsClient(string username, string password)

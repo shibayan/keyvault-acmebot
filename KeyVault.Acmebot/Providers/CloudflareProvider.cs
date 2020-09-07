@@ -48,6 +48,18 @@ namespace KeyVault.Acmebot.Providers
             }
         }
 
+        public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
+        {
+            var recordName = $"{relativeRecordName}.{zone.Name}";
+
+            var records = await _cloudflareDnsClient.GetDnsRecordsAsync(zone.Id, recordName);
+
+            foreach (var record in records)
+            {
+                await _cloudflareDnsClient.DeleteDnsRecordAsync(zone.Id, record.Id);
+            }
+        }
+
         public class CloudflareDnsClient
         {
             public CloudflareDnsClient(string apiToken)

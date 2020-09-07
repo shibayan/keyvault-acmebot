@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
@@ -74,7 +73,11 @@ namespace KeyVault.Acmebot
             // Order のステータスが ready になるまで 60 秒待機
             await activity.CheckIsReady(orderDetails);
 
+            // 証明書を作成し Key Vault に保存
             var certificate = await activity.FinalizeOrder((dnsNames, orderDetails));
+
+            // 作成した DNS レコードを削除
+            await activity.CleanupDnsChallenge(challengeResults);
 
             // 証明書の更新が完了後に Webhook を送信する
             await activity.SendCompletedEvent((certificate.Name, certificate.ExpiresOn, dnsNames));
@@ -311,6 +314,28 @@ namespace KeyVault.Acmebot
             );
 
             return (await _certificateClient.MergeCertificateAsync(mergeCertificateOptions)).Value.ToCertificateItem();
+        }
+
+        [FunctionName(nameof(CleanupDnsChallenge))]
+        public async Task CleanupDnsChallenge([ActivityTrigger] IList<AcmeChallengeResult> challengeResults)
+        {
+            // DNS zone の一覧を取得する
+            var zones = await _dnsProvider.ListZonesAsync();
+
+            // DNS-01 の検証レコード名毎に DNS から TXT レコードを削除
+            foreach (var lookup in challengeResults.ToLookup(x => x.DnsRecordName))
+            {
+                var dnsRecordName = lookup.Key;
+
+                var zone = zones.Where(x => dnsRecordName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase))
+                                .OrderByDescending(x => x.Name.Length)
+                                .First();
+
+                // Challenge の詳細から DNS 向けにレコード名を作成
+                var acmeDnsRecordName = dnsRecordName.Replace($".{zone.Name}", "", StringComparison.OrdinalIgnoreCase);
+
+                await _dnsProvider.DeleteTxtRecordAsync(zone, acmeDnsRecordName);
+            }
         }
 
         [FunctionName(nameof(SendCompletedEvent))]

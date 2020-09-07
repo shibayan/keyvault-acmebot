@@ -45,6 +45,13 @@ namespace KeyVault.Acmebot.Providers
             await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(resourceGroup, zone.Name, relativeRecordName, RecordType.TXT, recordSet);
         }
 
+        public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
+        {
+            var resourceGroup = ExtractResourceGroup(zone.Id);
+
+            await _dnsManagementClient.RecordSets.DeleteAsync(resourceGroup, zone.Name, relativeRecordName, RecordType.TXT);
+        }
+
         private static string ExtractResourceGroup(string resourceId)
         {
             var values = resourceId.Split('/', StringSplitOptions.RemoveEmptyEntries);
