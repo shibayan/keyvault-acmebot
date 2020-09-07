@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 
 using ACMESharp.Protocol;
 
-using Azure.Security.KeyVault.Certificates;
-
 using DurableTask.TypedProxy;
 
 using KeyVault.Acmebot.Models;
@@ -35,6 +33,8 @@ namespace KeyVault.Acmebot.Contracts
         Task AnswerChallenges(IList<AcmeChallengeResult> challengeResults);
 
         Task<CertificateItem> FinalizeOrder((string[], OrderDetails) input);
+
+        Task CleanupDnsChallenge(IList<AcmeChallengeResult> challengeResults);
 
         Task SendCompletedEvent((string, DateTimeOffset?, string[]) input);
     }
