@@ -216,7 +216,7 @@ namespace KeyVault.Acmebot
                 catch (DnsResponseException ex)
                 {
                     // 一時的な DNS エラーの可能性があるためリトライ
-                    throw new RetriableActivityException($"{challengeResult.DnsRecordName} bad response. {ex.DnsError}", ex);
+                    throw new RetriableActivityException($"{challengeResult.DnsRecordName} bad response. Message: \"{ex.DnsError}\"", ex);
                 }
 
                 var txtRecords = queryResult.Answers
@@ -232,7 +232,7 @@ namespace KeyVault.Acmebot
                 // レコードに今回のチャレンジが含まれていない場合もエラー
                 if (!txtRecords.Any(x => x.Text.Contains(challengeResult.DnsRecordValue)))
                 {
-                    throw new RetriableActivityException($"{challengeResult.DnsRecordName} value is not correct.");
+                    throw new RetriableActivityException($"{challengeResult.DnsRecordName} is not correct. Expected: \"{challengeResult.DnsRecordValue}\", Actual: \"{string.Join(",", txtRecords.SelectMany(x => x.Text))}\"");
                 }
             }
         }
