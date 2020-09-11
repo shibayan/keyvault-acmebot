@@ -206,8 +206,18 @@ namespace KeyVault.Acmebot
         {
             foreach (var challengeResult in challengeResults)
             {
-                // 実際に ACME の TXT レコードを引いて確認する
-                var queryResult = await _lookupClient.QueryAsync(challengeResult.DnsRecordName, QueryType.TXT);
+                IDnsQueryResponse queryResult;
+
+                try
+                {
+                    // 実際に ACME の TXT レコードを引いて確認する
+                    queryResult = await _lookupClient.QueryAsync(challengeResult.DnsRecordName, QueryType.TXT);
+                }
+                catch (DnsResponseException ex)
+                {
+                    // 一時的な DNS エラーの可能性があるためリトライ
+                    throw new RetriableActivityException($"{challengeResult.DnsRecordName} bad response. {ex.DnsError}", ex);
+                }
 
                 var txtRecords = queryResult.Answers
                                             .OfType<DnsClient.Protocol.TxtRecord>()
