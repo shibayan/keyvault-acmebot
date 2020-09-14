@@ -253,7 +253,7 @@ namespace KeyVault.Acmebot
             if (orderDetails.Payload.Status == "invalid")
             {
                 // invalid の場合は最初から実行が必要なので失敗させる
-                throw new InvalidOperationException("Invalid order status. Required retry at first.");
+                throw new InvalidOperationException($"ACME domain validation is invalid. Required retry at first. Type: \"{orderDetails.Payload.Error?.Type}\", Detail: \"{orderDetails.Payload.Error?.Detail}\"");
             }
         }
 
