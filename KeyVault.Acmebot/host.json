@@ -6,6 +6,9 @@
       "samplingSettings": {
         "isEnabled": true
       }
+    },
+    "logLevel": {
+      "KeyVault.Acmebot": "Warning"
     }
   },
   "extensions": {
