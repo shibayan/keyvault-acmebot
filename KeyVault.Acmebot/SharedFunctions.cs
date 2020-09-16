@@ -21,6 +21,7 @@ using KeyVault.Acmebot.Providers;
 
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace KeyVault.Acmebot
@@ -29,7 +30,7 @@ namespace KeyVault.Acmebot
     {
         public SharedFunctions(LookupClient lookupClient, IAcmeProtocolClientFactory acmeProtocolClientFactory,
                                IDnsProvider dnsProvider, CertificateClient certificateClient,
-                               WebhookClient webhookClient, IOptions<AcmebotOptions> options)
+                               WebhookClient webhookClient, IOptions<AcmebotOptions> options, ILogger<SharedFunctions> logger)
         {
             _acmeProtocolClientFactory = acmeProtocolClientFactory;
             _dnsProvider = dnsProvider;
@@ -37,6 +38,7 @@ namespace KeyVault.Acmebot
             _certificateClient = certificateClient;
             _webhookClient = webhookClient;
             _options = options.Value;
+            _logger = logger;
         }
 
         private readonly LookupClient _lookupClient;
@@ -45,6 +47,7 @@ namespace KeyVault.Acmebot
         private readonly CertificateClient _certificateClient;
         private readonly WebhookClient _webhookClient;
         private readonly AcmebotOptions _options;
+        private readonly ILogger<SharedFunctions> _logger;
 
         private const string IssuerName = "Acmebot";
 
@@ -71,7 +74,7 @@ namespace KeyVault.Acmebot
             await activity.AnswerChallenges(challengeResults);
 
             // Order のステータスが ready になるまで 60 秒待機
-            await activity.CheckIsReady(orderDetails);
+            await activity.CheckIsReady((orderDetails, challengeResults));
 
             // 証明書を作成し Key Vault に保存
             var certificate = await activity.FinalizeOrder((dnsNames, orderDetails));
@@ -237,9 +240,23 @@ namespace KeyVault.Acmebot
             }
         }
 
-        [FunctionName(nameof(CheckIsReady))]
-        public async Task CheckIsReady([ActivityTrigger] OrderDetails orderDetails)
+        [FunctionName(nameof(AnswerChallenges))]
+        public async Task AnswerChallenges([ActivityTrigger] IList<AcmeChallengeResult> challengeResults)
         {
+            var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
+
+            // Answer の準備が出来たことを通知
+            foreach (var challengeResult in challengeResults)
+            {
+                await acmeProtocolClient.AnswerChallengeAsync(challengeResult.Url);
+            }
+        }
+
+        [FunctionName(nameof(CheckIsReady))]
+        public async Task CheckIsReady([ActivityTrigger] (OrderDetails, IList<AcmeChallengeResult>) input)
+        {
+            var (orderDetails, challengeResults) = input;
+
             var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
             orderDetails = await acmeProtocolClient.GetOrderDetailsAsync(orderDetails.OrderUrl, orderDetails);
@@ -252,20 +269,24 @@ namespace KeyVault.Acmebot
 
             if (orderDetails.Payload.Status == "invalid")
             {
+                object lastError = null;
+
+                foreach (var challengeResult in challengeResults)
+                {
+                    var challenge = await acmeProtocolClient.GetChallengeDetailsAsync(challengeResult.Url);
+
+                    if (challenge.Status != "invalid")
+                    {
+                        continue;
+                    }
+
+                    _logger.LogError($"ACME domain validation error: {challenge.Error}");
+
+                    lastError = challenge.Error;
+                }
+
                 // invalid の場合は最初から実行が必要なので失敗させる
-                throw new InvalidOperationException($"ACME domain validation is invalid. Required retry at first. Type: \"{orderDetails.Payload.Error?.Type}\", Detail: \"{orderDetails.Payload.Error?.Detail}\"");
-            }
-        }
-
-        [FunctionName(nameof(AnswerChallenges))]
-        public async Task AnswerChallenges([ActivityTrigger] IList<AcmeChallengeResult> challengeResults)
-        {
-            var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
-
-            // Answer の準備が出来たことを通知
-            foreach (var challengeResult in challengeResults)
-            {
-                await acmeProtocolClient.AnswerChallengeAsync(challengeResult.Url);
+                throw new InvalidOperationException($"ACME domain validation is invalid. Required retry at first.\nLastError = {lastError}");
             }
         }
 
