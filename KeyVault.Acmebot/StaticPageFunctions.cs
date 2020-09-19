@@ -1,4 +1,4 @@
-using Azure.WebJobs.Extensions.HttpApi;
+﻿using Azure.WebJobs.Extensions.HttpApi;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

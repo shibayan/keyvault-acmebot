@@ -22,6 +22,8 @@ namespace KeyVault.Acmebot.Options
         [Required]
         public string Environment { get; set; } = "AzureCloud";
 
+        public string PreferredChain { get; set; }
+
         public AzureDnsOptions AzureDns { get; set; }
 
         public CloudflareOptions Cloudflare { get; set; }
