@@ -331,17 +331,12 @@ namespace KeyVault.Acmebot
 
             var finalize = await acmeProtocolClient.FinalizeOrderAsync(orderDetails.Payload.Finalize, csr);
 
-            // 証明書をバイト配列としてダウンロード
-            var certificateData = await acmeProtocolClient.GetOrderCertificateAsync(finalize);
-
-            // X509Certificate2Collection を作成
-            var x509Certificates = new X509Certificate2Collection();
-
-            x509Certificates.ImportFromPem(certificateData);
+            // 証明書をダウンロード
+            var x509Certificates = await acmeProtocolClient.GetOrderCertificateAsync(finalize, _options.PreferredChain);
 
             var mergeCertificateOptions = new MergeCertificateOptions(
                 certificateName,
-                x509Certificates.OfType<X509Certificate2>().Select(x => x.Export(X509ContentType.Pfx))
+                x509Certificates.Cast<X509Certificate2>().Select(x => x.Export(X509ContentType.Pfx))
             );
 
             return (await _certificateClient.MergeCertificateAsync(mergeCertificateOptions)).Value.ToCertificateItem();

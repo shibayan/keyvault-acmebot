@@ -90,7 +90,15 @@ namespace KeyVault.Acmebot
 
             builder.Services.AddOptions<AcmebotOptions>()
                    .Bind(section.Exists() ? section : context.Configuration.GetSection("LetsEncrypt"))
-                   .ValidateDataAnnotations();
+                   .ValidateDataAnnotations()
+                   .PostConfigure(options =>
+                   {
+                       // Backward compatibility
+                       if (options.Endpoint == "https://acme-v02.api.letsencrypt.org/")
+                       {
+                           options.PreferredChain ??= "DST Root CA X3";
+                       }
+                   });
         }
     }
 }
