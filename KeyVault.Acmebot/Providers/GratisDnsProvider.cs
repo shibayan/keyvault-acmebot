@@ -19,6 +19,8 @@ namespace KeyVault.Acmebot.Providers
 
         private readonly GratisDnsClient _gratisDnsClient;
 
+        public int PropagationSeconds => 60;
+
         public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
         {
             var domains = await _gratisDnsClient.ListDomainsAsync();
@@ -26,7 +28,7 @@ namespace KeyVault.Acmebot.Providers
             return domains.Select(x => new DnsZone { Id = x, Name = x }).ToArray();
         }
 
-        public async Task UpsertTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
+        public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
             var recordName = $"{relativeRecordName}.{zone.Name}";
 

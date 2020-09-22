@@ -24,6 +24,8 @@ namespace KeyVault.Acmebot.Providers
 
         private readonly DnsManagementClient _dnsManagementClient;
 
+        public int PropagationSeconds => 10;
+
         public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
         {
             var zones = await _dnsManagementClient.Zones.ListAllAsync();
@@ -31,16 +33,16 @@ namespace KeyVault.Acmebot.Providers
             return zones.Select(x => new DnsZone { Id = x.Id, Name = x.Name }).ToArray();
         }
 
-        public async Task UpsertTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
+        public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
             var resourceGroup = ExtractResourceGroup(zone.Id);
 
-            // 既存の TXT レコードがあれば取得する
-            var recordSet = await _dnsManagementClient.RecordSets.GetOrDefaultAsync(resourceGroup, zone.Name, relativeRecordName, RecordType.TXT) ?? new RecordSet();
-
             // TXT レコードに TTL と値をセットする
-            recordSet.TTL = 60;
-            recordSet.TxtRecords = values.Select(x => new TxtRecord(new[] { x })).ToArray();
+            var recordSet = new RecordSet
+            {
+                TTL = 60,
+                TxtRecords = values.Select(x => new TxtRecord(new[] { x })).ToArray()
+            };
 
             await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(resourceGroup, zone.Name, relativeRecordName, RecordType.TXT, recordSet);
         }
