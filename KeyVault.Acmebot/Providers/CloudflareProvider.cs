@@ -21,6 +21,8 @@ namespace KeyVault.Acmebot.Providers
 
         private readonly CloudflareDnsClient _cloudflareDnsClient;
 
+        public int PropagationSeconds => 10;
+
         public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
         {
             var zones = await _cloudflareDnsClient.ListAllZonesAsync();
@@ -29,19 +31,11 @@ namespace KeyVault.Acmebot.Providers
             return zones.Select(x => new DnsZone { Id = x.Id, Name = Punycode.Encode(x.Name) }).ToArray();
         }
 
-        public async Task UpsertTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
+        public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
             var recordName = $"{relativeRecordName}.{zone.Name}";
 
-            var records = await _cloudflareDnsClient.GetDnsRecordsAsync(zone.Id, recordName);
-
-            // 該当する全てのレコードを一度削除する
-            foreach (var record in records)
-            {
-                await _cloudflareDnsClient.DeleteDnsRecordAsync(zone.Id, record.Id);
-            }
-
-            // 必要な検証用の値の数だけ新しく追加しなおす
+            // 必要な検証用の値の数だけ新しく追加する
             foreach (var value in values)
             {
                 await _cloudflareDnsClient.CreateDnsRecordAsync(zone.Id, recordName, value);
@@ -54,6 +48,7 @@ namespace KeyVault.Acmebot.Providers
 
             var records = await _cloudflareDnsClient.GetDnsRecordsAsync(zone.Id, recordName);
 
+            // 該当する全てのレコードを削除する
             foreach (var record in records)
             {
                 await _cloudflareDnsClient.DeleteDnsRecordAsync(zone.Id, record.Id);

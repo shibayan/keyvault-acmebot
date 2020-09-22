@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using System.Threading.Tasks;
 
 using ACMESharp.Authorizations;
@@ -66,6 +67,9 @@ namespace KeyVault.Acmebot
 
             // ACME Challenge を実行
             var challengeResults = await activity.Dns01Authorization(orderDetails.Payload.Authorizations);
+
+            // DNS Provider が指定した分だけ遅延させる
+            await context.CreateTimer(context.CurrentUtcDateTime.AddSeconds(_dnsProvider.PropagationSeconds), CancellationToken.None);
 
             // DNS で正しくレコードが引けるか確認
             await activity.CheckDnsChallenge(challengeResults);
@@ -198,7 +202,9 @@ namespace KeyVault.Acmebot
                 // Challenge の詳細から DNS 向けにレコード名を作成
                 var acmeDnsRecordName = dnsRecordName.Replace($".{zone.Name}", "", StringComparison.OrdinalIgnoreCase);
 
-                await _dnsProvider.UpsertTxtRecordAsync(zone, acmeDnsRecordName, lookup.Select(x => x.DnsRecordValue));
+                await _dnsProvider.DeleteTxtRecordAsync(zone, acmeDnsRecordName);
+
+                await _dnsProvider.CreateTxtRecordAsync(zone, acmeDnsRecordName, lookup.Select(x => x.DnsRecordValue));
             }
 
             return challengeResults;

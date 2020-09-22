@@ -25,11 +25,33 @@ namespace KeyVault.Acmebot
     {
         public override void Configure(IFunctionsHostBuilder builder)
         {
+            var context = builder.GetContext();
+
+            var section = context.Configuration.GetSection("Acmebot");
+
+            // Add Options
+            builder.Services.AddOptions<AcmebotOptions>()
+                   .Bind(section.Exists() ? section : context.Configuration.GetSection("LetsEncrypt"))
+                   .ValidateDataAnnotations()
+                   .PostConfigure(options =>
+                   {
+                       // Backward compatibility
+                       if (options.Endpoint == "https://acme-v02.api.letsencrypt.org/")
+                       {
+                           options.PreferredChain ??= "DST Root CA X3";
+                       }
+                   });
+
+            // Add Services
             builder.Services.Replace(ServiceDescriptor.Transient(typeof(IOptionsFactory<>), typeof(OptionsFactory<>)));
 
             builder.Services.AddHttpClient();
 
-            builder.Services.AddSingleton(new LookupClient(new LookupClientOptions { UseCache = false }));
+            builder.Services.AddSingleton(new LookupClient(new LookupClientOptions(NameServer.GooglePublicDns, NameServer.GooglePublicDns2)
+            {
+                UseCache = false,
+                UseRandomNameServer = true
+            }));
 
             builder.Services.AddSingleton<IAzureEnvironment>(provider =>
             {
@@ -83,22 +105,6 @@ namespace KeyVault.Acmebot
 
                 throw new NotSupportedException();
             });
-
-            var context = builder.GetContext();
-
-            var section = context.Configuration.GetSection("Acmebot");
-
-            builder.Services.AddOptions<AcmebotOptions>()
-                   .Bind(section.Exists() ? section : context.Configuration.GetSection("LetsEncrypt"))
-                   .ValidateDataAnnotations()
-                   .PostConfigure(options =>
-                   {
-                       // Backward compatibility
-                       if (options.Endpoint == "https://acme-v02.api.letsencrypt.org/")
-                       {
-                           options.PreferredChain ??= "DST Root CA X3";
-                       }
-                   });
         }
     }
 }
