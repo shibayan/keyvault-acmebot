@@ -76,6 +76,15 @@
       return new Promise(resolve => setTimeout(() => resolve(), millisecondsDelay));
     }
 
+    const code = new URL(location.href).searchParams.get("code") || undefined;
+    axios.interceptors.request.use((config) => {
+      if(code){
+        config.params = config.params || {};
+        config.params['code'] = code;
+      }
+      return config;
+    });
+
     Vue.filter("punycode", function (value) {
       return punycode.toUnicode(value);
     });
