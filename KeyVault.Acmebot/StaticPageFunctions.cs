@@ -1,4 +1,6 @@
-﻿using Azure.WebJobs.Extensions.HttpApi;
+﻿using System;
+
+using Azure.WebJobs.Extensions.HttpApi;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,7 +22,7 @@ namespace KeyVault.Acmebot
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "static-page/add-certificate")] HttpRequest req,
             ILogger log)
         {
-            if (!User.Identity.IsAuthenticated)
+            if (!IsEasyAuthEnabled || !User.Identity.IsAuthenticated)
             {
                 return Forbid();
             }
@@ -33,12 +35,14 @@ namespace KeyVault.Acmebot
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "static-page/renew-certificate")] HttpRequest req,
             ILogger log)
         {
-            if (!User.Identity.IsAuthenticated)
+            if (!IsEasyAuthEnabled || !User.Identity.IsAuthenticated)
             {
                 return Forbid();
             }
 
             return File("static/renew-certificate.html");
         }
+
+        private static bool IsEasyAuthEnabled => bool.TryParse(Environment.GetEnvironmentVariable("WEBSITE_AUTH_ENABLED"), out var result) && result;
     }
 }
