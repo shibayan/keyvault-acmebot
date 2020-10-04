@@ -67,7 +67,7 @@ namespace KeyVault.Acmebot
 
                 var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
                 {
-                    AuthorityHost = new Uri(environment.ActiveDirectory)
+                    AuthorityHost = environment.ActiveDirectory
                 });
 
                 return new CertificateClient(new Uri(options.Value.VaultBaseUrl), credential);
