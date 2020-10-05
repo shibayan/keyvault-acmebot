@@ -53,12 +53,7 @@ namespace KeyVault.Acmebot.Providers
 
             foreach (var value in values)
             {
-                var txtRecord = new TxtRecord
-                {
-                    Value = { value }
-                };
-
-                recordSet.TxtRecords.Add(txtRecord);
+                recordSet.TxtRecords.Add(new TxtRecord { Value = { value } });
             }
 
             await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(resourceGroup, zone.Name, relativeRecordName, RecordType.TXT, recordSet);
