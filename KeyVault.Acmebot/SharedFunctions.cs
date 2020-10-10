@@ -137,9 +137,16 @@ namespace KeyVault.Acmebot
         [FunctionName(nameof(GetZones))]
         public async Task<IList<string>> GetZones([ActivityTrigger] object input = null)
         {
-            var zones = await _dnsProvider.ListZonesAsync();
+            try
+            {
+                var zones = await _dnsProvider.ListZonesAsync();
 
-            return zones.Select(x => x.Name).ToArray();
+                return zones.Select(x => x.Name).ToArray();
+            }
+            catch
+            {
+                return Array.Empty<string>();
+            }
         }
 
         [FunctionName(nameof(Order))]
