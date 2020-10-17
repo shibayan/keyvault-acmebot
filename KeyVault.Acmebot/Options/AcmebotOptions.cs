@@ -28,6 +28,8 @@ namespace KeyVault.Acmebot.Options
 
         public CloudflareOptions Cloudflare { get; set; }
 
+        public GoogleDnsOptions Google { get; set; }
+
         public GratisDnsOptions GratisDns { get; set; }
     }
 }
