@@ -21,7 +21,7 @@ namespace KeyVault.Acmebot.Providers
             var credential = GoogleCredential.FromJson(jsonString).CreateScoped(DnsService.Scope.NdevClouddnsReadwrite);
 
             // Create the service.
-            _dnsService = new DnsService(new BaseClientService.Initializer {HttpClientInitializer = credential});
+            _dnsService = new DnsService(new BaseClientService.Initializer { HttpClientInitializer = credential });
         }
 
         private readonly DnsService _dnsService;
@@ -35,7 +35,7 @@ namespace KeyVault.Acmebot.Providers
             var zones = await _dnsService.ManagedZones.List(_credsParameters.ProjectId).ExecuteAsync();
 
             return zones.ManagedZones
-                .Select(managedZone => new DnsZone {Id = managedZone.Id.ToString(), Name = managedZone.DnsName})
+                .Select(managedZone => new DnsZone { Id = managedZone.Id.ToString(), Name = managedZone.DnsName })
                 .ToArray();
         }
 
@@ -66,14 +66,15 @@ namespace KeyVault.Acmebot.Providers
             var txtRecords = await
                 new ResourceRecordSetsResource.ListRequest(_dnsService, _credsParameters.ProjectId, zone.Id)
                 {
-                    Name = recordName, Type = "TXT"
+                    Name = recordName,
+                    Type = "TXT"
                 }.ExecuteAsync();
             if (txtRecords.Rrsets.Count == 0)
             {
                 return;
             }
 
-            var change = new Change {Deletions = txtRecords.Rrsets};
+            var change = new Change { Deletions = txtRecords.Rrsets };
             await _dnsService.Changes.Create(change, _credsParameters.ProjectId, zone.Id).ExecuteAsync();
         }
     }
