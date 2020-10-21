@@ -1,6 +1,6 @@
 ﻿namespace KeyVault.Acmebot.Options
 {
-    public class TransIPOptions
+    public class TransIpOptions
     {
         public string CustomerName { get; set; }
 

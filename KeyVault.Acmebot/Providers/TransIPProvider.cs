@@ -9,23 +9,23 @@ using System.Text;
 using System.Threading.Tasks;
 using Azure.Core;
 using Azure.Security.KeyVault.Keys.Cryptography;
+using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Options;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace KeyVault.Acmebot.Providers
 {
-    public class TransIPProvider : IDnsProvider
+    public class TransIpProvider : IDnsProvider
     {
-        public TransIPProvider(IOptions<AcmebotOptions> acmeOptions, IOptions<TransIPOptions> options, TokenCredential credential)
+        public TransIpProvider(AcmebotOptions acmeOptions, TransIpOptions options, TokenCredential credential)
         {
-            var keyUri = new Uri(new Uri(acmeOptions.Value.VaultBaseUrl), $"/keys/{options.Value.PrivateKeyName}");
+            var keyUri = new Uri(new Uri(acmeOptions.VaultBaseUrl), $"/keys/{options.PrivateKeyName}");
             var cryptoClient = new CryptographyClient(keyUri, credential);
-            _transIPClient = new TransIPClient(options.Value.CustomerName, cryptoClient);
+            _transIpClient = new TransIpClient(options.CustomerName, cryptoClient);
         }
 
-        private readonly TransIPClient _transIPClient;
+        private readonly TransIpClient _transIpClient;
 
         public int PropagationSeconds => 60;
 
@@ -40,29 +40,29 @@ namespace KeyVault.Acmebot.Providers
             });
 
             foreach (var record in records)
-                await _transIPClient.AddRecord(zone.Name, record);
+                await _transIpClient.AddRecord(zone.Name, record);
         }
 
         public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
         {
-            var records = await _transIPClient.ListRecords(zone.Name);
+            var records = await _transIpClient.ListRecords(zone.Name);
 
             var recordsToDelete = records.Where(r => string.Equals(relativeRecordName, r.Name) && r.Type == "TXT");
 
             foreach (var record in recordsToDelete)
-                await _transIPClient.DeleteRecord(zone.Name, record);
+                await _transIpClient.DeleteRecord(zone.Name, record);
         }
 
         public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
         {
-            var zones = await _transIPClient.ListZonesAsync();
+            var zones = await _transIpClient.ListZonesAsync();
 
             return zones.Select(d => new DnsZone(){ Id = d.Name, Name = d.Name }).ToArray();
         }
 
-        private class TransIPClient
+        private class TransIpClient
         {
-            public TransIPClient(string customerName, CryptographyClient cryptoClient)
+            public TransIpClient(string customerName, CryptographyClient cryptoClient)
             {
                 _customerName = customerName;
                 _cryptoClient = cryptoClient;
@@ -160,6 +160,11 @@ namespace KeyVault.Acmebot.Providers
 
                 }
 
+                await CreateNewToken();
+            }
+
+            private async Task CreateNewToken()
+            {
                 byte[] nonce = new byte[16];
                 RandomNumberGenerator.Fill(nonce);
 
@@ -171,8 +176,7 @@ namespace KeyVault.Acmebot.Providers
 
                 (string signature, string body) = await SignRequestAsync(request);
 
-                var client = new HttpClient();
-                var response = await client.SendAsync(
+                var response = await new HttpClient().SendAsync(
                     new HttpRequestMessage(HttpMethod.Post, new Uri(_httpClient.BaseAddress, "auth"))
                     {
                         Headers = { { "Signature", signature } },
@@ -189,7 +193,7 @@ namespace KeyVault.Acmebot.Providers
                 {
                     CustomerName = _customerName,
                     Token = tokenResponse.Token,
-                    Expires = DateTimeOffset.UtcNow.AddSeconds(tokenResponse.GetTokenExpiration())
+                    Expires = DateTimeOffset.FromUnixTimeSeconds(tokenResponse.GetTokenExpiration())
                 };
 
                 StoreToken(_token);
@@ -279,7 +283,7 @@ namespace KeyVault.Acmebot.Providers
             public bool ReadOnly { get; set; } = false;
 
             [JsonProperty("expiration_time")]
-            public string ExpirationTime { get; set; } = "3600 seconds";
+            public string ExpirationTime { get; set; } = "4 weeks";
 
             [JsonProperty("label")]
             public string Label { get; set; } = "KeyVault.Acmebot." + DateTime.UtcNow.ToString();
