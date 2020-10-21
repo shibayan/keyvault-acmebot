@@ -104,9 +104,9 @@ namespace KeyVault.Acmebot
                     return new GratisDnsProvider(options.GratisDns);
                 }
 
-                if (options.TransIP != null)
+                if (options.TransIp != null)
                 {
-                    return new TransIpProvider(options, options.TransIP, credential);
+                    return new TransIpProvider(options, options.TransIp, credential);
                 }
 
                 if (options.AzureDns != null)

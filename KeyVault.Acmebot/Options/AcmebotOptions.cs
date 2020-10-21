@@ -30,6 +30,6 @@ namespace KeyVault.Acmebot.Options
 
         public GratisDnsOptions GratisDns { get; set; }
 
-        public TransIpOptions TransIP { get; set; }
+        public TransIpOptions TransIp { get; set; }
     }
 }
