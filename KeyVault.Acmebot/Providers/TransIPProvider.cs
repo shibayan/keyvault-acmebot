@@ -27,7 +27,7 @@ namespace KeyVault.Acmebot.Providers
 
         private readonly TransIpClient _transIpClient;
 
-        public int PropagationSeconds => 60;
+        public int PropagationSeconds => 360;
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
