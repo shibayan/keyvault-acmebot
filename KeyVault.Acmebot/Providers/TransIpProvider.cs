@@ -56,7 +56,7 @@ namespace KeyVault.Acmebot.Providers
         {
             var zones = await _transIpClient.ListZonesAsync();
 
-            return zones.Select(d => new DnsZone(){ Id = d.Name, Name = d.Name }).ToArray();
+            return zones.Select(d => new DnsZone() { Id = d.Name, Name = d.Name }).ToArray();
         }
 
         private class TransIpClient
@@ -204,7 +204,7 @@ namespace KeyVault.Acmebot.Providers
 
                 using var hasher = SHA512.Create();
                 byte[] bytes = hasher.ComputeHash(Encoding.UTF8.GetBytes(body));
-                
+
                 SignResult signature = await _cryptoClient.SignAsync(SignatureAlgorithm.RS512, bytes);
 
                 return (Convert.ToBase64String(signature.Signature), body);
