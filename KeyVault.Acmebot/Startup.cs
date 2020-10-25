@@ -88,6 +88,11 @@ namespace KeyVault.Acmebot
                     return new CloudflareProvider(options.Cloudflare);
                 }
 
+                if (options.Google != null)
+                {
+                    return new GoogleDnsProvider(options.Google);
+                }
+
                 if (options.GratisDns != null)
                 {
                     return new GratisDnsProvider(options.GratisDns);
