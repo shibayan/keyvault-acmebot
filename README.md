@@ -61,8 +61,8 @@ You will need the following:
 - DNS provider (required to host your public DNS zone)
   - Azure DNS
   - Cloudflare
-  - GratisDNS
   - Google Cloud DNS
+  - GratisDNS
 - Email address (required to register with ACME)
 
 ## Getting Started
