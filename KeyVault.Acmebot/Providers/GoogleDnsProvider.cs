@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Dns.v1;
 using Google.Apis.Dns.v1.Data;
 using Google.Apis.Json;
 using Google.Apis.Services;
+
 using KeyVault.Acmebot.Options;
 
 namespace KeyVault.Acmebot.Providers
@@ -16,17 +18,16 @@ namespace KeyVault.Acmebot.Providers
     {
         public GoogleDnsProvider(GoogleDnsOptions options)
         {
-            string jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(options.KeyFile64));
-            _credsParameters = NewtonsoftJsonSerializer.Instance.Deserialize<JsonCredentialParameters>(jsonString);
+            var jsonString = Encoding.UTF8.GetString(Convert.FromBase64String(options.KeyFile64));
             var credential = GoogleCredential.FromJson(jsonString).CreateScoped(DnsService.Scope.NdevClouddnsReadwrite);
 
             // Create the service.
             _dnsService = new DnsService(new BaseClientService.Initializer { HttpClientInitializer = credential });
+            _credsParameters = NewtonsoftJsonSerializer.Instance.Deserialize<JsonCredentialParameters>(jsonString);
         }
 
         private readonly DnsService _dnsService;
         private readonly JsonCredentialParameters _credsParameters;
-
 
         public int PropagationSeconds => 10;
 
@@ -35,16 +36,17 @@ namespace KeyVault.Acmebot.Providers
             var zones = await _dnsService.ManagedZones.List(_credsParameters.ProjectId).ExecuteAsync();
 
             return zones.ManagedZones
-                .Select(managedZone => new DnsZone { Id = managedZone.Id.ToString(), Name = managedZone.DnsName })
-                .ToArray();
+                        .Select(managedZone => new DnsZone { Id = managedZone.Id.ToString(), Name = managedZone.DnsName })
+                        .ToArray();
         }
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
-            string recordName = $"{relativeRecordName}.{zone.Name}";
-            var change = new Change()
+            var recordName = $"{relativeRecordName}.{zone.Name}";
+
+            var change = new Change
             {
-                Additions = new List<ResourceRecordSet>
+                Additions = new[]
                 {
                     new ResourceRecordSet
                     {
@@ -62,19 +64,22 @@ namespace KeyVault.Acmebot.Providers
 
         public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
         {
-            string recordName = $"{relativeRecordName}.{zone.Name}";
-            var txtRecords = await
-                new ResourceRecordSetsResource.ListRequest(_dnsService, _credsParameters.ProjectId, zone.Id)
-                {
-                    Name = recordName,
-                    Type = "TXT"
-                }.ExecuteAsync();
+            var recordName = $"{relativeRecordName}.{zone.Name}";
+
+            var request = _dnsService.ResourceRecordSets.List(_credsParameters.ProjectId, zone.Id);
+
+            request.Name = recordName;
+            request.Type = "TXT";
+
+            var txtRecords = await request.ExecuteAsync();
+
             if (txtRecords.Rrsets.Count == 0)
             {
                 return;
             }
 
             var change = new Change { Deletions = txtRecords.Rrsets };
+
             await _dnsService.Changes.Create(change, _credsParameters.ProjectId, zone.Id).ExecuteAsync();
         }
     }
