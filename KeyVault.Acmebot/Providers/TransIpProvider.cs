@@ -102,7 +102,7 @@ namespace KeyVault.Acmebot.Providers
 
                 ListDnsEntriesResponse entries = await response.Content.ReadAsAsync<ListDnsEntriesResponse>();
 
-                return entries.DnsEntries.ToList();
+                return entries.DnsEntries;
             }
 
             public async Task DeleteRecord(string zoneName, DnsEntry entry)
@@ -294,7 +294,7 @@ namespace KeyVault.Acmebot.Providers
         private class ListDomainsResult
         {
             [JsonProperty("domains")]
-            public IEnumerable<Domain> Domains { get; set; }
+            public IReadOnlyList<Domain> Domains { get; set; }
         }
 
         private class Domain
@@ -306,7 +306,7 @@ namespace KeyVault.Acmebot.Providers
         private class ListDnsEntriesResponse
         {
             [JsonProperty("dnsEntries")]
-            public IEnumerable<DnsEntry> DnsEntries { get; set; }
+            public IReadOnlyList<DnsEntry> DnsEntries { get; set; }
         }
 
         private class DnsEntryRequest
