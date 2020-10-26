@@ -7,8 +7,9 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Azure.Core;
+using Azure.Identity;
 using Azure.Security.KeyVault.Keys.Cryptography;
+using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -17,10 +18,16 @@ namespace KeyVault.Acmebot.Providers
 {
     public class TransIpProvider : IDnsProvider
     {
-        public TransIpProvider(AcmebotOptions acmeOptions, TransIpOptions options, TokenCredential credential)
+        public TransIpProvider(AcmebotOptions acmeOptions, TransIpOptions options, IAzureEnvironment environment)
         {
+            var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
+            {
+                AuthorityHost = new Uri(environment.ActiveDirectory)
+            });
+
             var keyUri = new Uri(new Uri(acmeOptions.VaultBaseUrl), $"/keys/{options.PrivateKeyName}");
             var cryptoClient = new CryptographyClient(keyUri, credential);
+
             _transIpClient = new TransIpClient(options.CustomerName, cryptoClient);
         }
 
@@ -39,17 +46,21 @@ namespace KeyVault.Acmebot.Providers
             });
 
             foreach (var record in records)
-                await _transIpClient.AddRecord(zone.Name, record);
+            {
+                await _transIpClient.AddRecordAsync(zone.Name, record);
+            }
         }
 
         public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
         {
-            var records = await _transIpClient.ListRecords(zone.Name);
+            var records = await _transIpClient.ListRecordsAsync(zone.Name);
 
             var recordsToDelete = records.Where(r => string.Equals(relativeRecordName, r.Name) && r.Type == "TXT");
 
             foreach (var record in recordsToDelete)
-                await _transIpClient.DeleteRecord(zone.Name, record);
+            {
+                await _transIpClient.DeleteRecordAsync(zone.Name, record);
+            }
         }
 
         public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
@@ -77,7 +88,7 @@ namespace KeyVault.Acmebot.Providers
             private readonly HttpClient _httpClient;
             private readonly string _customerName;
             private readonly CryptographyClient _cryptoClient;
-            private TransIPToken _token = null;
+            private TransIpToken _token = null;
 
             public async Task<IEnumerable<Domain>> ListZonesAsync()
             {
@@ -92,7 +103,7 @@ namespace KeyVault.Acmebot.Providers
                 return domains.Domains;
             }
 
-            public async Task<IReadOnlyList<DnsEntry>> ListRecords(string zoneName)
+            public async Task<IReadOnlyList<DnsEntry>> ListRecordsAsync(string zoneName)
             {
                 await EnsureLoggedInAsync();
 
@@ -105,7 +116,7 @@ namespace KeyVault.Acmebot.Providers
                 return entries.DnsEntries;
             }
 
-            public async Task DeleteRecord(string zoneName, DnsEntry entry)
+            public async Task DeleteRecordAsync(string zoneName, DnsEntry entry)
             {
                 await EnsureLoggedInAsync();
 
@@ -122,7 +133,7 @@ namespace KeyVault.Acmebot.Providers
                 response.EnsureSuccessStatusCode();
             }
 
-            public async Task AddRecord(string zoneName, DnsEntry entry)
+            public async Task AddRecordAsync(string zoneName, DnsEntry entry)
             {
                 await EnsureLoggedInAsync();
 
@@ -159,10 +170,10 @@ namespace KeyVault.Acmebot.Providers
 
                 }
 
-                await CreateNewToken();
+                await CreateNewTokenAsync();
             }
 
-            private async Task CreateNewToken()
+            private async Task CreateNewTokenAsync()
             {
                 byte[] nonce = new byte[16];
                 RandomNumberGenerator.Fill(nonce);
@@ -188,7 +199,7 @@ namespace KeyVault.Acmebot.Providers
 
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenResponse.Token);
 
-                _token = new TransIPToken()
+                _token = new TransIpToken()
                 {
                     CustomerName = _customerName,
                     Token = tokenResponse.Token,
@@ -210,7 +221,7 @@ namespace KeyVault.Acmebot.Providers
                 return (Convert.ToBase64String(signature.Signature), body);
             }
 
-            private void StoreToken(TransIPToken token)
+            private void StoreToken(TransIpToken token)
             {
                 var fullPath = Environment.ExpandEnvironmentVariables(@"%HOME%\.acme\transip_token.json");
                 var directoryPath = Path.GetDirectoryName(fullPath);
@@ -225,7 +236,7 @@ namespace KeyVault.Acmebot.Providers
                 File.WriteAllText(fullPath, json);
             }
 
-            private TransIPToken LoadToken()
+            private TransIpToken LoadToken()
             {
                 var fullPath = Environment.ExpandEnvironmentVariables(@"%HOME%\.acme\transip_token.json");
 
@@ -234,11 +245,11 @@ namespace KeyVault.Acmebot.Providers
 
                 var json = File.ReadAllText(fullPath);
 
-                return JsonConvert.DeserializeObject<TransIPToken>(json);
+                return JsonConvert.DeserializeObject<TransIpToken>(json);
             }
         }
 
-        private class TransIPToken
+        private class TransIpToken
         {
             public string CustomerName { get; set; }
 

@@ -60,16 +60,6 @@ namespace KeyVault.Acmebot
                 return AzureEnvironment.Get(options.Value.Environment);
             });
 
-            builder.Services.AddSingleton<TokenCredential>(provider =>
-            {
-                var environment = provider.GetRequiredService<IAzureEnvironment>();
-
-                return new DefaultAzureCredential(new DefaultAzureCredentialOptions
-                {
-                    AuthorityHost = new Uri(environment.ActiveDirectory)
-                });
-            });
-
             builder.Services.AddSingleton(provider =>
             {
                 var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
@@ -92,7 +82,6 @@ namespace KeyVault.Acmebot
             {
                 var options = provider.GetRequiredService<IOptions<AcmebotOptions>>().Value;
                 var environment = provider.GetRequiredService<IAzureEnvironment>();
-                var credential = provider.GetRequiredService<TokenCredential>();
 
                 if (options.Cloudflare != null)
                 {
@@ -106,7 +95,7 @@ namespace KeyVault.Acmebot
 
                 if (options.TransIp != null)
                 {
-                    return new TransIpProvider(options, options.TransIp, credential);
+                    return new TransIpProvider(options, options.TransIp, environment);
                 }
 
                 if (options.AzureDns != null)
