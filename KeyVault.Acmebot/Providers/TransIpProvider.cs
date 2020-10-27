@@ -7,10 +7,13 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+
 using Azure.Identity;
 using Azure.Security.KeyVault.Keys.Cryptography;
+
 using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Options;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -37,7 +40,7 @@ namespace KeyVault.Acmebot.Providers
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
-            var records = values.Select(value => new DnsEntry()
+            var records = values.Select(value => new DnsEntry
             {
                 Name = relativeRecordName,
                 Type = "TXT",
@@ -55,7 +58,7 @@ namespace KeyVault.Acmebot.Providers
         {
             var records = await _transIpClient.ListRecordsAsync(zone.Name);
 
-            var recordsToDelete = records.Where(r => string.Equals(relativeRecordName, r.Name) && r.Type == "TXT");
+            var recordsToDelete = records.Where(r => r.Name == relativeRecordName && r.Type == "TXT");
 
             foreach (var record in recordsToDelete)
             {
@@ -67,7 +70,7 @@ namespace KeyVault.Acmebot.Providers
         {
             var zones = await _transIpClient.ListZonesAsync();
 
-            return zones.Select(d => new DnsZone() { Id = d.Name, Name = d.Name }).ToArray();
+            return zones.Select(d => new DnsZone { Id = d.Name, Name = d.Name }).ToArray();
         }
 
         private class TransIpClient
@@ -77,7 +80,7 @@ namespace KeyVault.Acmebot.Providers
                 _customerName = customerName;
                 _cryptoClient = cryptoClient;
 
-                _httpClient = new HttpClient()
+                _httpClient = new HttpClient
                 {
                     BaseAddress = new Uri("https://api.transip.nl/v6/")
                 };
@@ -88,9 +91,10 @@ namespace KeyVault.Acmebot.Providers
             private readonly HttpClient _httpClient;
             private readonly string _customerName;
             private readonly CryptographyClient _cryptoClient;
-            private TransIpToken _token = null;
 
-            public async Task<IEnumerable<Domain>> ListZonesAsync()
+            private TransIpToken _token;
+
+            public async Task<IReadOnlyList<Domain>> ListZonesAsync()
             {
                 await EnsureLoggedInAsync();
 
@@ -107,11 +111,11 @@ namespace KeyVault.Acmebot.Providers
             {
                 await EnsureLoggedInAsync();
 
-                HttpResponseMessage response = await _httpClient.GetAsync($"domains/{zoneName}/dns");
+                var response = await _httpClient.GetAsync($"domains/{zoneName}/dns");
 
                 response.EnsureSuccessStatusCode();
 
-                ListDnsEntriesResponse entries = await response.Content.ReadAsAsync<ListDnsEntriesResponse>();
+                var entries = await response.Content.ReadAsAsync<ListDnsEntriesResponse>();
 
                 return entries.DnsEntries;
             }
@@ -153,11 +157,14 @@ namespace KeyVault.Acmebot.Providers
             private async Task EnsureLoggedInAsync()
             {
                 if (_token?.IsValid() == true)
+                {
                     return;
+                }
 
                 if (_token is null)
                 {
                     _token = LoadToken();
+
                     if (_token?.IsValid() == true && _customerName.Equals(_token.CustomerName))
                     {
                         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token.Token);
@@ -165,7 +172,9 @@ namespace KeyVault.Acmebot.Providers
                         var testResponse = await _httpClient.GetAsync("api-test");
 
                         if (testResponse.IsSuccessStatusCode)
+                        {
                             return;
+                        }
                     }
 
                 }
@@ -175,7 +184,8 @@ namespace KeyVault.Acmebot.Providers
 
             private async Task CreateNewTokenAsync()
             {
-                byte[] nonce = new byte[16];
+                var nonce = new byte[16];
+
                 RandomNumberGenerator.Fill(nonce);
 
                 var request = new TokenRequest
@@ -199,7 +209,7 @@ namespace KeyVault.Acmebot.Providers
 
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenResponse.Token);
 
-                _token = new TransIpToken()
+                _token = new TransIpToken
                 {
                     CustomerName = _customerName,
                     Token = tokenResponse.Token,
@@ -211,12 +221,12 @@ namespace KeyVault.Acmebot.Providers
 
             private async Task<(string token, string body)> SignRequestAsync(object request)
             {
-                string body = JsonConvert.SerializeObject(request);
+                var body = JsonConvert.SerializeObject(request);
 
                 using var hasher = SHA512.Create();
-                byte[] bytes = hasher.ComputeHash(Encoding.UTF8.GetBytes(body));
+                var bytes = hasher.ComputeHash(Encoding.UTF8.GetBytes(body));
 
-                SignResult signature = await _cryptoClient.SignAsync(SignatureAlgorithm.RS512, bytes);
+                var signature = await _cryptoClient.SignAsync(SignatureAlgorithm.RS512, bytes);
 
                 return (Convert.ToBase64String(signature.Signature), body);
             }
@@ -241,7 +251,9 @@ namespace KeyVault.Acmebot.Providers
                 var fullPath = Environment.ExpandEnvironmentVariables(@"%HOME%\.acme\transip_token.json");
 
                 if (!File.Exists(fullPath))
+                {
                     return null;
+                }
 
                 var json = File.ReadAllText(fullPath);
 
@@ -259,7 +271,7 @@ namespace KeyVault.Acmebot.Providers
 
             public bool IsValid()
             {
-                return (!string.IsNullOrEmpty(Token)) && (Expires - DateTimeOffset.Now) > TimeSpan.FromMinutes(1);
+                return !string.IsNullOrEmpty(Token) && Expires - DateTimeOffset.Now > TimeSpan.FromMinutes(1);
             }
         }
 
@@ -290,13 +302,13 @@ namespace KeyVault.Acmebot.Providers
             public string Nonce { get; set; }
 
             [JsonProperty("read_only")]
-            public bool ReadOnly { get; set; } = false;
+            public bool ReadOnly { get; set; }
 
             [JsonProperty("expiration_time")]
             public string ExpirationTime { get; set; } = "4 weeks";
 
             [JsonProperty("label")]
-            public string Label { get; set; } = "KeyVault.Acmebot." + DateTime.UtcNow.ToString();
+            public string Label { get; set; } = "KeyVault.Acmebot." + DateTime.UtcNow;
 
             [JsonProperty("global_key")]
             public bool GlobalKey { get; set; } = true;
