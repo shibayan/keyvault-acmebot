@@ -14,7 +14,7 @@ namespace KeyVault.Acmebot.Models
         public string Name { get; set; }
 
         [JsonProperty("dnsNames")]
-        public IList<string> DnsNames { get; set; }
+        public IReadOnlyList<string> DnsNames { get; set; }
 
         [JsonProperty("expiresOn")]
         public DateTimeOffset ExpiresOn { get; set; }
