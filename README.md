@@ -62,6 +62,7 @@ You will need the following:
   - Azure DNS
   - Cloudflare
   - GratisDNS
+  - TransIP DNS
 - Email address (required to register with ACME)
 
 ## Getting Started
