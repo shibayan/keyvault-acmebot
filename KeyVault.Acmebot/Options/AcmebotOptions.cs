@@ -31,5 +31,7 @@ namespace KeyVault.Acmebot.Options
         public GoogleDnsOptions Google { get; set; }
 
         public GratisDnsOptions GratisDns { get; set; }
+
+        public TransIpOptions TransIp { get; set; }
     }
 }

@@ -63,6 +63,7 @@ You will need the following:
   - Cloudflare
   - Google Cloud DNS
   - GratisDNS
+  - TransIP DNS
 - Email address (required to register with ACME)
 
 ## Getting Started

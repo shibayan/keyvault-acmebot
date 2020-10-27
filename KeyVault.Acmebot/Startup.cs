@@ -98,6 +98,11 @@ namespace KeyVault.Acmebot
                     return new GratisDnsProvider(options.GratisDns);
                 }
 
+                if (options.TransIp != null)
+                {
+                    return new TransIpProvider(options, options.TransIp, environment);
+                }
+
                 if (options.AzureDns != null)
                 {
                     return new AzureDnsProvider(options.AzureDns, environment);
