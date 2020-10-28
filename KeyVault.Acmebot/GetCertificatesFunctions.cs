@@ -26,7 +26,7 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(GetCertificates))]
-        public Task<IList<CertificateItem>> GetCertificates([OrchestrationTrigger] IDurableOrchestrationContext context)
+        public Task<IReadOnlyList<CertificateItem>> GetCertificates([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             var activity = context.CreateActivityProxy<ISharedFunctions>();
 
