@@ -61,7 +61,9 @@ You will need the following:
 - DNS provider (required to host your public DNS zone)
   - Azure DNS
   - Cloudflare
+  - Google Cloud DNS
   - GratisDNS
+  - TransIP DNS
 - Email address (required to register with ACME)
 
 ## Getting Started
@@ -102,7 +104,7 @@ There are also additional settings that will be automatically created by Key Vau
   - The email address (required) used in ACME account registration
 - Acmebot:AzureDns:SubscriptionId
   - Your Azure subscription ID in order to identify which DNS resources can be used for ACME
-  
+
 ### 3. Enable App Service Authentication
 
 You must enable Authentication on the Function App that is deployed as part of this application.

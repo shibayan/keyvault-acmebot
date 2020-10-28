@@ -25,7 +25,7 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(GetDnsZones))]
-        public async Task<IList<string>> GetDnsZones([OrchestrationTrigger] IDurableOrchestrationContext context)
+        public async Task<IReadOnlyList<string>> GetDnsZones([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             var activity = context.CreateActivityProxy<ISharedFunctions>();
 

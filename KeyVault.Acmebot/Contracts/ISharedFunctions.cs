@@ -12,30 +12,30 @@ namespace KeyVault.Acmebot.Contracts
 {
     public interface ISharedFunctions
     {
-        Task<IList<CertificateItem>> GetExpiringCertificates(DateTime currentDateTime);
+        Task<IReadOnlyList<CertificateItem>> GetExpiringCertificates(DateTime currentDateTime);
 
-        Task<IList<CertificateItem>> GetAllCertificates(object input = null);
+        Task<IReadOnlyList<CertificateItem>> GetAllCertificates(object input = null);
 
-        Task<IList<string>> GetZones(object input = null);
+        Task<IReadOnlyList<string>> GetZones(object input = null);
 
-        Task<OrderDetails> Order(string[] dnsNames);
+        Task<OrderDetails> Order(IReadOnlyList<string> dnsNames);
 
-        Task Dns01Precondition(string[] dnsNames);
+        Task Dns01Precondition(IReadOnlyList<string> dnsNames);
 
-        Task<IList<AcmeChallengeResult>> Dns01Authorization(string[] authorizationUrls);
+        Task<IReadOnlyList<AcmeChallengeResult>> Dns01Authorization(IReadOnlyList<string> authorizationUrls);
 
         [RetryOptions("00:00:10", 12, HandlerType = typeof(RetryStrategy), HandlerMethodName = nameof(RetryStrategy.RetriableException))]
-        Task CheckDnsChallenge(IList<AcmeChallengeResult> challengeResults);
+        Task CheckDnsChallenge(IReadOnlyList<AcmeChallengeResult> challengeResults);
 
-        Task AnswerChallenges(IList<AcmeChallengeResult> challengeResults);
+        Task AnswerChallenges(IReadOnlyList<AcmeChallengeResult> challengeResults);
 
         [RetryOptions("00:00:05", 12, HandlerType = typeof(RetryStrategy), HandlerMethodName = nameof(RetryStrategy.RetriableException))]
-        Task CheckIsReady((OrderDetails, IList<AcmeChallengeResult>) input);
+        Task CheckIsReady((OrderDetails, IReadOnlyList<AcmeChallengeResult>) input);
 
-        Task<CertificateItem> FinalizeOrder((string[], OrderDetails) input);
+        Task<CertificateItem> FinalizeOrder((IReadOnlyList<string>, OrderDetails) input);
 
-        Task CleanupDnsChallenge(IList<AcmeChallengeResult> challengeResults);
+        Task CleanupDnsChallenge(IReadOnlyList<AcmeChallengeResult> challengeResults);
 
-        Task SendCompletedEvent((string, DateTimeOffset?, string[]) input);
+        Task SendCompletedEvent((string, DateTimeOffset?, IReadOnlyList<string>) input);
     }
 }

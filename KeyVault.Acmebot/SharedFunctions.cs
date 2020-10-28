@@ -95,7 +95,7 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(GetExpiringCertificates))]
-        public async Task<IList<CertificateItem>> GetExpiringCertificates([ActivityTrigger] DateTime currentDateTime)
+        public async Task<IReadOnlyList<CertificateItem>> GetExpiringCertificates([ActivityTrigger] DateTime currentDateTime)
         {
             var certificates = _certificateClient.GetPropertiesOfCertificatesAsync();
 
@@ -120,7 +120,7 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(GetAllCertificates))]
-        public async Task<IList<CertificateItem>> GetAllCertificates([ActivityTrigger] object input = null)
+        public async Task<IReadOnlyList<CertificateItem>> GetAllCertificates([ActivityTrigger] object input = null)
         {
             var certificates = _certificateClient.GetPropertiesOfCertificatesAsync();
 
@@ -135,15 +135,22 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(GetZones))]
-        public async Task<IList<string>> GetZones([ActivityTrigger] object input = null)
+        public async Task<IReadOnlyList<string>> GetZones([ActivityTrigger] object input = null)
         {
-            var zones = await _dnsProvider.ListZonesAsync();
+            try
+            {
+                var zones = await _dnsProvider.ListZonesAsync();
 
-            return zones.Select(x => x.Name).ToArray();
+                return zones.Select(x => x.Name).ToArray();
+            }
+            catch
+            {
+                return Array.Empty<string>();
+            }
         }
 
         [FunctionName(nameof(Order))]
-        public async Task<OrderDetails> Order([ActivityTrigger] string[] dnsNames)
+        public async Task<OrderDetails> Order([ActivityTrigger] IReadOnlyList<string> dnsNames)
         {
             var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
@@ -151,7 +158,7 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(Dns01Precondition))]
-        public async Task Dns01Precondition([ActivityTrigger] string[] dnsNames)
+        public async Task Dns01Precondition([ActivityTrigger] IReadOnlyList<string> dnsNames)
         {
             // DNS zone が存在するか確認
             var zones = await _dnsProvider.ListZonesAsync();
@@ -166,7 +173,7 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(Dns01Authorization))]
-        public async Task<IList<AcmeChallengeResult>> Dns01Authorization([ActivityTrigger] string[] authorizationUrls)
+        public async Task<IReadOnlyList<AcmeChallengeResult>> Dns01Authorization([ActivityTrigger] IReadOnlyList<string> authorizationUrls)
         {
             var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
@@ -215,7 +222,7 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(CheckDnsChallenge))]
-        public async Task CheckDnsChallenge([ActivityTrigger] IList<AcmeChallengeResult> challengeResults)
+        public async Task CheckDnsChallenge([ActivityTrigger] IReadOnlyList<AcmeChallengeResult> challengeResults)
         {
             foreach (var challengeResult in challengeResults)
             {
@@ -251,7 +258,7 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(AnswerChallenges))]
-        public async Task AnswerChallenges([ActivityTrigger] IList<AcmeChallengeResult> challengeResults)
+        public async Task AnswerChallenges([ActivityTrigger] IReadOnlyList<AcmeChallengeResult> challengeResults)
         {
             var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
@@ -263,7 +270,7 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(CheckIsReady))]
-        public async Task CheckIsReady([ActivityTrigger] (OrderDetails, IList<AcmeChallengeResult>) input)
+        public async Task CheckIsReady([ActivityTrigger] (OrderDetails, IReadOnlyList<AcmeChallengeResult>) input)
         {
             var (orderDetails, challengeResults) = input;
 
@@ -301,7 +308,7 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(FinalizeOrder))]
-        public async Task<CertificateItem> FinalizeOrder([ActivityTrigger] (string[], OrderDetails) input)
+        public async Task<CertificateItem> FinalizeOrder([ActivityTrigger] (IReadOnlyList<string>, OrderDetails) input)
         {
             var (dnsNames, orderDetails) = input;
 
@@ -353,7 +360,7 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(CleanupDnsChallenge))]
-        public async Task CleanupDnsChallenge([ActivityTrigger] IList<AcmeChallengeResult> challengeResults)
+        public async Task CleanupDnsChallenge([ActivityTrigger] IReadOnlyList<AcmeChallengeResult> challengeResults)
         {
             // DNS zone の一覧を取得する
             var zones = await _dnsProvider.ListZonesAsync();
@@ -375,7 +382,7 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(SendCompletedEvent))]
-        public Task SendCompletedEvent([ActivityTrigger] (string, DateTimeOffset?, string[]) input)
+        public Task SendCompletedEvent([ActivityTrigger] (string, DateTimeOffset?, IReadOnlyList<string>) input)
         {
             var (certificateName, expirationDate, dnsNames) = input;
 
