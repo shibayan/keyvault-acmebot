@@ -35,7 +35,7 @@ namespace KeyVault.Acmebot.Providers
 
             return zones.ManagedZones
                 .Select(managedZone => new DnsZone
-                    { Id = managedZone.Id.ToString(), Name = managedZone.DnsName.Remove(managedZone.DnsName.Length - 1) })
+                { Id = managedZone.Id.ToString(), Name = managedZone.DnsName.Remove(managedZone.DnsName.Length - 1) })
                 .ToArray();
         }
 
