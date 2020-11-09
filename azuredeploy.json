@@ -47,6 +47,13 @@
       "metadata": {
         "description": "Specifies whether the key vault is a standard vault or a premium vault."
       }
+    },
+    "keyVaultBaseUrl": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Enter the base URL of an existing Key Vault. (ex. https://example.vault.azure.net)"
+      }
     }
   },
   "variables": {
@@ -59,6 +66,7 @@
     "keyVaultSkuName": "[parameters('keyVaultSkuName')]",
     "mailAddress": "[parameters('mailAddress')]",
     "acmeEndpoint": "[parameters('acmeEndpoint')]",
+    "vaultBaseUrl": "[parameters('keyVaultBaseUrl')]",
     "appInsightsEndpoints": {
       "AzureCloud": "applicationinsights.azure.com",
       "AzureChinaCloud": "applicationinsights.azure.cn",
@@ -164,7 +172,7 @@
             },
             {
               "name": "Acmebot:VaultBaseUrl",
-              "value": "[if(parameters('createWithKeyVault'), concat('https://', variables('keyVaultName'), environment().suffixes.keyvaultDns), '')]"
+              "value": "[if(parameters('createWithKeyVault'), concat('https://', variables('keyVaultName'), environment().suffixes.keyvaultDns), variables('vaultBaseUrl'))]"
             },
             {
               "name": "Acmebot:Environment",
