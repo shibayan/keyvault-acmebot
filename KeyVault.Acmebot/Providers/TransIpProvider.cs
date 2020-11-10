@@ -38,19 +38,24 @@ namespace KeyVault.Acmebot.Providers
 
         public int PropagationSeconds => 360;
 
+        public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
+        {
+            var zones = await _transIpClient.ListZonesAsync();
+
+            return zones.Select(x => new DnsZone { Id = x.Name, Name = x.Name }).ToArray();
+        }
+
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
-            var records = values.Select(value => new DnsEntry
+            foreach (var value in values)
             {
-                Name = relativeRecordName,
-                Type = "TXT",
-                Expire = 60,
-                Content = value
-            });
-
-            foreach (var record in records)
-            {
-                await _transIpClient.AddRecordAsync(zone.Name, record);
+                await _transIpClient.AddRecordAsync(zone.Name, new DnsEntry
+                {
+                    Name = relativeRecordName,
+                    Type = "TXT",
+                    Expire = 60,
+                    Content = value
+                });
             }
         }
 
@@ -64,13 +69,6 @@ namespace KeyVault.Acmebot.Providers
             {
                 await _transIpClient.DeleteRecordAsync(zone.Name, record);
             }
-        }
-
-        public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
-        {
-            var zones = await _transIpClient.ListZonesAsync();
-
-            return zones.Select(d => new DnsZone { Id = d.Name, Name = d.Name }).ToArray();
         }
 
         private class TransIpClient
