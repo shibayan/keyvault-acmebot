@@ -2,6 +2,8 @@
 
 using Azure.WebJobs.Extensions.HttpApi;
 
+using KeyVault.Acmebot.Internal;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -22,7 +24,7 @@ namespace KeyVault.Acmebot
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "static-page/add-certificate")] HttpRequest req,
             ILogger log)
         {
-            if (!IsEasyAuthEnabled || !User.Identity.IsAuthenticated)
+            if (!IsEasyAuthEnabled || !User.IsAppAuthorized())
             {
                 return Forbid();
             }
@@ -35,7 +37,7 @@ namespace KeyVault.Acmebot
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "static-page/renew-certificate")] HttpRequest req,
             ILogger log)
         {
-            if (!IsEasyAuthEnabled || !User.Identity.IsAuthenticated)
+            if (!IsEasyAuthEnabled || !User.IsAppAuthorized())
             {
                 return Forbid();
             }

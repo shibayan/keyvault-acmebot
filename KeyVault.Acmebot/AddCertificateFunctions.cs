@@ -2,6 +2,7 @@
 
 using Azure.WebJobs.Extensions.HttpApi;
 
+using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Models;
 
 using Microsoft.AspNetCore.Http;
@@ -26,7 +27,7 @@ namespace KeyVault.Acmebot
             [DurableClient] IDurableClient starter,
             ILogger log)
         {
-            if (!User.Identity.IsAuthenticated)
+            if (!User.IsAppAuthorized())
             {
                 return Unauthorized();
             }
@@ -50,7 +51,7 @@ namespace KeyVault.Acmebot
             string instanceId,
             [DurableClient] IDurableClient starter)
         {
-            if (!User.Identity.IsAuthenticated)
+            if (!User.IsAppAuthorized())
             {
                 return Unauthorized();
             }
