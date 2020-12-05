@@ -114,7 +114,7 @@
           this.sending = true;
 
           try {
-            let response = await axios.post("/api/certificate", { DnsNames: this.certificate.dnsNames });
+            let response = await axios.post("/api/certificate", { dnsNames: this.certificate.dnsNames });
 
             while (true) {
               await delay(5000);
