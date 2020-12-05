@@ -9,9 +9,9 @@ using Microsoft.Extensions.Options;
 
 namespace KeyVault.Acmebot.Internal
 {
-    public class WebhookClient
+    public class WebhookInvoker
     {
-        public WebhookClient(IHttpClientFactory httpClientFactory, IOptions<AcmebotOptions> options)
+        public WebhookInvoker(IHttpClientFactory httpClientFactory, IOptions<AcmebotOptions> options)
         {
             _httpClientFactory = httpClientFactory;
             _options = options.Value;

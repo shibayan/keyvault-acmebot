@@ -8,9 +8,9 @@ using DurableTask.TypedProxy;
 
 using KeyVault.Acmebot.Models;
 
-namespace KeyVault.Acmebot.Contracts
+namespace KeyVault.Acmebot.Functions
 {
-    public interface ISharedFunctions
+    public interface ISharedActivity
     {
         Task<IReadOnlyList<CertificateItem>> GetExpiringCertificates(DateTime currentDateTime);
 
@@ -22,14 +22,14 @@ namespace KeyVault.Acmebot.Contracts
 
         Task Dns01Precondition(IReadOnlyList<string> dnsNames);
 
-        Task<IReadOnlyList<AcmeChallengeResult>> Dns01Authorization(IReadOnlyList<string> authorizationUrls);
+        Task<(IReadOnlyList<AcmeChallengeResult>, int)> Dns01Authorization(IReadOnlyList<string> authorizationUrls);
 
-        [RetryOptions("00:00:10", 12, HandlerType = typeof(RetryStrategy), HandlerMethodName = nameof(RetryStrategy.RetriableException))]
+        [RetryOptions("00:00:10", 12, HandlerType = typeof(ExceptionRetryStrategy<RetriableActivityException>))]
         Task CheckDnsChallenge(IReadOnlyList<AcmeChallengeResult> challengeResults);
 
         Task AnswerChallenges(IReadOnlyList<AcmeChallengeResult> challengeResults);
 
-        [RetryOptions("00:00:05", 12, HandlerType = typeof(RetryStrategy), HandlerMethodName = nameof(RetryStrategy.RetriableException))]
+        [RetryOptions("00:00:05", 12, HandlerType = typeof(ExceptionRetryStrategy<RetriableActivityException>))]
         Task CheckIsReady((OrderDetails, IReadOnlyList<AcmeChallengeResult>) input);
 
         Task<CertificateItem> FinalizeOrder((IReadOnlyList<string>, OrderDetails) input);

@@ -6,7 +6,7 @@ using DurableTask.Core;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
-namespace KeyVault.Acmebot
+namespace KeyVault.Acmebot.Functions
 {
     public class PurgeInstanceHistoryFunctions
     {

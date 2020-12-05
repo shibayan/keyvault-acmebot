@@ -5,11 +5,11 @@ using Azure.Security.KeyVault.Certificates;
 
 using DnsClient;
 
-using KeyVault.Acmebot;
 using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Options;
 using KeyVault.Acmebot.Providers;
 
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Configuration;
@@ -17,7 +17,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
-[assembly: FunctionsStartup(typeof(Startup))]
+[assembly: FunctionsStartup(typeof(KeyVault.Acmebot.Startup))]
 
 namespace KeyVault.Acmebot
 {
@@ -47,6 +47,8 @@ namespace KeyVault.Acmebot
 
             builder.Services.AddHttpClient();
 
+            builder.Services.AddSingleton<ITelemetryInitializer, ApplicationVersionInitializer<Startup>>();
+
             builder.Services.AddSingleton(new LookupClient(new LookupClientOptions(NameServer.GooglePublicDns, NameServer.GooglePublicDns2)
             {
                 UseCache = false,
@@ -75,7 +77,7 @@ namespace KeyVault.Acmebot
 
             builder.Services.AddSingleton<IAcmeProtocolClientFactory, AcmeProtocolClientFactory>();
 
-            builder.Services.AddSingleton<WebhookClient>();
+            builder.Services.AddSingleton<WebhookInvoker>();
             builder.Services.AddSingleton<ILifeCycleNotificationHelper, WebhookLifeCycleNotification>();
 
             builder.Services.AddSingleton<IDnsProvider>(provider =>

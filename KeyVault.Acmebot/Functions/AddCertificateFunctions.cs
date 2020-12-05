@@ -11,7 +11,7 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
-namespace KeyVault.Acmebot
+namespace KeyVault.Acmebot.Functions
 {
     public class AddCertificateFunctions : HttpFunctionBase
     {
@@ -37,7 +37,7 @@ namespace KeyVault.Acmebot
             }
 
             // Function input comes from the request content.
-            var instanceId = await starter.StartNewAsync(nameof(SharedFunctions.IssueCertificate), request.DnsNames);
+            var instanceId = await starter.StartNewAsync(nameof(SharedOrchestrator.IssueCertificate), request.DnsNames);
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 

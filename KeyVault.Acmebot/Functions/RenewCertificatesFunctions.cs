@@ -3,20 +3,18 @@ using System.Threading.Tasks;
 
 using DurableTask.TypedProxy;
 
-using KeyVault.Acmebot.Contracts;
-
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 
-namespace KeyVault.Acmebot
+namespace KeyVault.Acmebot.Functions
 {
     public class RenewCertificatesFunctions
     {
         [FunctionName(nameof(RenewCertificates))]
         public async Task RenewCertificates([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
         {
-            var activity = context.CreateActivityProxy<ISharedFunctions>();
+            var activity = context.CreateActivityProxy<ISharedActivity>();
 
             // 期限切れまで 30 日以内の証明書を取得する
             var certificates = await activity.GetExpiringCertificates(context.CurrentUtcDateTime);
@@ -39,7 +37,7 @@ namespace KeyVault.Acmebot
                 try
                 {
                     // 証明書の更新処理を開始
-                    await context.CallSubOrchestratorAsync(nameof(SharedFunctions.IssueCertificate), dnsNames);
+                    await context.CallSubOrchestratorAsync(nameof(SharedOrchestrator.IssueCertificate), dnsNames);
                 }
                 catch (Exception ex)
                 {
