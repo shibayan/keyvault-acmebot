@@ -110,6 +110,7 @@ namespace KeyVault.Acmebot
                     return new AzureDnsProvider(options.AzureDns, environment);
                 }
 
+                // Backward compatibility
                 if (options.SubscriptionId != null)
                 {
                     return new AzureDnsProvider(new AzureDnsOptions { SubscriptionId = options.SubscriptionId }, environment);

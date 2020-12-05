@@ -10,15 +10,15 @@ using Microsoft.Extensions.Logging;
 
 namespace KeyVault.Acmebot.Functions
 {
-    public class StaticPageFunctions : HttpFunctionBase
+    public class StaticPage : HttpFunctionBase
     {
-        public StaticPageFunctions(IHttpContextAccessor httpContextAccessor)
+        public StaticPage(IHttpContextAccessor httpContextAccessor)
             : base(httpContextAccessor)
         {
         }
 
-        [FunctionName(nameof(AddCertificatePage))]
-        public IActionResult AddCertificatePage(
+        [FunctionName(nameof(StaticPage) + "_" + nameof(AddCertificate))]
+        public IActionResult AddCertificate(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "static-page/add-certificate")] HttpRequest req,
             ILogger log)
         {
@@ -30,8 +30,8 @@ namespace KeyVault.Acmebot.Functions
             return File("static/add-certificate.html");
         }
 
-        [FunctionName(nameof(RenewCertificatePage))]
-        public IActionResult RenewCertificatePage(
+        [FunctionName(nameof(StaticPage) + "_" + nameof(RenewCertificate))]
+        public IActionResult RenewCertificate(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "static-page/renew-certificate")] HttpRequest req,
             ILogger log)
         {

@@ -9,10 +9,10 @@ using Microsoft.Extensions.Logging;
 
 namespace KeyVault.Acmebot.Functions
 {
-    public class RenewCertificatesFunctions
+    public class RenewCertificates
     {
-        [FunctionName(nameof(RenewCertificates))]
-        public async Task RenewCertificates([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
+        [FunctionName(nameof(RenewCertificates) + "_" + nameof(Orchestrator))]
+        public async Task Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
         {
             var activity = context.CreateActivityProxy<ISharedActivity>();
 
@@ -48,14 +48,14 @@ namespace KeyVault.Acmebot.Functions
             }
         }
 
-        [FunctionName(nameof(RenewCertificates_Timer))]
-        public static async Task RenewCertificates_Timer(
+        [FunctionName(nameof(RenewCertificates) + "_" + nameof(Timer))]
+        public static async Task Timer(
             [TimerTrigger("0 0 0 * * 1,3,5")] TimerInfo timer,
             [DurableClient] IDurableClient starter,
             ILogger log)
         {
             // Function input comes from the request content.
-            var instanceId = await starter.StartNewAsync(nameof(RenewCertificates), null);
+            var instanceId = await starter.StartNewAsync(nameof(RenewCertificates) + "_" + nameof(Orchestrator));
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
         }

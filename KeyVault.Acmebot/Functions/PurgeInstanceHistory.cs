@@ -8,10 +8,10 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
 namespace KeyVault.Acmebot.Functions
 {
-    public class PurgeInstanceHistoryFunctions
+    public class PurgeInstanceHistory
     {
-        [FunctionName(nameof(PurgeInstanceHistory_Timer))]
-        public Task PurgeInstanceHistory_Timer(
+        [FunctionName(nameof(PurgeInstanceHistory) + "_" + nameof(Timer))]
+        public Task Timer(
             [TimerTrigger("0 0 6 * * 0")] TimerInfo timer,
             [DurableClient] IDurableClient starter)
         {
