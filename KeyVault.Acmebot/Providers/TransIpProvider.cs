@@ -25,7 +25,7 @@ namespace KeyVault.Acmebot.Providers
         {
             var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
             {
-                AuthorityHost = new Uri(environment.ActiveDirectory)
+                AuthorityHost = environment.ActiveDirectory
             });
 
             var keyUri = new Uri(new Uri(acmeOptions.VaultBaseUrl), $"/keys/{options.PrivateKeyName}");
