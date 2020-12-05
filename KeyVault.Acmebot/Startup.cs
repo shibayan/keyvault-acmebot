@@ -55,7 +55,7 @@ namespace KeyVault.Acmebot
                 UseRandomNameServer = true
             }));
 
-            builder.Services.AddSingleton<AzureEnvironment>(provider =>
+            builder.Services.AddSingleton(provider =>
             {
                 var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
 
