@@ -25,9 +25,9 @@ namespace KeyVault.Acmebot.Functions
 {
     public class SharedActivity : ISharedActivity
     {
-        public SharedActivity(LookupClient lookupClient, IAcmeProtocolClientFactory acmeProtocolClientFactory,
-                               IDnsProvider dnsProvider, CertificateClient certificateClient,
-                               WebhookInvoker webhookInvoker, IOptions<AcmebotOptions> options, ILogger<SharedActivity> logger)
+        public SharedActivity(LookupClient lookupClient, AcmeProtocolClientFactory acmeProtocolClientFactory,
+                              IDnsProvider dnsProvider, CertificateClient certificateClient,
+                              WebhookInvoker webhookInvoker, IOptions<AcmebotOptions> options, ILogger<SharedActivity> logger)
         {
             _acmeProtocolClientFactory = acmeProtocolClientFactory;
             _dnsProvider = dnsProvider;
@@ -39,7 +39,7 @@ namespace KeyVault.Acmebot.Functions
         }
 
         private readonly LookupClient _lookupClient;
-        private readonly IAcmeProtocolClientFactory _acmeProtocolClientFactory;
+        private readonly AcmeProtocolClientFactory _acmeProtocolClientFactory;
         private readonly IDnsProvider _dnsProvider;
         private readonly CertificateClient _certificateClient;
         private readonly WebhookInvoker _webhookInvoker;

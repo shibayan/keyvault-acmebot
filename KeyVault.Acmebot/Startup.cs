@@ -55,7 +55,7 @@ namespace KeyVault.Acmebot
                 UseRandomNameServer = true
             }));
 
-            builder.Services.AddSingleton<IAzureEnvironment>(provider =>
+            builder.Services.AddSingleton<AzureEnvironment>(provider =>
             {
                 var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
 
@@ -65,7 +65,7 @@ namespace KeyVault.Acmebot
             builder.Services.AddSingleton(provider =>
             {
                 var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
-                var environment = provider.GetRequiredService<IAzureEnvironment>();
+                var environment = provider.GetRequiredService<AzureEnvironment>();
 
                 var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
                 {
@@ -75,7 +75,7 @@ namespace KeyVault.Acmebot
                 return new CertificateClient(new Uri(options.Value.VaultBaseUrl), credential);
             });
 
-            builder.Services.AddSingleton<IAcmeProtocolClientFactory, AcmeProtocolClientFactory>();
+            builder.Services.AddSingleton<AcmeProtocolClientFactory>();
 
             builder.Services.AddSingleton<WebhookInvoker>();
             builder.Services.AddSingleton<ILifeCycleNotificationHelper, WebhookLifeCycleNotification>();
@@ -83,7 +83,7 @@ namespace KeyVault.Acmebot
             builder.Services.AddSingleton<IDnsProvider>(provider =>
             {
                 var options = provider.GetRequiredService<IOptions<AcmebotOptions>>().Value;
-                var environment = provider.GetRequiredService<IAzureEnvironment>();
+                var environment = provider.GetRequiredService<AzureEnvironment>();
 
                 if (options.Cloudflare != null)
                 {

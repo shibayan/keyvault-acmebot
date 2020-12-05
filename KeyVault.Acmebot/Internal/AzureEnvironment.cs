@@ -3,13 +3,7 @@ using System.Collections.Generic;
 
 namespace KeyVault.Acmebot.Internal
 {
-    public interface IAzureEnvironment
-    {
-        Uri ActiveDirectory { get; }
-        Uri ResourceManager { get; }
-    }
-
-    internal class AzureEnvironment : IAzureEnvironment
+    public class AzureEnvironment
     {
         public Uri ActiveDirectory { get; private set; }
         public Uri ResourceManager { get; private set; }
