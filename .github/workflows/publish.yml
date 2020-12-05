@@ -23,7 +23,7 @@ jobs:
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
 
     - name: Publish Functions
-      run: dotnet publish -c Release -o ./dist -p:Version=${{ steps.setup_version.outputs.VERSION }}
+      run: dotnet publish -c Release -r win-x86 --self-contained false -o ./dist -p:Version=${{ steps.setup_version.outputs.VERSION }}
 
     - name: Zip Functions
       run: 7z a latest.zip ./dist/*

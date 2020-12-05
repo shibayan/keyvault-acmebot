@@ -29,20 +29,20 @@ namespace KeyVault.Acmebot.Providers
         private readonly DnsService _dnsService;
         private readonly JsonCredentialParameters _credsParameters;
 
-        public int PropagationSeconds => 10;
+        public int PropagationSeconds => 60;
 
         public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
         {
             var zones = await _dnsService.ManagedZones.List(_credsParameters.ProjectId).ExecuteAsync();
 
             return zones.ManagedZones
-                        .Select(managedZone => new DnsZone { Id = managedZone.Id.ToString(), Name = managedZone.DnsName })
+                        .Select(x => new DnsZone { Id = x.Name, Name = x.DnsName.TrimEnd('.') })
                         .ToArray();
         }
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
-            var recordName = $"{relativeRecordName}.{zone.Name}";
+            var recordName = $"{relativeRecordName}.{zone.Name}.";
 
             var change = new Change
             {
@@ -50,11 +50,10 @@ namespace KeyVault.Acmebot.Providers
                 {
                     new ResourceRecordSet
                     {
-                        Kind = "dns#resourceRecordSet",
+                        Name = recordName,
                         Type = "TXT",
                         Ttl = 60,
-                        Rrdatas = values.ToArray(),
-                        Name = recordName
+                        Rrdatas = values.ToArray()
                     }
                 }
             };
@@ -64,7 +63,7 @@ namespace KeyVault.Acmebot.Providers
 
         public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
         {
-            var recordName = $"{relativeRecordName}.{zone.Name}";
+            var recordName = $"{relativeRecordName}.{zone.Name}.";
 
             var request = _dnsService.ResourceRecordSets.List(_credsParameters.ProjectId, zone.Id);
 

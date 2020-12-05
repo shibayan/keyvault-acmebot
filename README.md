@@ -3,6 +3,7 @@
 ![Build](https://github.com/shibayan/keyvault-acmebot/workflows/Build/badge.svg)
 [![Release](https://img.shields.io/github/release/shibayan/keyvault-acmebot.svg)](https://github.com/shibayan/keyvault-acmebot/releases/latest)
 [![License](https://img.shields.io/github/license/shibayan/keyvault-acmebot.svg)](https://github.com/shibayan/keyvault-acmebot/blob/master/LICENSE)
+[![Terraform Registry](https://img.shields.io/badge/terraform-registry-5c4ee5.svg)](https://registry.terraform.io/modules/shibayan/keyvault-acmebot/azurerm/latest)
 
 This application automates the issuance and renewal of ACME SSL/TLS certificates. The certificates are stored inside Azure Key Vault. Many Azure services such as Azure App Service, Application Gateway, CDN, etc. are able to import certificates directly from Key Vault.
 
@@ -59,7 +60,7 @@ You will need the following:
 - Azure Subscription (required to deploy this solution)
 - Azure Key Vault (existing one or new Key Vault can be created at deployment time)
 - DNS provider (required to host your public DNS zone)
-  - Azure DNS
+  - Azure DNS (The resource must be unlocked)
   - Cloudflare
   - Google Cloud DNS
   - GratisDNS

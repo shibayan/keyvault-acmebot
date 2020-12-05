@@ -50,7 +50,7 @@ namespace KeyVault.Acmebot.Internal
 
             if (acmeProtocolClient.Account == null)
             {
-                account = await acmeProtocolClient.CreateAccountAsync(new[] { "mailto:" + _options.Contacts }, true);
+                account = await acmeProtocolClient.CreateAccountAsync(new[] { $"mailto:{_options.Contacts}" }, true);
 
                 accountKey = new AccountKey
                 {
@@ -60,6 +60,15 @@ namespace KeyVault.Acmebot.Internal
 
                 SaveState(account, "account.json");
                 SaveState(accountKey, "account_key.json");
+
+                acmeProtocolClient.Account = account;
+            }
+
+            if (acmeProtocolClient.Account.Payload.Contact[0] != $"mailto:{_options.Contacts}")
+            {
+                account = await acmeProtocolClient.UpdateAccountAsync(new[] { $"mailto:{_options.Contacts}" });
+
+                SaveState(account, "account.json");
 
                 acmeProtocolClient.Account = account;
             }
