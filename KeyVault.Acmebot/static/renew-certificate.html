@@ -93,7 +93,7 @@
           this.loading = true;
 
           try {
-            const response = await axios.get("/api/get-certificates");
+            const response = await axios.get("/api/certificates");
 
             if (response.status === 200) {
               this.$set(this, "certificates", response.data);
@@ -114,7 +114,7 @@
           this.sending = true;
 
           try {
-            let response = await axios.post("/api/add-certificate", { DnsNames: this.certificate.dnsNames });
+            let response = await axios.post("/api/certificate", { dnsNames: this.certificate.dnsNames });
 
             while (true) {
               await delay(5000);

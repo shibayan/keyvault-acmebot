@@ -13,7 +13,7 @@ namespace KeyVault.Acmebot.Providers
 {
     public class AzureDnsProvider : IDnsProvider
     {
-        public AzureDnsProvider(AzureDnsOptions options, IAzureEnvironment environment)
+        public AzureDnsProvider(AzureDnsOptions options, AzureEnvironment environment)
         {
             var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
             {

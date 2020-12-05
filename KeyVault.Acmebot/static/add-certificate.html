@@ -104,7 +104,7 @@
           this.loading = true;
 
           try {
-            const response = await axios.get("/api/get-dns-zones");
+            const response = await axios.get("/api/dns-zones");
 
             if (response.status === 200) {
               this.$set(this, "zones", response.data);
@@ -147,7 +147,7 @@
           this.sending = true;
 
           try {
-            let response = await axios.post("/api/add-certificate", { DnsNames: this.dnsNames });
+            let response = await axios.post("/api/certificate", { dnsNames: this.dnsNames });
 
             while (true) {
               await delay(5000);

@@ -6,7 +6,7 @@ using Azure.WebJobs.Extensions.HttpApi;
 
 using DurableTask.TypedProxy;
 
-using KeyVault.Acmebot.Contracts;
+using KeyVault.Acmebot.Models;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,28 +15,26 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
-namespace KeyVault.Acmebot
+namespace KeyVault.Acmebot.Functions
 {
-    public class GetDnsZonesFunctions : HttpFunctionBase
+    public class GetCertificates : HttpFunctionBase
     {
-        public GetDnsZonesFunctions(IHttpContextAccessor httpContextAccessor)
+        public GetCertificates(IHttpContextAccessor httpContextAccessor)
             : base(httpContextAccessor)
         {
         }
 
-        [FunctionName(nameof(GetDnsZones))]
-        public async Task<IReadOnlyList<string>> GetDnsZones([OrchestrationTrigger] IDurableOrchestrationContext context)
+        [FunctionName(nameof(GetCertificates) + "_" + nameof(Orchestrator))]
+        public Task<IReadOnlyList<CertificateItem>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            var activity = context.CreateActivityProxy<ISharedFunctions>();
+            var activity = context.CreateActivityProxy<ISharedActivity>();
 
-            var zones = await activity.GetZones();
-
-            return zones;
+            return activity.GetAllCertificates();
         }
 
-        [FunctionName(nameof(GetDnsZones_HttpStart))]
-        public async Task<IActionResult> GetDnsZones_HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "get-dns-zones")] HttpRequest req,
+        [FunctionName(nameof(GetCertificates) + "_" + nameof(HttpStart))]
+        public async Task<IActionResult> HttpStart(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "certificates")] HttpRequest req,
             [DurableClient] IDurableClient starter,
             ILogger log)
         {
@@ -46,7 +44,7 @@ namespace KeyVault.Acmebot
             }
 
             // Function input comes from the request content.
-            string instanceId = await starter.StartNewAsync(nameof(GetDnsZones), null);
+            string instanceId = await starter.StartNewAsync(nameof(GetCertificates) + "_" + nameof(Orchestrator));
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
