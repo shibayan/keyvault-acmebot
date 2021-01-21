@@ -33,7 +33,7 @@ namespace KeyVault.Acmebot.Options
         public GratisDnsOptions GratisDns { get; set; }
 
         public TransIpOptions TransIp { get; set; }
-        
+
         public GoDaddyOptions GoDaddy { get; set; }
     }
 }
