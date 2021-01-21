@@ -132,6 +132,9 @@
         "siteConfig": {
           "appSettings": [
             {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2015-05-01').InstrumentationKey"
+            },{
               "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
               "value": "[concat('InstrumentationKey=', reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2015-05-01').InstrumentationKey, ';EndpointSuffix=', variables('appInsightsEndpoints')[environment().name])]"
             },
