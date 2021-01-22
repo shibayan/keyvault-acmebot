@@ -110,6 +110,11 @@ namespace KeyVault.Acmebot
                     return new AzureDnsProvider(options.AzureDns, environment);
                 }
 
+                if (options.GoDaddy != null)
+                {
+                    return new GoDaddyProvider(options.GoDaddy);
+                }
+
                 // Backward compatibility
                 if (options.SubscriptionId != null)
                 {
