@@ -22,7 +22,7 @@
             <div class="field">
               <div class="control">
                 <div class="select" :class="{ 'is-loading': loading }">
-                  <select v-model="zoneName" @change="reset">
+                  <select v-model="zoneName">
                     <option disabled value="">Please select one</option>
                     <option v-for="zone in zones" :value="zone">{{ toUnicode(zone) }}</option>
                   </select>
@@ -135,10 +135,6 @@
         },
         remove(dnsName) {
           this.dnsNames = this.dnsNames.filter(x => x !== dnsName);
-        },
-        reset() {
-          this.dnsNames = [];
-          this.recordName = "";
         },
         async submit() {
           this.sending = true;
