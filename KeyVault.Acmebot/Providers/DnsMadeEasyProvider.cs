@@ -147,7 +147,7 @@ namespace KeyVault.Acmebot.Providers
                     request.Headers.Add("x-dnsme-apikey", ApiKey);
                     request.Headers.Add("x-dnsme-requestdate", currentTimeStr);
                     request.Headers.Add("x-dnsme-hmac", hmac);
-                    
+
                     return base.SendAsync(request, cancellationToken);
                 }
 
