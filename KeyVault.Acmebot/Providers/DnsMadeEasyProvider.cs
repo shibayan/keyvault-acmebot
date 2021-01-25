@@ -121,7 +121,9 @@ namespace KeyVault.Acmebot.Providers
                 public ApiKeyHandler(string apiKey, string secretKey, HttpMessageHandler innerHandler) : base(innerHandler)
                 {
                     if (apiKey is null)
+                    {
                         throw new ArgumentNullException(nameof(apiKey));
+                    }
                     if (secretKey is null)
                         throw new ArgumentNullException(nameof(secretKey));
                     if (innerHandler is null)
