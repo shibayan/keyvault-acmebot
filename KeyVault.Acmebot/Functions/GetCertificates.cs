@@ -6,7 +6,6 @@ using Azure.WebJobs.Extensions.HttpApi;
 
 using DurableTask.TypedProxy;
 
-using KeyVault.Acmebot.Contracts;
 using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Models;
 
@@ -17,26 +16,26 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
-namespace KeyVault.Acmebot
+namespace KeyVault.Acmebot.Functions
 {
-    public class GetCertificatesFunctions : HttpFunctionBase
+    public class GetCertificates : HttpFunctionBase
     {
-        public GetCertificatesFunctions(IHttpContextAccessor httpContextAccessor)
+        public GetCertificates(IHttpContextAccessor httpContextAccessor)
             : base(httpContextAccessor)
         {
         }
 
-        [FunctionName(nameof(GetCertificates))]
-        public Task<IReadOnlyList<CertificateItem>> GetCertificates([OrchestrationTrigger] IDurableOrchestrationContext context)
+        [FunctionName(nameof(GetCertificates) + "_" + nameof(Orchestrator))]
+        public Task<IReadOnlyList<CertificateItem>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            var activity = context.CreateActivityProxy<ISharedFunctions>();
+            var activity = context.CreateActivityProxy<ISharedActivity>();
 
             return activity.GetAllCertificates();
         }
 
-        [FunctionName(nameof(GetCertificates_HttpStart))]
-        public async Task<IActionResult> GetCertificates_HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "get-certificates")] HttpRequest req,
+        [FunctionName(nameof(GetCertificates) + "_" + nameof(HttpStart))]
+        public async Task<IActionResult> HttpStart(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "certificates")] HttpRequest req,
             [DurableClient] IDurableClient starter,
             ILogger log)
         {
@@ -46,7 +45,7 @@ namespace KeyVault.Acmebot
             }
 
             // Function input comes from the request content.
-            string instanceId = await starter.StartNewAsync(nameof(GetCertificates), null);
+            string instanceId = await starter.StartNewAsync(nameof(GetCertificates) + "_" + nameof(Orchestrator));
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 

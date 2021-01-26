@@ -6,7 +6,6 @@ using Azure.WebJobs.Extensions.HttpApi;
 
 using DurableTask.TypedProxy;
 
-using KeyVault.Acmebot.Contracts;
 using KeyVault.Acmebot.Internal;
 
 using Microsoft.AspNetCore.Http;
@@ -16,28 +15,28 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
-namespace KeyVault.Acmebot
+namespace KeyVault.Acmebot.Functions
 {
-    public class GetDnsZonesFunctions : HttpFunctionBase
+    public class GetDnsZones : HttpFunctionBase
     {
-        public GetDnsZonesFunctions(IHttpContextAccessor httpContextAccessor)
+        public GetDnsZones(IHttpContextAccessor httpContextAccessor)
             : base(httpContextAccessor)
         {
         }
 
-        [FunctionName(nameof(GetDnsZones))]
-        public async Task<IReadOnlyList<string>> GetDnsZones([OrchestrationTrigger] IDurableOrchestrationContext context)
+        [FunctionName(nameof(GetDnsZones) + "_" + nameof(Orchestrator))]
+        public async Task<IReadOnlyList<string>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            var activity = context.CreateActivityProxy<ISharedFunctions>();
+            var activity = context.CreateActivityProxy<ISharedActivity>();
 
             var zones = await activity.GetZones();
 
             return zones;
         }
 
-        [FunctionName(nameof(GetDnsZones_HttpStart))]
-        public async Task<IActionResult> GetDnsZones_HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "get-dns-zones")] HttpRequest req,
+        [FunctionName(nameof(GetDnsZones) + "_" + nameof(HttpStart))]
+        public async Task<IActionResult> HttpStart(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "dns-zones")] HttpRequest req,
             [DurableClient] IDurableClient starter,
             ILogger log)
         {
@@ -47,7 +46,7 @@ namespace KeyVault.Acmebot
             }
 
             // Function input comes from the request content.
-            string instanceId = await starter.StartNewAsync(nameof(GetDnsZones), null);
+            string instanceId = await starter.StartNewAsync(nameof(GetDnsZones) + "_" + nameof(Orchestrator));
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 

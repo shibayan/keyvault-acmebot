@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace KeyVault.Acmebot.Internal
+namespace KeyVault.Acmebot
 {
     [Serializable]
     public class RetriableActivityException : Exception

@@ -21,11 +21,11 @@ namespace KeyVault.Acmebot.Providers
 {
     public class TransIpProvider : IDnsProvider
     {
-        public TransIpProvider(AcmebotOptions acmeOptions, TransIpOptions options, IAzureEnvironment environment)
+        public TransIpProvider(AcmebotOptions acmeOptions, TransIpOptions options, AzureEnvironment environment)
         {
             var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
             {
-                AuthorityHost = new Uri(environment.ActiveDirectory)
+                AuthorityHost = environment.ActiveDirectory
             });
 
             var keyUri = new Uri(new Uri(acmeOptions.VaultBaseUrl), $"/keys/{options.PrivateKeyName}");

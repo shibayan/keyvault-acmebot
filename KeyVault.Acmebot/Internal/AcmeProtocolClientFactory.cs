@@ -13,12 +13,7 @@ using Newtonsoft.Json;
 
 namespace KeyVault.Acmebot.Internal
 {
-    public interface IAcmeProtocolClientFactory
-    {
-        Task<AcmeProtocolClient> CreateClientAsync();
-    }
-
-    internal class AcmeProtocolClientFactory : IAcmeProtocolClientFactory
+    public class AcmeProtocolClientFactory
     {
         public AcmeProtocolClientFactory(IOptions<AcmebotOptions> options)
         {

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Key Vault Acmebot</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.8.2/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.1/css/bulma.min.css" integrity="sha512-ZRv40llEogRmoWgZwnsqke3HNzJ0kiI0+pcMgiz2bxO6Ew1DVBtWjVn0qjrXdT3+u+pSN36gLgmJiiQ3cQtyzA==" crossorigin="anonymous" />
   <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
 </head>
 <body>
@@ -22,9 +22,9 @@
             <div class="field">
               <div class="control">
                 <div class="select" :class="{ 'is-loading': loading }">
-                  <select v-model="zoneName" @change="reset">
+                  <select v-model="zoneName">
                     <option disabled value="">Please select one</option>
-                    <option v-for="zone in zones" :value="zone">{{ zone | punycode }}</option>
+                    <option v-for="zone in zones" :value="zone">{{ toUnicode(zone) }}</option>
                   </select>
                 </div>
               </div>
@@ -42,7 +42,7 @@
               </p>
               <p class="control">
                 <a class="button is-static">
-                  .{{ zoneName | punycode }}
+                  .{{ toUnicode(zoneName) }}
                 </a>
               </p>
               <p class="control">
@@ -57,7 +57,7 @@
             <div class="content">
               <div class="tags">
                 <span v-for="dnsName in dnsNames" class="tag is-light is-medium">
-                  {{ dnsName | punycode }}
+                  {{ toUnicode(dnsName) }}
                   <button class="delete is-small" @click="remove(dnsName)"></button>
                 </span>
               </div>
@@ -77,37 +77,34 @@
       </div>
     </div>
   </section>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/punycode/1.4.1/punycode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.0.2/vue.global.prod.js" integrity="sha512-M8VjsuCj1iBzrwKloFNjvQBmFXT2oF0MWExoLGpQT2nEx5tq7CP+BhWGJdczT1LoWAhyqHh+LJ6ihHSVGyclHw==" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.0/axios.min.js" integrity="sha512-DZqqY3PiOvTP9HkjIWgjO6ouCbq+dxqWoJZ/Q+zPYNHmlnI2dQnbJ5bxAHpAMw+LXRm4D72EIRXzvcHQtE8/VQ==" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/punycode/1.4.1/punycode.min.js" integrity="sha512-YZlXEJ9dOHnIn3LXSS3RpbhAtTQZWw2VOywaMsC8p7/0DyGu0gEf0pFhkQtE/i4pQpgGUDY7cicb401Tf/5sRA==" crossorigin="anonymous"></script>
   <script>
     const delay = (millisecondsDelay) => {
       return new Promise(resolve => setTimeout(() => resolve(), millisecondsDelay));
     }
 
-    Vue.filter("punycode", function (value) {
-      return punycode.toUnicode(value);
-    });
-
-    const app = new Vue({
-      el: "#app",
-      data: {
-        zones: [],
-        zoneName: "",
-        dnsNames: [],
-        recordName: "",
-        loading: false,
-        sending: false
+    const app = {
+      data() {
+        return {
+          zones: [],
+          zoneName: "",
+          dnsNames: [],
+          recordName: "",
+          loading: false,
+          sending: false
+        };
       },
       methods: {
-        load: async function () {
+        async load() {
           this.loading = true;
 
           try {
-            const response = await axios.get("/api/get-dns-zones");
+            const response = await axios.get("/api/dns-zones");
 
             if (response.status === 200) {
-              this.$set(this, "zones", response.data);
+              this.zones = response.data;
             }
           } catch (error) {
             alert(error);
@@ -115,7 +112,7 @@
 
           this.loading = false;
         },
-        reload: function () {
+        reload() {
           this.zones = [];
           this.zoneName = "";
           this.dnsNames = [];
@@ -123,7 +120,7 @@
 
           this.load();
         },
-        add: function () {
+        add() {
           if (this.zoneName === "") {
             return;
           }
@@ -136,18 +133,14 @@
 
           this.recordName = "";
         },
-        remove: function (dnsName) {
+        remove(dnsName) {
           this.dnsNames = this.dnsNames.filter(x => x !== dnsName);
         },
-        reset: function () {
-          this.dnsNames = [];
-          this.recordName = "";
-        },
-        submit: async function () {
+        async submit() {
           this.sending = true;
 
           try {
-            let response = await axios.post("/api/add-certificate", { DnsNames: this.dnsNames });
+            let response = await axios.post("/api/certificate", { dnsNames: this.dnsNames });
 
             while (true) {
               await delay(5000);
@@ -177,12 +170,17 @@
 
           this.reload();
           this.sending = false;
+        },
+        toUnicode(value) {
+          return punycode.toUnicode(value);
         }
       },
-      beforeMount: function () {
+      beforeMount() {
         this.load();
       }
-    });
+    };
+
+    Vue.createApp(app).mount("#app");
   </script>
 </body>
 </html>

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
-using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Options;
 
 using Newtonsoft.Json;
@@ -20,6 +20,7 @@ namespace KeyVault.Acmebot.Providers
         }
 
         private readonly CloudflareDnsClient _cloudflareDnsClient;
+        private readonly IdnMapping _idnMapping = new IdnMapping();
 
         public int PropagationSeconds => 10;
 
@@ -28,7 +29,7 @@ namespace KeyVault.Acmebot.Providers
             var zones = await _cloudflareDnsClient.ListAllZonesAsync();
 
             // Zone API は Punycode されていない値を返すのでエンコードが必要
-            return zones.Select(x => new DnsZone { Id = x.Id, Name = Punycode.Encode(x.Name) }).ToArray();
+            return zones.Select(x => new DnsZone { Id = x.Id, Name = _idnMapping.GetAscii(x.Name) }).ToArray();
         }
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)

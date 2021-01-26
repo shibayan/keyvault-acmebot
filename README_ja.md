@@ -60,7 +60,10 @@ https://github.com/shibayan/keyvault-certificate-rotation
 - DNS プロバイダー (公開 DNS ゾーンにあるホスト)
   - Azure DNS
   - Cloudflare
+  - Google Cloud DNS
   - GratisDNS
+  - TransIP DNS
+  - DNS Made Easy
 - E メールアドレス (ACME の利用登録に必要)
 
 ## 開始する

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading;
 using System.Threading.Tasks;
 
 using ACMESharp.Authorizations;
@@ -12,9 +11,6 @@ using Azure.Security.KeyVault.Certificates;
 
 using DnsClient;
 
-using DurableTask.TypedProxy;
-
-using KeyVault.Acmebot.Contracts;
 using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Models;
 using KeyVault.Acmebot.Options;
@@ -25,74 +21,32 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace KeyVault.Acmebot
+namespace KeyVault.Acmebot.Functions
 {
-    public class SharedFunctions : ISharedFunctions
+    public class SharedActivity : ISharedActivity
     {
-        public SharedFunctions(LookupClient lookupClient, IAcmeProtocolClientFactory acmeProtocolClientFactory,
-                               IDnsProvider dnsProvider, CertificateClient certificateClient,
-                               WebhookClient webhookClient, IOptions<AcmebotOptions> options, ILogger<SharedFunctions> logger)
+        public SharedActivity(LookupClient lookupClient, AcmeProtocolClientFactory acmeProtocolClientFactory,
+                              IDnsProvider dnsProvider, CertificateClient certificateClient,
+                              WebhookInvoker webhookInvoker, IOptions<AcmebotOptions> options, ILogger<SharedActivity> logger)
         {
             _acmeProtocolClientFactory = acmeProtocolClientFactory;
             _dnsProvider = dnsProvider;
             _lookupClient = lookupClient;
             _certificateClient = certificateClient;
-            _webhookClient = webhookClient;
+            _webhookInvoker = webhookInvoker;
             _options = options.Value;
             _logger = logger;
         }
 
         private readonly LookupClient _lookupClient;
-        private readonly IAcmeProtocolClientFactory _acmeProtocolClientFactory;
+        private readonly AcmeProtocolClientFactory _acmeProtocolClientFactory;
         private readonly IDnsProvider _dnsProvider;
         private readonly CertificateClient _certificateClient;
-        private readonly WebhookClient _webhookClient;
+        private readonly WebhookInvoker _webhookInvoker;
         private readonly AcmebotOptions _options;
-        private readonly ILogger<SharedFunctions> _logger;
+        private readonly ILogger<SharedActivity> _logger;
 
         private const string IssuerName = "Acmebot";
-
-        [FunctionName(nameof(IssueCertificate))]
-        public async Task IssueCertificate([OrchestrationTrigger] IDurableOrchestrationContext context)
-        {
-            var dnsNames = context.GetInput<string[]>();
-
-            var activity = context.CreateActivityProxy<ISharedFunctions>();
-
-            // 前提条件をチェック
-            await activity.Dns01Precondition(dnsNames);
-
-            // 新しく ACME Order を作成する
-            var orderDetails = await activity.Order(dnsNames);
-
-            // 既に確認済みの場合は Challenge をスキップする
-            if (orderDetails.Payload.Status != "ready")
-            {
-                // ACME Challenge を実行
-                var challengeResults = await activity.Dns01Authorization(orderDetails.Payload.Authorizations);
-
-                // DNS Provider が指定した分だけ遅延させる
-                await context.CreateTimer(context.CurrentUtcDateTime.AddSeconds(_dnsProvider.PropagationSeconds), CancellationToken.None);
-
-                // DNS で正しくレコードが引けるか確認
-                await activity.CheckDnsChallenge(challengeResults);
-
-                // ACME Answer を実行
-                await activity.AnswerChallenges(challengeResults);
-
-                // Order のステータスが ready になるまで 60 秒待機
-                await activity.CheckIsReady((orderDetails, challengeResults));
-
-                // 作成した DNS レコードを削除
-                await activity.CleanupDnsChallenge(challengeResults);
-            }
-
-            // 証明書を作成し Key Vault に保存
-            var certificate = await activity.FinalizeOrder((dnsNames, orderDetails));
-
-            // 証明書の更新が完了後に Webhook を送信する
-            await activity.SendCompletedEvent((certificate.Name, certificate.ExpiresOn, dnsNames));
-        }
 
         [FunctionName(nameof(GetExpiringCertificates))]
         public async Task<IReadOnlyList<CertificateItem>> GetExpiringCertificates([ActivityTrigger] DateTime currentDateTime)
@@ -173,7 +127,7 @@ namespace KeyVault.Acmebot
         }
 
         [FunctionName(nameof(Dns01Authorization))]
-        public async Task<IReadOnlyList<AcmeChallengeResult>> Dns01Authorization([ActivityTrigger] IReadOnlyList<string> authorizationUrls)
+        public async Task<(IReadOnlyList<AcmeChallengeResult>, int)> Dns01Authorization([ActivityTrigger] IReadOnlyList<string> authorizationUrls)
         {
             var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
@@ -218,7 +172,7 @@ namespace KeyVault.Acmebot
                 await _dnsProvider.CreateTxtRecordAsync(zone, acmeDnsRecordName, lookup.Select(x => x.DnsRecordValue));
             }
 
-            return challengeResults;
+            return (challengeResults, _dnsProvider.PropagationSeconds);
         }
 
         [FunctionName(nameof(CheckDnsChallenge))]
@@ -386,7 +340,7 @@ namespace KeyVault.Acmebot
         {
             var (certificateName, expirationDate, dnsNames) = input;
 
-            return _webhookClient.SendCompletedEventAsync(certificateName, expirationDate, dnsNames);
+            return _webhookInvoker.SendCompletedEventAsync(certificateName, expirationDate, dnsNames);
         }
     }
 }

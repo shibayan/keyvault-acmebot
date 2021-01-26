@@ -1,25 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
+
+using Azure.Identity;
+using Azure.ResourceManager.Dns;
+using Azure.ResourceManager.Dns.Models;
 
 using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Options;
-
-using Microsoft.Azure.Management.Dns;
-using Microsoft.Azure.Management.Dns.Models;
-using Microsoft.Rest;
 
 namespace KeyVault.Acmebot.Providers
 {
     public class AzureDnsProvider : IDnsProvider
     {
-        public AzureDnsProvider(AzureDnsOptions options, IAzureEnvironment environment)
+        public AzureDnsProvider(AzureDnsOptions options, AzureEnvironment environment)
         {
-            _dnsManagementClient = new DnsManagementClient(new Uri(environment.ResourceManager), new TokenCredentials(new ManagedIdentityTokenProvider(environment)))
+            var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
             {
-                SubscriptionId = options.SubscriptionId
-            };
+                AuthorityHost = environment.ActiveDirectory
+            });
+
+            _dnsManagementClient = new DnsManagementClient(options.SubscriptionId, environment.ResourceManager, credential);
         }
 
         private readonly DnsManagementClient _dnsManagementClient;
@@ -28,9 +29,16 @@ namespace KeyVault.Acmebot.Providers
 
         public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
         {
-            var zones = await _dnsManagementClient.Zones.ListAllAsync();
+            var zones = new List<DnsZone>();
 
-            return zones.Select(x => new DnsZone { Id = x.Id, Name = x.Name }).ToArray();
+            var result = _dnsManagementClient.Zones.ListAsync();
+
+            await foreach (var zone in result)
+            {
+                zones.Add(new DnsZone { Id = zone.Id, Name = zone.Name });
+            }
+
+            return zones;
         }
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
@@ -40,9 +48,13 @@ namespace KeyVault.Acmebot.Providers
             // TXT レコードに TTL と値をセットする
             var recordSet = new RecordSet
             {
-                TTL = 60,
-                TxtRecords = values.Select(x => new TxtRecord(new[] { x })).ToArray()
+                TTL = 60
             };
+
+            foreach (var value in values)
+            {
+                recordSet.TxtRecords.Add(new TxtRecord { Value = { value } });
+            }
 
             await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(resourceGroup, zone.Name, relativeRecordName, RecordType.TXT, recordSet);
         }

@@ -65,6 +65,7 @@ You will need the following:
   - Google Cloud DNS
   - GratisDNS
   - TransIP DNS
+  - DNS Made Easy
 - Email address (required to register with ACME)
 
 ## Getting Started
@@ -110,7 +111,7 @@ There are also additional settings that will be automatically created by Key Vau
 
 You must enable Authentication on the Function App that is deployed as part of this application.
 
-Open the Azure Portal, navigate to the `Authentication / Authorization` menu of the deployed Function App and enable App Service authentication. Select the `Login with Azure Active Directory` as the action to perform if the request is not authenticated. We recommend using Azure Active Directory as your authentication provider, but it works with other providers as well, although it's not supported.
+In the Azure Portal, open the Function blade then select the `Authentication / Authorization` menu and enable App Service authentication. Select the `Login with Azure Active Directory` as the action to perform if the request is not authenticated. We recommend using Azure Active Directory as your authentication provider, but it works with other providers as well, although it's not supported.
 
 ![Enable App Service Authentication with AAD](https://user-images.githubusercontent.com/1356444/49693401-ecc7c400-fbb4-11e8-9ae1-5d376a4d8a05.png)
 

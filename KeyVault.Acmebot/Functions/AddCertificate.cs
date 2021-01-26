@@ -12,18 +12,18 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
-namespace KeyVault.Acmebot
+namespace KeyVault.Acmebot.Functions
 {
-    public class AddCertificateFunctions : HttpFunctionBase
+    public class AddCertificate : HttpFunctionBase
     {
-        public AddCertificateFunctions(IHttpContextAccessor httpContextAccessor)
+        public AddCertificate(IHttpContextAccessor httpContextAccessor)
             : base(httpContextAccessor)
         {
         }
 
-        [FunctionName(nameof(AddCertificate_HttpStart))]
-        public async Task<IActionResult> AddCertificate_HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "add-certificate")] AddCertificateRequest request,
+        [FunctionName(nameof(AddCertificate) + "_" + nameof(HttpStart))]
+        public async Task<IActionResult> HttpStart(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "certificate")] AddCertificateRequest request,
             [DurableClient] IDurableClient starter,
             ILogger log)
         {
@@ -38,16 +38,16 @@ namespace KeyVault.Acmebot
             }
 
             // Function input comes from the request content.
-            var instanceId = await starter.StartNewAsync(nameof(SharedFunctions.IssueCertificate), request.DnsNames);
+            var instanceId = await starter.StartNewAsync(nameof(SharedOrchestrator.IssueCertificate), request.DnsNames);
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
-            return AcceptedAtFunction(nameof(AddCertificate_HttpPoll), new { instanceId }, null);
+            return AcceptedAtFunction(nameof(AddCertificate) + "_" + nameof(HttpPoll), new { instanceId }, null);
         }
 
-        [FunctionName(nameof(AddCertificate_HttpPoll))]
-        public async Task<IActionResult> AddCertificate_HttpPoll(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "add-certificate/{instanceId}")] HttpRequest req,
+        [FunctionName(nameof(AddCertificate) + "_" + nameof(HttpPoll))]
+        public async Task<IActionResult> HttpPoll(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "certificate/{instanceId}")] HttpRequest req,
             string instanceId,
             [DurableClient] IDurableClient starter)
         {
@@ -72,7 +72,7 @@ namespace KeyVault.Acmebot
                 status.RuntimeStatus == OrchestrationRuntimeStatus.Pending ||
                 status.RuntimeStatus == OrchestrationRuntimeStatus.ContinuedAsNew)
             {
-                return AcceptedAtFunction(nameof(AddCertificate_HttpPoll), new { instanceId }, null);
+                return AcceptedAtFunction(nameof(AddCertificate) + "_" + nameof(HttpPoll), new { instanceId }, null);
             }
 
             return Ok();

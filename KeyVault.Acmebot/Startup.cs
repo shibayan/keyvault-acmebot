@@ -5,11 +5,11 @@ using Azure.Security.KeyVault.Certificates;
 
 using DnsClient;
 
-using KeyVault.Acmebot;
 using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Options;
 using KeyVault.Acmebot.Providers;
 
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Configuration;
@@ -17,7 +17,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
-[assembly: FunctionsStartup(typeof(Startup))]
+[assembly: FunctionsStartup(typeof(KeyVault.Acmebot.Startup))]
 
 namespace KeyVault.Acmebot
 {
@@ -47,13 +47,15 @@ namespace KeyVault.Acmebot
 
             builder.Services.AddHttpClient();
 
+            builder.Services.AddSingleton<ITelemetryInitializer, ApplicationVersionInitializer<Startup>>();
+
             builder.Services.AddSingleton(new LookupClient(new LookupClientOptions(NameServer.GooglePublicDns, NameServer.GooglePublicDns2)
             {
                 UseCache = false,
                 UseRandomNameServer = true
             }));
 
-            builder.Services.AddSingleton<IAzureEnvironment>(provider =>
+            builder.Services.AddSingleton(provider =>
             {
                 var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
 
@@ -63,25 +65,25 @@ namespace KeyVault.Acmebot
             builder.Services.AddSingleton(provider =>
             {
                 var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
-                var environment = provider.GetRequiredService<IAzureEnvironment>();
+                var environment = provider.GetRequiredService<AzureEnvironment>();
 
                 var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
                 {
-                    AuthorityHost = new Uri(environment.ActiveDirectory)
+                    AuthorityHost = environment.ActiveDirectory
                 });
 
                 return new CertificateClient(new Uri(options.Value.VaultBaseUrl), credential);
             });
 
-            builder.Services.AddSingleton<IAcmeProtocolClientFactory, AcmeProtocolClientFactory>();
+            builder.Services.AddSingleton<AcmeProtocolClientFactory>();
 
-            builder.Services.AddSingleton<WebhookClient>();
+            builder.Services.AddSingleton<WebhookInvoker>();
             builder.Services.AddSingleton<ILifeCycleNotificationHelper, WebhookLifeCycleNotification>();
 
             builder.Services.AddSingleton<IDnsProvider>(provider =>
             {
                 var options = provider.GetRequiredService<IOptions<AcmebotOptions>>().Value;
-                var environment = provider.GetRequiredService<IAzureEnvironment>();
+                var environment = provider.GetRequiredService<AzureEnvironment>();
 
                 if (options.Cloudflare != null)
                 {
@@ -108,6 +110,12 @@ namespace KeyVault.Acmebot
                     return new AzureDnsProvider(options.AzureDns, environment);
                 }
 
+                if (options.DnsMadeEasy != null)
+                {
+                    return new DnsMadeEasyProvider(options, options.DnsMadeEasy, environment);
+                }
+
+                // Backward compatibility
                 if (options.SubscriptionId != null)
                 {
                     return new AzureDnsProvider(new AzureDnsOptions { SubscriptionId = options.SubscriptionId }, environment);

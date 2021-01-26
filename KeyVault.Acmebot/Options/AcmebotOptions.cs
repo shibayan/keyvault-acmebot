@@ -24,9 +24,12 @@ namespace KeyVault.Acmebot.Options
 
         public string PreferredChain { get; set; }
 
+        // Properties should be in alphabetical order
         public AzureDnsOptions AzureDns { get; set; }
 
         public CloudflareOptions Cloudflare { get; set; }
+
+        public DnsMadeEasyOptions DnsMadeEasy { get; set; }
 
         public GoogleDnsOptions Google { get; set; }
 
