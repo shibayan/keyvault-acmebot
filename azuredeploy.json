@@ -225,5 +225,20 @@
         ]
       }
     }
-  ]
+  ],
+  "outputs": {
+    "functionAppName": {
+      "type": "string",
+      "value": "[variables('functionAppName')]"
+    },
+    "identity": {
+      "type": "object",
+      "value": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2020-06-01', 'Full').identity]"
+    },
+    "keyVaultName": {
+      "type": "string",
+      "condition": "[parameters('createWithKeyVault')]",
+      "value": "[variables('keyVaultName')]"
+    }
+  }
 }
