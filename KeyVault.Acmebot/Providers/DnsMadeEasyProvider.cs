@@ -124,15 +124,26 @@ namespace KeyVault.Acmebot.Providers
                     {
                         throw new ArgumentNullException(nameof(apiKey));
                     }
+
                     if (secretKey is null)
+                    {
                         throw new ArgumentNullException(nameof(secretKey));
+                    }
+
                     if (innerHandler is null)
+                    {
                         throw new ArgumentNullException(nameof(innerHandler));
+                    }
 
                     if (string.IsNullOrWhiteSpace(apiKey))
+                    {
                         throw new ArgumentException("API Key must be specified", nameof(apiKey));
+                    }
+
                     if (string.IsNullOrWhiteSpace(secretKey))
+                    {
                         throw new ArgumentException("Secret Key must be specified", nameof(secretKey));
+                    }
 
                     ApiKey = apiKey;
 
@@ -164,8 +175,11 @@ namespace KeyVault.Acmebot.Providers
                 protected override void Dispose(bool disposing)
                 {
                     base.Dispose(disposing);
+
                     if (disposing)
+                    {
                         HMAC.Dispose();
+                    }
                 }
             }
         }
