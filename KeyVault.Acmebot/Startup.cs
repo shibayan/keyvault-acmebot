@@ -110,6 +110,11 @@ namespace KeyVault.Acmebot
                     return new AzureDnsProvider(options.AzureDns, environment);
                 }
 
+                if (options.DnsMadeEasy != null)
+                {
+                    return new DnsMadeEasyProvider(options, options.DnsMadeEasy, environment);
+                }
+
                 // Backward compatibility
                 if (options.SubscriptionId != null)
                 {

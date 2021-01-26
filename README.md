@@ -65,6 +65,7 @@ You will need the following:
   - Google Cloud DNS
   - GratisDNS
   - TransIP DNS
+  - DNS Made Easy
 - Email address (required to register with ACME)
 
 ## Getting Started
