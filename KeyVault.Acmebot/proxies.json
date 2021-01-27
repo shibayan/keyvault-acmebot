@@ -7,6 +7,12 @@
       },
       "backendUri": "http://localhost/api/static-page/add-certificate"
     },
+    "BulkCertificate_Proxy": {
+      "matchCondition": {
+        "route": "bulk-certificate"
+      },
+      "backendUri": "http://localhost/api/static-page/bulk-certificate"
+    },
     "RenewCertificate_Proxy": {
       "matchCondition": {
         "route": "renew-certificate"
