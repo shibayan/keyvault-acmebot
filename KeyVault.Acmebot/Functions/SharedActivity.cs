@@ -117,12 +117,13 @@ namespace KeyVault.Acmebot.Functions
             // DNS zone が存在するか確認
             var zones = await _dnsProvider.ListZonesAsync();
 
-            foreach (var dnsName in dnsNames)
+            var notFoundZones = dnsNames.Where(x => zones.All(xs => !string.Equals(x, xs.Name, StringComparison.OrdinalIgnoreCase) && !x.EndsWith($".{xs.Name}", StringComparison.OrdinalIgnoreCase)))
+                                        .ToArray();
+
+            // マッチする DNS zone が見つからない DNS name があった場合はエラー
+            if (notFoundZones.Length > 0)
             {
-                if (!zones.Any(x => string.Equals(dnsName, x.Name, StringComparison.OrdinalIgnoreCase) || dnsName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase)))
-                {
-                    throw new InvalidOperationException($"DNS zone \"{dnsName}\" is not found");
-                }
+                throw new PreconditionException($"DNS zone(s) are not found. {string.Join(",", notFoundZones)}");
             }
         }
 

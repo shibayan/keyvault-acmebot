@@ -10,15 +10,18 @@ namespace KeyVault.Acmebot
         {
         }
 
-        public RetriableActivityException(string message) : base(message)
+        public RetriableActivityException(string message)
+            : base(message)
         {
         }
 
-        public RetriableActivityException(string message, Exception inner) : base(message, inner)
+        public RetriableActivityException(string message, Exception inner)
+            : base(message, inner)
         {
         }
 
-        protected RetriableActivityException(SerializationInfo info, StreamingContext context) : base(info, context)
+        protected RetriableActivityException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
         }
     }
