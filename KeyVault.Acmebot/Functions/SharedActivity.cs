@@ -168,7 +168,6 @@ namespace KeyVault.Acmebot.Functions
                 var acmeDnsRecordName = dnsRecordName.Replace($".{zone.Name}", "", StringComparison.OrdinalIgnoreCase);
 
                 await _dnsProvider.DeleteTxtRecordAsync(zone, acmeDnsRecordName);
-
                 await _dnsProvider.CreateTxtRecordAsync(zone, acmeDnsRecordName, lookup.Select(x => x.DnsRecordValue));
             }
 
