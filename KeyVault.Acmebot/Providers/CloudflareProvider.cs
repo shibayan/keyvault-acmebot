@@ -56,7 +56,7 @@ namespace KeyVault.Acmebot.Providers
             }
         }
 
-        public class CloudflareDnsClient
+        private class CloudflareDnsClient
         {
             public CloudflareDnsClient(string apiToken)
             {
@@ -124,7 +124,7 @@ namespace KeyVault.Acmebot.Providers
             }
         }
 
-        public class ApiResult<T>
+        private class ApiResult<T>
         {
             [JsonProperty("result")]
             public T[] Result { get; set; }
@@ -142,7 +142,7 @@ namespace KeyVault.Acmebot.Providers
             public object[] Messages { get; set; }
         }
 
-        public class ResultInfo
+        private class ResultInfo
         {
             [JsonProperty("page")]
             public int Page { get; set; }
@@ -160,7 +160,7 @@ namespace KeyVault.Acmebot.Providers
             public int TotalCount { get; set; }
         }
 
-        public class ZoneResult
+        private class ZoneResult
         {
             [JsonProperty("id")]
             public string Id { get; set; }
@@ -172,7 +172,7 @@ namespace KeyVault.Acmebot.Providers
             public string Status { get; set; }
         }
 
-        public class DnsRecordResult
+        private class DnsRecordResult
         {
             [JsonProperty("id")]
             public string Id { get; set; }

@@ -9,7 +9,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Options;
 
 using Newtonsoft.Json;
@@ -18,7 +17,7 @@ namespace KeyVault.Acmebot.Providers
 {
     public class DnsMadeEasyProvider : IDnsProvider
     {
-        public DnsMadeEasyProvider(AcmebotOptions acmeOptions, DnsMadeEasyOptions options, AzureEnvironment environment)
+        public DnsMadeEasyProvider(DnsMadeEasyOptions options)
         {
             _client = new DnsMadeEasyClient(options.ApiKey, options.SecretKey);
         }
@@ -113,7 +112,7 @@ namespace KeyVault.Acmebot.Providers
                 response.EnsureSuccessStatusCode();
             }
 
-            internal sealed class ApiKeyHandler : DelegatingHandler
+            private sealed class ApiKeyHandler : DelegatingHandler
             {
                 private string ApiKey { get; }
                 private HMACSHA1 HMAC { get; }
