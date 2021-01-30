@@ -85,9 +85,20 @@ namespace KeyVault.Acmebot
                 var options = provider.GetRequiredService<IOptions<AcmebotOptions>>().Value;
                 var environment = provider.GetRequiredService<AzureEnvironment>();
 
+                // Provider should be in alphabetical order
+                if (options.AzureDns != null)
+                {
+                    return new AzureDnsProvider(options.AzureDns, environment);
+                }
+
                 if (options.Cloudflare != null)
                 {
                     return new CloudflareProvider(options.Cloudflare);
+                }
+
+                if (options.DnsMadeEasy != null)
+                {
+                    return new DnsMadeEasyProvider(options.DnsMadeEasy);
                 }
 
                 if (options.Google != null)
@@ -103,16 +114,6 @@ namespace KeyVault.Acmebot
                 if (options.TransIp != null)
                 {
                     return new TransIpProvider(options, options.TransIp, environment);
-                }
-
-                if (options.AzureDns != null)
-                {
-                    return new AzureDnsProvider(options.AzureDns, environment);
-                }
-
-                if (options.DnsMadeEasy != null)
-                {
-                    return new DnsMadeEasyProvider(options, options.DnsMadeEasy, environment);
                 }
 
                 // Backward compatibility
