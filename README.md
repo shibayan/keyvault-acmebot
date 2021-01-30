@@ -119,6 +119,10 @@ Select Azure Active Directory as the authentication provider, select `Express` a
 
 ![Create New Azure AD App](https://user-images.githubusercontent.com/1356444/49693412-6f508380-fbb5-11e8-81fb-6bbcbe47654e.png)
 
+If you are using Sovereign Cloud, you may not be able to select Express. Enable authentication from the advanced settings with reference to the following document.
+
+https://docs.microsoft.com/en-us/azure/app-service/configure-authentication-provider-aad#-configure-with-advanced-settings
+
 Finally, you can save your previous settings to enable App Service authentication.
 
 ### 4. Add access control (IAM) to Azure DNS
