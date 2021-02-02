@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ACMESharp.Authorizations;
 using ACMESharp.Protocol;
 
+using Azure.ResourceManager.Dns.Models;
 using Azure.Security.KeyVault.Certificates;
 
 using DnsClient;
@@ -117,13 +118,53 @@ namespace KeyVault.Acmebot.Functions
             // DNS zone が存在するか確認
             var zones = await _dnsProvider.ListZonesAsync();
 
-            var notFoundZones = dnsNames.Where(x => zones.All(xs => !string.Equals(x, xs.Name, StringComparison.OrdinalIgnoreCase) && !x.EndsWith($".{xs.Name}", StringComparison.OrdinalIgnoreCase)))
-                                        .ToArray();
+            var foundZones = new List<DnsZone>();
+            var zoneNotFoundDnsNames = new List<string>();
 
-            // マッチする DNS zone が見つからない DNS name があった場合はエラー
-            if (notFoundZones.Length > 0)
+            foreach (var dnsName in dnsNames)
             {
-                throw new PreconditionException($"DNS zone(s) are not found. {string.Join(",", notFoundZones)}");
+                var zone = zones.Where(x => !string.Equals(dnsName, x.Name, StringComparison.OrdinalIgnoreCase) && !dnsName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase))
+                                .OrderByDescending(x => x.Name.Length)
+                                .FirstOrDefault();
+
+                // マッチする DNS zone が見つからない場合はエラー
+                if (zone == null)
+                {
+                    zoneNotFoundDnsNames.Add(dnsName);
+                    continue;
+                }
+
+                foundZones.Add(zone);
+            }
+
+            if (zoneNotFoundDnsNames.Count > 0)
+            {
+                throw new PreconditionException($"DNS zone(s) are not found. DnsNames = {string.Join(",", zoneNotFoundDnsNames)}");
+            }
+
+            // DNS zone に移譲されている Name servers が正しいか検証
+            foreach (var zone in foundZones)
+            {
+                // DNS provider が Name servers を返していなければスキップ
+                if (zone.NameServers == null || zone.NameServers.Count == 0)
+                {
+                    continue;
+                }
+
+                // DNS provider が Name servers を返している場合は NS レコードを確認
+                var queryResult = await _lookupClient.QueryAsync(zone.Name, QueryType.NS);
+
+                // 最後の . が付いている場合があるので削除して統一
+                var expectNameServers = zone.NameServers.Select(x => x.TrimEnd('.'));
+                var actualNameServers = queryResult.Answers
+                                                   .OfType<DnsClient.Protocol.NsRecord>()
+                                                   .Select(x => x.NSDName.Value.TrimEnd('.'));
+
+                // 処理対象の DNS zone から取得した NS と実際に引いた NS の値が一つも一致しない場合はエラー
+                if (!actualNameServers.Intersect(expectNameServers, StringComparer.OrdinalIgnoreCase).Any())
+                {
+                    throw new PreconditionException($"The delegated name server is not correct. DNS zone = {zone.Name}, Name Servers = {string.Join(",", zone.NameServers)}");
+                }
             }
         }
 

@@ -29,7 +29,7 @@ namespace KeyVault.Acmebot.Providers
             var zones = await _cloudflareDnsClient.ListAllZonesAsync();
 
             // Zone API は Punycode されていない値を返すのでエンコードが必要
-            return zones.Select(x => new DnsZone { Id = x.Id, Name = _idnMapping.GetAscii(x.Name) }).ToArray();
+            return zones.Select(x => new DnsZone { Id = x.Id, Name = _idnMapping.GetAscii(x.Name), NameServers = x.NameServers }).ToArray();
         }
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
@@ -170,6 +170,9 @@ namespace KeyVault.Acmebot.Providers
 
             [JsonProperty("status")]
             public string Status { get; set; }
+
+            [JsonProperty("name_servers")]
+            public string[] NameServers { get; set; }
         }
 
         private class DnsRecordResult
