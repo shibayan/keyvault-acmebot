@@ -123,7 +123,7 @@ namespace KeyVault.Acmebot.Functions
 
             foreach (var dnsName in dnsNames)
             {
-                var zone = zones.Where(x => !string.Equals(dnsName, x.Name, StringComparison.OrdinalIgnoreCase) && !dnsName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase))
+                var zone = zones.Where(x => string.Equals(dnsName, x.Name, StringComparison.OrdinalIgnoreCase) || dnsName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase))
                                 .OrderByDescending(x => x.Name.Length)
                                 .FirstOrDefault();
 
