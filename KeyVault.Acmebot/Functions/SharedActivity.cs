@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using ACMESharp.Authorizations;
 using ACMESharp.Protocol;
 
-using Azure.ResourceManager.Dns.Models;
 using Azure.Security.KeyVault.Certificates;
 
 using DnsClient;
