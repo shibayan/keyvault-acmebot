@@ -118,7 +118,7 @@ namespace KeyVault.Acmebot.Functions
             // DNS zone が存在するか確認
             var zones = await _dnsProvider.ListZonesAsync();
 
-            var foundZones = new List<DnsZone>();
+            var foundZones = new HashSet<DnsZone>();
             var zoneNotFoundDnsNames = new List<string>();
 
             foreach (var dnsName in dnsNames)
