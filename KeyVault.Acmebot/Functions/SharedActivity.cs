@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using ACMESharp.Authorizations;
 using ACMESharp.Protocol;
 
-using Azure.ResourceManager.Dns.Models;
 using Azure.Security.KeyVault.Certificates;
 
 using DnsClient;
@@ -155,13 +154,13 @@ namespace KeyVault.Acmebot.Functions
                 var queryResult = await _lookupClient.QueryAsync(zone.Name, QueryType.NS);
 
                 // 最後の . が付いている場合があるので削除して統一
-                var expectNameServers = zone.NameServers.Select(x => x.TrimEnd('.'));
+                var expectedNameServers = zone.NameServers.Select(x => x.TrimEnd('.'));
                 var actualNameServers = queryResult.Answers
                                                    .OfType<DnsClient.Protocol.NsRecord>()
                                                    .Select(x => x.NSDName.Value.TrimEnd('.'));
 
                 // 処理対象の DNS zone から取得した NS と実際に引いた NS の値が一つも一致しない場合はエラー
-                if (!actualNameServers.Intersect(expectNameServers, StringComparer.OrdinalIgnoreCase).Any())
+                if (!actualNameServers.Intersect(expectedNameServers, StringComparer.OrdinalIgnoreCase).Any())
                 {
                     throw new PreconditionException($"The delegated name server is not correct. DNS zone = {zone.Name}, Name Servers = {string.Join(",", zone.NameServers)}");
                 }
