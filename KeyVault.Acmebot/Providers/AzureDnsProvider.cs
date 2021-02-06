@@ -35,7 +35,7 @@ namespace KeyVault.Acmebot.Providers
 
             await foreach (var zone in result)
             {
-                zones.Add(new DnsZone { Id = zone.Id, Name = zone.Name });
+                zones.Add(new DnsZone { Id = zone.Id, Name = zone.Name, NameServers = zone.NameServers });
             }
 
             return zones;
