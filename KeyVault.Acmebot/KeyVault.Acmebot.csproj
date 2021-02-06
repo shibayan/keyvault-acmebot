@@ -39,4 +39,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <Target Name="DeleteXmlDocumentation" AfterTargets="Publish">
+    <Delete Files="$(PublishDir)System.Reactive.xml" />
+  </Target>
 </Project>
