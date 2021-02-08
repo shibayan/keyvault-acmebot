@@ -160,10 +160,6 @@
               "value": "dotnet"
             },
             {
-              "name": "Acmebot:AzureDns:SubscriptionId",
-              "value": "[subscription().subscriptionId]"
-            },
-            {
               "name": "Acmebot:Contacts",
               "value": "[variables('mailAddress')]"
             },

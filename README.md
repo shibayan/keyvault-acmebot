@@ -99,13 +99,12 @@ Update the following configuration settings of the Function App:
 - Acmebot:Webhook
   - Webhook destination URL (optional, Slack and Microsoft Teams are recommended)
 
-There are also additional settings that will be automatically created by Key Vault Acmebot
+There are also additional settings that will be automatically created by Key Vault Acmebot:
+
 - Acmebot:Endpoint
   - The ACME endpoint used to issue certificates
 - Acmebot:Contacts
   - The email address (required) used in ACME account registration
-- Acmebot:AzureDns:SubscriptionId
-  - Your Azure subscription ID in order to identify which DNS resources can be used for ACME
 
 ### 3. Enable App Service Authentication
 
