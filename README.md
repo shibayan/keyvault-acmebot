@@ -62,10 +62,10 @@ You will need the following:
 - DNS provider (required to host your public DNS zone)
   - Azure DNS (The resource must be unlocked)
   - Cloudflare
+  - DNS Made Easy
   - Google Cloud DNS
   - GratisDNS
   - TransIP DNS
-  - DNS Made Easy
 - Email address (required to register with ACME)
 
 ## Getting Started
@@ -124,13 +124,9 @@ https://docs.microsoft.com/en-us/azure/app-service/configure-authentication-prov
 
 Finally, you can save your previous settings to enable App Service authentication.
 
-### 4. Add access control (IAM) to Azure DNS
+### 4. Add settings for your choice DNS provider
 
-Open the `Access Control (IAM)` of the target DNS zone or resource group containing the DNS zone, and assign the role of `DNS Zone Contributor` to the deployed application.
-
-![temp](https://user-images.githubusercontent.com/1356444/64354572-a9628f00-d03a-11e9-93c9-0c12992ca9bf.png)
-
-When using a DNS provider other than Azure DNS, please refer to the following page for configuration.
+For instructions on how to configure each DNS provider, please refer to the following page.
 
 https://github.com/shibayan/keyvault-acmebot/wiki/DNS-Provider-Configuration
 
