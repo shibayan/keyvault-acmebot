@@ -10,6 +10,8 @@ namespace KeyVault.Acmebot.Options
         [Required]
         public string Contacts { get; set; }
 
+        public ExternalAccountBindingOptions ExternalAccountBinding { get; set; }
+
         // Backward compatibility
         public string SubscriptionId { get; set; }
 
