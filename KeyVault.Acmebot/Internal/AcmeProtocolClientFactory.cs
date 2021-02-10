@@ -1,7 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 
+using ACMESharp.Crypto;
+using ACMESharp.Crypto.JOSE;
 using ACMESharp.Protocol;
 using ACMESharp.Protocol.Resources;
 
@@ -34,7 +37,16 @@ namespace KeyVault.Acmebot.Internal
 
             if (directory == null)
             {
-                directory = await acmeProtocolClient.GetDirectoryAsync();
+                try
+                {
+                    directory = await acmeProtocolClient.GetDirectoryAsync();
+                }
+                catch (AcmeProtocolException)
+                {
+                    acmeProtocolClient.Directory.Directory = "";
+
+                    directory = await acmeProtocolClient.GetDirectoryAsync();
+                }
 
                 SaveState(directory, "directory.json");
 
@@ -45,7 +57,9 @@ namespace KeyVault.Acmebot.Internal
 
             if (acmeProtocolClient.Account == null)
             {
-                account = await acmeProtocolClient.CreateAccountAsync(new[] { $"mailto:{_options.Contacts}" }, true);
+                var externalAccountBinding = _options.ExternalAccountBinding != null ? CreateExternalAccountBinding(acmeProtocolClient) : null;
+
+                account = await acmeProtocolClient.CreateAccountAsync(new[] { $"mailto:{_options.Contacts}" }, true, externalAccountBinding);
 
                 accountKey = new AccountKey
                 {
@@ -69,6 +83,35 @@ namespace KeyVault.Acmebot.Internal
             }
 
             return acmeProtocolClient;
+        }
+
+        private object CreateExternalAccountBinding(AcmeProtocolClient acmeProtocolClient)
+        {
+            byte[] HMACSign(byte[] x)
+            {
+                var hmacKeyBytes = CryptoHelper.Base64.UrlDecode(_options.ExternalAccountBinding.HmacKey);
+
+                var hmac = (HMAC)(_options.ExternalAccountBinding.Algorithm switch
+                {
+                    "HS256" => new HMACSHA256(hmacKeyBytes),
+                    "HS384" => new HMACSHA384(hmacKeyBytes),
+                    "HS512" => new HMACSHA512(hmacKeyBytes),
+                    _ => throw new NotSupportedException()
+                });
+
+                return hmac.ComputeHash(x);
+            }
+
+            var payload = JsonConvert.SerializeObject(acmeProtocolClient.Signer.ExportJwk());
+
+            var protectedHeaders = new
+            {
+                alg = _options.ExternalAccountBinding.Algorithm,
+                kid = _options.ExternalAccountBinding.KeyId,
+                url = acmeProtocolClient.Directory.NewAccount
+            };
+
+            return JwsHelper.SignFlatJsonAsObject(HMACSign, payload, protectedHeaders);
         }
 
         private static TState LoadState<TState>(string path)
