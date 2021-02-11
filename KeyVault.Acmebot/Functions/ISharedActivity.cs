@@ -32,12 +32,12 @@ namespace KeyVault.Acmebot.Functions
         [RetryOptions("00:00:05", 12, HandlerType = typeof(ExceptionRetryStrategy<RetriableActivityException>))]
         Task CheckIsReady((OrderDetails, IReadOnlyList<AcmeChallengeResult>) input);
 
-        Task<string> FinalizeOrder((IReadOnlyList<string>, OrderDetails) input);
+        Task<OrderDetails> FinalizeOrder((string, IReadOnlyList<string>, OrderDetails) input);
 
         [RetryOptions("00:00:05", 12, HandlerType = typeof(ExceptionRetryStrategy<RetriableActivityException>))]
         Task CheckIsValid(OrderDetails orderDetails);
 
-        Task<CertificateItem> FinalizeCertificate((string, OrderDetails) input);
+        Task<CertificateItem> MergeCertificate((string, OrderDetails) input);
 
         Task CleanupDnsChallenge(IReadOnlyList<AcmeChallengeResult> challengeResults);
 

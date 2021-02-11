@@ -302,11 +302,9 @@ namespace KeyVault.Acmebot.Functions
         }
 
         [FunctionName(nameof(FinalizeOrder))]
-        public async Task<string> FinalizeOrder([ActivityTrigger] (IReadOnlyList<string>, OrderDetails) input)
+        public async Task<OrderDetails> FinalizeOrder([ActivityTrigger] (string, IReadOnlyList<string>, OrderDetails) input)
         {
-            var (dnsNames, orderDetails) = input;
-
-            var certificateName = dnsNames[0].Replace("*", "wildcard").Replace(".", "-");
+            var (certificateName, dnsNames, orderDetails) = input;
 
             byte[] csr;
 
@@ -340,9 +338,7 @@ namespace KeyVault.Acmebot.Functions
             // Order の最終処理を実行する
             var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
-            await acmeProtocolClient.FinalizeOrderAsync(orderDetails.Payload.Finalize, csr);
-
-            return certificateName;
+            return await acmeProtocolClient.FinalizeOrderAsync(orderDetails.Payload.Finalize, csr);
         }
 
         [FunctionName(nameof(CheckIsValid))]
@@ -365,8 +361,8 @@ namespace KeyVault.Acmebot.Functions
             }
         }
 
-        [FunctionName(nameof(FinalizeCertificate))]
-        public async Task<CertificateItem> FinalizeCertificate([ActivityTrigger] (string, OrderDetails) input)
+        [FunctionName(nameof(MergeCertificate))]
+        public async Task<CertificateItem> MergeCertificate([ActivityTrigger] (string, OrderDetails) input)
         {
             var (certificateName, orderDetails) = input;
 
