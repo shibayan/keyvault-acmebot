@@ -45,8 +45,14 @@ namespace KeyVault.Acmebot.Functions
                 await activity.CleanupDnsChallenge(challengeResults);
             }
 
-            // 証明書を作成し Key Vault に保存
-            var certificate = await activity.FinalizeOrder((dnsNames, orderDetails));
+            // Key Vault で CSR を作成し Finalize を実行
+            var certificateName = await activity.FinalizeOrder((dnsNames, orderDetails));
+
+            // Finalize 後のステータスが valid になるまで 60 秒待機
+            await activity.CheckIsValid(orderDetails);
+
+            // 証明書をダウンロードし Key Vault に保存
+            var certificate = await activity.FinalizeCertificate((certificateName, orderDetails));
 
             // 証明書の更新が完了後に Webhook を送信する
             await activity.SendCompletedEvent((certificate.Name, certificate.ExpiresOn, dnsNames));

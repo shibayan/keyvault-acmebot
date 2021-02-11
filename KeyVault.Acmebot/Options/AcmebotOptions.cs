@@ -10,8 +10,6 @@ namespace KeyVault.Acmebot.Options
         [Required]
         public string Contacts { get; set; }
 
-        public ExternalAccountBindingOptions ExternalAccountBinding { get; set; }
-
         // Backward compatibility
         public string SubscriptionId { get; set; }
 
@@ -25,6 +23,8 @@ namespace KeyVault.Acmebot.Options
         public string Environment { get; set; } = "AzureCloud";
 
         public string PreferredChain { get; set; }
+
+        public ExternalAccountBindingOptions ExternalAccountBinding { get; set; }
 
         // Properties should be in alphabetical order
         public AzureDnsOptions AzureDns { get; set; }

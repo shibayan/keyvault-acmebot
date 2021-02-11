@@ -302,7 +302,7 @@ namespace KeyVault.Acmebot.Functions
         }
 
         [FunctionName(nameof(FinalizeOrder))]
-        public async Task<CertificateItem> FinalizeOrder([ActivityTrigger] (IReadOnlyList<string>, OrderDetails) input)
+        public async Task<string> FinalizeOrder([ActivityTrigger] (IReadOnlyList<string>, OrderDetails) input)
         {
             var (dnsNames, orderDetails) = input;
 
@@ -337,13 +337,45 @@ namespace KeyVault.Acmebot.Functions
                 csr = certificateOperation.Properties.Csr;
             }
 
-            // Order の最終処理を実行し、証明書を作成
+            // Order の最終処理を実行する
             var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
-            var finalize = await acmeProtocolClient.FinalizeOrderAsync(orderDetails.Payload.Finalize, csr);
+            await acmeProtocolClient.FinalizeOrderAsync(orderDetails.Payload.Finalize, csr);
+
+            return certificateName;
+        }
+
+        [FunctionName(nameof(CheckIsValid))]
+        public async Task CheckIsValid([ActivityTrigger] OrderDetails orderDetails)
+        {
+            var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
+
+            orderDetails = await acmeProtocolClient.GetOrderDetailsAsync(orderDetails.OrderUrl, orderDetails);
+
+            if (orderDetails.Payload.Status == "pending" || orderDetails.Payload.Status == "processing")
+            {
+                // pending か processing の場合はリトライする
+                throw new RetriableActivityException($"Finalize request is {orderDetails.Payload.Status}. It will retry automatically.");
+            }
+
+            if (orderDetails.Payload.Status == "invalid")
+            {
+                // invalid の場合は最初から実行が必要なので失敗させる
+                throw new InvalidOperationException($"Finalize request is invalid. Required retry at first.");
+            }
+        }
+
+        [FunctionName(nameof(FinalizeCertificate))]
+        public async Task<CertificateItem> FinalizeCertificate([ActivityTrigger] (string, OrderDetails) input)
+        {
+            var (certificateName, orderDetails) = input;
+
+            var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
+
+            orderDetails = await acmeProtocolClient.GetOrderDetailsAsync(orderDetails.OrderUrl, orderDetails);
 
             // 証明書をダウンロード
-            var x509Certificates = await acmeProtocolClient.GetOrderCertificateAsync(finalize, _options.PreferredChain);
+            var x509Certificates = await acmeProtocolClient.GetOrderCertificateAsync(orderDetails, _options.PreferredChain);
 
             var mergeCertificateOptions = new MergeCertificateOptions(
                 certificateName,
