@@ -57,7 +57,7 @@ namespace KeyVault.Acmebot.Internal
 
             if (acmeProtocolClient.Account == null)
             {
-                var externalAccountBinding = _options.ExternalAccountBinding != null ? CreateExternalAccountBinding(acmeProtocolClient) : null;
+                var externalAccountBinding = directory.Meta.ExternalAccountRequired == "true" ? CreateExternalAccountBinding(acmeProtocolClient) : null;
 
                 account = await acmeProtocolClient.CreateAccountAsync(new[] { $"mailto:{_options.Contacts}" }, true, externalAccountBinding);
 
