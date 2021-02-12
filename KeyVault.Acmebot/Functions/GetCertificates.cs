@@ -44,11 +44,11 @@ namespace KeyVault.Acmebot.Functions
             }
 
             // Function input comes from the request content.
-            string instanceId = await starter.StartNewAsync(nameof(GetCertificates) + "_" + nameof(Orchestrator));
+            var instanceId = await starter.StartNewAsync(nameof(GetCertificates) + "_" + nameof(Orchestrator));
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
-            return await starter.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromMinutes(1));
+            return await starter.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromMinutes(1), returnInternalServerErrorOnFailure: true);
         }
     }
 }

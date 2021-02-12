@@ -26,7 +26,7 @@ jobs:
       run: dotnet publish -c Release -r win-x86 --self-contained false -o ./dist -p:Version=${{ steps.setup_version.outputs.VERSION }}
 
     - name: Zip Functions
-      run: 7z a latest.zip ./dist/*
+      run: 7z a -mx=9 latest.zip ./dist/*
 
     - name: Upload to Blob
       run: az storage blob upload -f latest.zip -c azure-keyvault-letsencrypt -n v3/latest.zip
