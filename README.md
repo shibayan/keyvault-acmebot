@@ -148,9 +148,14 @@ If the `Access Control (IAM)` setting is not correct, nothing will be shown in t
 
 ### Renew an existing certificate
 
-All existing ACME certificates are automatically renewed 30 days before their expiration.
+All existing ACME certificates are automatically renewed 30 days before their expiration using one of two options.
 
-The default check timing is 00:00 UTC. If you need to change the time zone, use `WEBSITE_TIME_ZONE` to set the time zone.
+**Option 1 (default)**: A Timer Trigger which runs every day. The default check timing is 00:00 UTC. If you need to change the time zone, use `WEBSITE_TIME_ZONE` to set the time zone.
+
+**Option 2**: Key Vault Event Grid `Microsoft.KeyVault.CertificateNearExpiry` event is handled by this function app to renew the certificate. [Create a Key Vault Event subscription](https://docs.microsoft.com/en-us/azure/key-vault/general/event-grid-logicapps) but choose Azure Function instead of Logic Apps as the target. You'll then want to choose `RenewCertificate_EventGrid` as the target function.
+
+Finally, disable the Timer Trigger by adding the following Configuration Setting to your the function app:
+`"AzureWebJobs.RenewCertificates_Timer.Disabled": "True"`
 
 ### How to use the issued certificate in Azure services
 

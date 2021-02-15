@@ -48,11 +48,24 @@ namespace KeyVault.Acmebot.Functions
 
         private const string IssuerName = "Acmebot";
 
+        [FunctionName(nameof(GetExpiringCertificate))]
+        public async Task<CertificateItem> GetExpiringCertificate([ActivityTrigger] string certificateName)
+        {
+            var certificate = await _certificateClient.GetCertificateAsync(certificateName);
+
+            if (certificate.Value.Properties.TagsFilter(IssuerName, _options.Endpoint))
+            {
+                return certificate.Value.ToCertificateItem();
+            }
+
+            return null;
+        }
+
         [FunctionName(nameof(GetExpiringCertificates))]
         public async Task<IReadOnlyList<CertificateItem>> GetExpiringCertificates([ActivityTrigger] DateTime currentDateTime)
         {
             var certificates = _certificateClient.GetPropertiesOfCertificatesAsync();
-
+            
             var result = new List<CertificateItem>();
 
             await foreach (var certificate in certificates)

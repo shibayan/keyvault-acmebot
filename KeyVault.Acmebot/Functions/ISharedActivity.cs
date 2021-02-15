@@ -12,6 +12,8 @@ namespace KeyVault.Acmebot.Functions
 {
     public interface ISharedActivity
     {
+        Task<CertificateItem> GetExpiringCertificate(string certificateName);
+
         Task<IReadOnlyList<CertificateItem>> GetExpiringCertificates(DateTime currentDateTime);
 
         Task<IReadOnlyList<CertificateItem>> GetAllCertificates(object input = null);
