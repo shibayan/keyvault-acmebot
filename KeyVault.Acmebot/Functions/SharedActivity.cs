@@ -65,6 +65,7 @@ namespace KeyVault.Acmebot.Functions
         public async Task<IReadOnlyList<CertificateItem>> GetExpiringCertificates([ActivityTrigger] DateTime currentDateTime)
         {
             var certificates = _certificateClient.GetPropertiesOfCertificatesAsync();
+
             var result = new List<CertificateItem>();
 
             await foreach (var certificate in certificates)
