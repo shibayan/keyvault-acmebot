@@ -342,7 +342,7 @@ namespace KeyVault.Acmebot.Functions
 
             var finalize = await acmeProtocolClient.FinalizeOrderAsync(orderDetails.Payload.Finalize, csr);
 
-            // 証明書をダウンロード
+            // 証明書をダウンロードして Key Vault へ格納
             var x509Certificates = await acmeProtocolClient.GetOrderCertificateAsync(finalize, _options.PreferredChain);
 
             var mergeCertificateOptions = new MergeCertificateOptions(

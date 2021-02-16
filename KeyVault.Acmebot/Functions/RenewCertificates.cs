@@ -37,7 +37,7 @@ namespace KeyVault.Acmebot.Functions
                 try
                 {
                     // 証明書の更新処理を開始
-                    await context.CallSubOrchestratorAsync(nameof(SharedOrchestrator.IssueCertificate), dnsNames);
+                    await context.CallSubOrchestratorWithRetryAsync(nameof(SharedOrchestrator.IssueCertificate), _retryOptions, dnsNames);
                 }
                 catch (Exception ex)
                 {
@@ -49,12 +49,17 @@ namespace KeyVault.Acmebot.Functions
         }
 
         [FunctionName(nameof(RenewCertificates) + "_" + nameof(Timer))]
-        public static async Task Timer([TimerTrigger("0 0 0 * * 0")] TimerInfo timer, [DurableClient] IDurableClient starter, ILogger log)
+        public async Task Timer([TimerTrigger("0 0 0 * * 0")] TimerInfo timer, [DurableClient] IDurableClient starter, ILogger log)
         {
             // Function input comes from the request content.
             var instanceId = await starter.StartNewAsync(nameof(RenewCertificates) + "_" + nameof(Orchestrator));
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
         }
+
+        private readonly RetryOptions _retryOptions = new RetryOptions(TimeSpan.FromMinutes(10), 2)
+        {
+            Handle = ex => ex.InnerException is RetriableOrchestratorException
+        };
     }
 }
