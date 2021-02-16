@@ -42,6 +42,6 @@
     </None>
   </ItemGroup>
   <Target Name="DeleteXmlDocumentation" AfterTargets="Publish">
-    <Delete Files="$(PublishDir)System.Reactive.xml" />
+    <Delete Files="$(PublishDir)System.Reactive.xml;$(PublishDir)ACMESharp.xml" />
   </Target>
 </Project>
