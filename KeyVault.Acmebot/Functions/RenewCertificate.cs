@@ -50,7 +50,7 @@ namespace KeyVault.Acmebot.Functions
         }
 
         [FunctionName(nameof(RenewCertificate) + "_" + nameof(EventGrid))]
-        public async Task EventGrid([EventGridTrigger]EventGridEvent eventGridEvent, [DurableClient] IDurableClient starter, ILogger log)
+        public async Task EventGrid([EventGridTrigger] EventGridEvent eventGridEvent, [DurableClient] IDurableClient starter, ILogger log)
         {
             if (eventGridEvent.EventType.Equals("Microsoft.KeyVault.CertificateNearExpiry", StringComparison.OrdinalIgnoreCase))
             {
