@@ -102,6 +102,11 @@ namespace KeyVault.Acmebot.Internal
                 return hmac.ComputeHash(x);
             }
 
+            if (string.IsNullOrEmpty(_options.ExternalAccountBinding.KeyId) || string.IsNullOrEmpty(_options.ExternalAccountBinding.HmacKey))
+            {
+                throw new PreconditionException("This ACME endpoint requires External Account Binding.");
+            }
+
             var payload = JsonConvert.SerializeObject(acmeProtocolClient.Signer.ExportJwk());
 
             var protectedHeaders = new
