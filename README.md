@@ -52,6 +52,7 @@ https://github.com/shibayan/keyvault-certificate-rotation
 - ACME-compliant Certification Authorities
   - [Let's Encrypt](https://letsencrypt.org/)
   - [Buypass Go SSL](https://www.buypass.com/ssl/resources/acme-free-ssl)
+  - [ZeroSSL](https://zerossl.com/features/acme/) (Requires EAB Credentials)
 
 ## Requirements
 
