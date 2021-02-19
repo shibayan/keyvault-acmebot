@@ -23,13 +23,11 @@ namespace KeyVault.Acmebot.Functions
         }
 
         [FunctionName(nameof(GetDnsZones) + "_" + nameof(Orchestrator))]
-        public async Task<IReadOnlyList<string>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
+        public Task<IReadOnlyList<string>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             var activity = context.CreateActivityProxy<ISharedActivity>();
 
-            var zones = await activity.GetZones();
-
-            return zones;
+            return activity.GetZones();
         }
 
         [FunctionName(nameof(GetDnsZones) + "_" + nameof(HttpStart))]
@@ -44,11 +42,11 @@ namespace KeyVault.Acmebot.Functions
             }
 
             // Function input comes from the request content.
-            string instanceId = await starter.StartNewAsync(nameof(GetDnsZones) + "_" + nameof(Orchestrator));
+            var instanceId = await starter.StartNewAsync(nameof(GetDnsZones) + "_" + nameof(Orchestrator));
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
-            return await starter.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromMinutes(1));
+            return await starter.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromMinutes(1), returnInternalServerErrorOnFailure: true);
         }
     }
 }

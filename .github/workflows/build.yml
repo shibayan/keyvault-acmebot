@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
 
     - name: Use .NET Core ${{ env.DOTNET_VERSION }}
       uses: actions/setup-dotnet@v1
@@ -27,4 +29,4 @@ jobs:
       run: dotnet build -c Release
 
     - name: Lint C# code
-      run: dotnet format --check --verbosity detailed
+      run: dotnet format --check --exclude ACMESharpCore --verbosity detailed

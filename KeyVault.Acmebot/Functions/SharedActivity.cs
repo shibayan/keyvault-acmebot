@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using ACMESharp.Authorizations;
 using ACMESharp.Protocol;
+using ACMESharp.Protocol.Resources;
 
 using Azure.Security.KeyVault.Certificates;
 
@@ -20,6 +21,8 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
+using Newtonsoft.Json;
 
 namespace KeyVault.Acmebot.Functions
 {
@@ -275,29 +278,35 @@ namespace KeyVault.Acmebot.Functions
             if (orderDetails.Payload.Status == "pending" || orderDetails.Payload.Status == "processing")
             {
                 // pending か processing の場合はリトライする
-                throw new RetriableActivityException($"ACME domain validation is {orderDetails.Payload.Status}. It will retry automatically.");
+                throw new RetriableActivityException($"ACME validation status is {orderDetails.Payload.Status}. It will retry automatically.");
             }
 
             if (orderDetails.Payload.Status == "invalid")
             {
-                object lastError = null;
+                var problems = new List<Problem>();
 
                 foreach (var challengeResult in challengeResults)
                 {
                     var challenge = await acmeProtocolClient.GetChallengeDetailsAsync(challengeResult.Url);
 
-                    if (challenge.Status != "invalid")
+                    if (challenge.Status != "invalid" || challenge.Error == null)
                     {
                         continue;
                     }
 
-                    _logger.LogError($"ACME domain validation error: {challenge.Error}");
+                    _logger.LogError($"ACME domain validation error: {JsonConvert.SerializeObject(challenge.Error)}");
 
-                    lastError = challenge.Error;
+                    problems.Add(challenge.Error);
+                }
+
+                // 全てのエラーが dns 関係の場合は Orchestrator からリトライさせる
+                if (problems.All(x => x.Type == "urn:ietf:params:acme:error:dns"))
+                {
+                    throw new RetriableOrchestratorException("ACME validation status is invalid, but retriable error. It will retry automatically.");
                 }
 
                 // invalid の場合は最初から実行が必要なので失敗させる
-                throw new InvalidOperationException($"ACME domain validation is invalid. Required retry at first.\nLastError = {lastError}");
+                throw new InvalidOperationException($"ACME validation status is invalid. Required retry at first.\nLastError = {JsonConvert.SerializeObject(problems.Last())}");
             }
         }
 
@@ -370,7 +379,7 @@ namespace KeyVault.Acmebot.Functions
 
             orderDetails = await acmeProtocolClient.GetOrderDetailsAsync(orderDetails.OrderUrl, orderDetails);
 
-            // 証明書をダウンロード
+            // 証明書をダウンロードして Key Vault へ格納
             var x509Certificates = await acmeProtocolClient.GetOrderCertificateAsync(orderDetails, _options.PreferredChain);
 
             var mergeCertificateOptions = new MergeCertificateOptions(

@@ -121,7 +121,7 @@ namespace KeyVault.Acmebot
                     return new AzureDnsProvider(new AzureDnsOptions { SubscriptionId = options.SubscriptionId }, environment);
                 }
 
-                throw new NotSupportedException();
+                throw new NotSupportedException("DNS Provider is not configured. Please check the documentation and configure it.");
             });
         }
     }
