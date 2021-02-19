@@ -299,8 +299,8 @@ namespace KeyVault.Acmebot.Functions
                     problems.Add(challenge.Error);
                 }
 
-                // 全てのエラーが connection か dns の場合は Orchestrator からリトライさせる
-                if (problems.All(x => x.Type == "urn:ietf:params:acme:error:connection" || x.Type == "urn:ietf:params:acme:error:dns"))
+                // 全てのエラーが dns 関係の場合は Orchestrator からリトライさせる
+                if (problems.All(x => x.Type == "urn:ietf:params:acme:error:dns"))
                 {
                     throw new RetriableOrchestratorException("ACME validation status is invalid, but retriable error. It will retry automatically.");
                 }
