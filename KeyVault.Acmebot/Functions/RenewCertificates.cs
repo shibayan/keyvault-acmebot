@@ -59,7 +59,7 @@ namespace KeyVault.Acmebot.Functions
 
         private readonly RetryOptions _retryOptions = new RetryOptions(TimeSpan.FromMinutes(10), 2)
         {
-            Handle = ex => ex.InnerException is RetriableOrchestratorException
+            Handle = ex => ex.InnerException?.InnerException is RetriableOrchestratorException
         };
     }
 }
