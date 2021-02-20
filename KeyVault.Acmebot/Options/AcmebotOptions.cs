@@ -24,6 +24,8 @@ namespace KeyVault.Acmebot.Options
 
         public string PreferredChain { get; set; }
 
+        public ExternalAccountBindingOptions ExternalAccountBinding { get; set; }
+
         // Properties should be in alphabetical order
         public AzureDnsOptions AzureDns { get; set; }
 

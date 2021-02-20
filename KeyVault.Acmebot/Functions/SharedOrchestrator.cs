@@ -14,6 +14,7 @@ namespace KeyVault.Acmebot.Functions
         public async Task IssueCertificate([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
             var dnsNames = context.GetInput<string[]>();
+            var certificateName = dnsNames[0].Replace("*", "wildcard").Replace(".", "-");
 
             var activity = context.CreateActivityProxy<ISharedActivity>();
 
@@ -45,8 +46,18 @@ namespace KeyVault.Acmebot.Functions
                 await activity.CleanupDnsChallenge(challengeResults);
             }
 
-            // 証明書を作成し Key Vault に保存
-            var certificate = await activity.FinalizeOrder((dnsNames, orderDetails));
+            // Key Vault で CSR を作成し Finalize を実行
+            orderDetails = await activity.FinalizeOrder((certificateName, dnsNames, orderDetails));
+
+            // Finalize の時点でステータスが valid の時点はスキップ
+            if (orderDetails.Payload.Status != "valid")
+            {
+                // Finalize 後のステータスが valid になるまで 60 秒待機
+                await activity.CheckIsValid(orderDetails);
+            }
+
+            // 証明書をダウンロードし Key Vault に保存
+            var certificate = await activity.MergeCertificate((certificateName, orderDetails));
 
             // 証明書の更新が完了後に Webhook を送信する
             await activity.SendCompletedEvent((certificate.Name, certificate.ExpiresOn, dnsNames));

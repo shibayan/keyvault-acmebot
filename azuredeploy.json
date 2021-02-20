@@ -19,7 +19,8 @@
       "type": "string",
       "allowedValues": [
         "https://acme-v02.api.letsencrypt.org/",
-        "https://api.buypass.com/acme/"
+        "https://api.buypass.com/acme/",
+        "https://acme.zerossl.com/v2/DV90/"
       ],
       "defaultValue": "https://acme-v02.api.letsencrypt.org/",
       "metadata": {
