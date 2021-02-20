@@ -87,7 +87,7 @@ namespace KeyVault.Acmebot.Internal
 
         private object CreateExternalAccountBinding(AcmeProtocolClient acmeProtocolClient)
         {
-            byte[] HMACSign(byte[] x)
+            byte[] HmacSignature(byte[] x)
             {
                 var hmacKeyBytes = CryptoHelper.Base64.UrlDecode(_options.ExternalAccountBinding.HmacKey);
 
@@ -96,7 +96,7 @@ namespace KeyVault.Acmebot.Internal
                     "HS256" => new HMACSHA256(hmacKeyBytes),
                     "HS384" => new HMACSHA384(hmacKeyBytes),
                     "HS512" => new HMACSHA512(hmacKeyBytes),
-                    _ => throw new NotSupportedException()
+                    _ => throw new NotSupportedException($"The signature algorithm {_options.ExternalAccountBinding.Algorithm} is not supported.")
                 });
 
                 return hmac.ComputeHash(x);
@@ -116,7 +116,7 @@ namespace KeyVault.Acmebot.Internal
                 url = acmeProtocolClient.Directory.NewAccount
             };
 
-            return JwsHelper.SignFlatJsonAsObject(HMACSign, payload, protectedHeaders);
+            return JwsHelper.SignFlatJsonAsObject(HmacSignature, payload, protectedHeaders);
         }
 
         private static TState LoadState<TState>(string path)
