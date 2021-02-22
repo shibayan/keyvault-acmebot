@@ -157,15 +157,19 @@ namespace KeyVault.Acmebot.Functions
                 var queryResult = await _lookupClient.QueryAsync(zone.Name, QueryType.NS);
 
                 // 最後の . が付いている場合があるので削除して統一
-                var expectedNameServers = zone.NameServers.Select(x => x.TrimEnd('.'));
+                var expectedNameServers = zone.NameServers
+                                              .Select(x => x.TrimEnd('.'))
+                                              .ToArray();
+
                 var actualNameServers = queryResult.Answers
                                                    .OfType<DnsClient.Protocol.NsRecord>()
-                                                   .Select(x => x.NSDName.Value.TrimEnd('.'));
+                                                   .Select(x => x.NSDName.Value.TrimEnd('.'))
+                                                   .ToArray();
 
                 // 処理対象の DNS zone から取得した NS と実際に引いた NS の値が一つも一致しない場合はエラー
                 if (!actualNameServers.Intersect(expectedNameServers, StringComparer.OrdinalIgnoreCase).Any())
                 {
-                    throw new PreconditionException($"The delegated name server is not correct. DNS zone = {zone.Name}, Name Servers = {string.Join(",", zone.NameServers)}");
+                    throw new PreconditionException($"The delegated name server is not correct. DNS zone = {zone.Name}, Expected = {string.Join(",", expectedNameServers)}, Actual = {string.Join(",", actualNameServers)}");
                 }
             }
         }
