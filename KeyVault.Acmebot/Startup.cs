@@ -95,9 +95,9 @@ namespace KeyVault.Acmebot
                     return new DnsMadeEasyProvider(options.DnsMadeEasy);
                 }
 
-                if (options.Google != null)
+                if (options.GoogleDns != null || options.Google != null)
                 {
-                    return new GoogleDnsProvider(options.Google);
+                    return new GoogleDnsProvider(options.GoogleDns ?? options.Google);
                 }
 
                 if (options.GratisDns != null)

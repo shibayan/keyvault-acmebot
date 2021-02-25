@@ -10,7 +10,7 @@ namespace KeyVault.Acmebot.Options
         [Required]
         public string Contacts { get; set; }
 
-        // Backward compatibility
+        // Backward compatibility, Remove in the future
         public string SubscriptionId { get; set; }
 
         [Required]
@@ -33,7 +33,10 @@ namespace KeyVault.Acmebot.Options
 
         public DnsMadeEasyOptions DnsMadeEasy { get; set; }
 
+        // Backward compatibility, Remove in the future
         public GoogleDnsOptions Google { get; set; }
+
+        public GoogleDnsOptions GoogleDns { get; set; }
 
         public GratisDnsOptions GratisDns { get; set; }
 
