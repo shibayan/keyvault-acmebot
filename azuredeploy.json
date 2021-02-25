@@ -49,11 +49,29 @@
         "description": "Specifies whether the key vault is a standard vault or a premium vault."
       }
     },
+    "enableRbacAuthorization": {
+      "type": "bool",
+      "defaultValue": false,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "If you select true, RBAC will be used instead of Key Vault access policy"
+      }
+    },
     "keyVaultBaseUrl": {
       "type": "string",
       "defaultValue": "",
       "metadata": {
         "description": "Enter the base URL of an existing Key Vault. (ex. https://example.vault.azure.net)"
+      }
+    },
+    "roleNameGuid": {
+      "type": "string",
+      "defaultValue": "[newGuid()]",
+      "metadata": {
+        "description": "A new GUID used to identify the role assignment"
       }
     }
   },
@@ -219,7 +237,22 @@
               "certificates": [ "get", "list", "create", "update" ]
             }
           }
-        ]
+        ],
+        "enableRbacAuthorization": "[parameters('enableRbacAuthorization')]"
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "name": "[parameters('roleNameGuid')]",
+      "apiVersion": "2020-04-01-preview",
+      "condition": "[and(parameters('createWithKeyVault'), parameters('enableRbacAuthorization'))]",
+      "scope": "[concat('Microsoft.KeyVault/vaults', '/', variables('keyVaultName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions/', 'a4417e6f-fecd-4de8-b567-7b0420556985')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2020-06-01', 'Full').identity.principalId]"
       }
     }
   ],
