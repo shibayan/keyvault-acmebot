@@ -105,6 +105,11 @@ namespace KeyVault.Acmebot
                     return new GratisDnsProvider(options.GratisDns);
                 }
 
+                if (options.Route53 != null)
+                {
+                    return new Route53Provider(options.Route53);
+                }
+
                 if (options.TransIp != null)
                 {
                     return new TransIpProvider(options, options.TransIp, environment);
