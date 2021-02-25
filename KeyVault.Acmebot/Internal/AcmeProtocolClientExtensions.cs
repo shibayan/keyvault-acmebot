@@ -21,8 +21,8 @@ namespace KeyVault.Acmebot.Internal
             {
                 defaultX509Certificates = await resp.Content.ReadAsCertificatesAsync();
 
-                // 証明書チェーンが未指定、もしくはデフォルトのチェーンの場合は即返す
-                if (preferredChain == null || defaultX509Certificates.Find(X509FindType.FindByIssuerName, preferredChain, true).Count > 0)
+                // 証明書チェーンが未指定の場合は即返す
+                if (preferredChain == null)
                 {
                     return defaultX509Certificates;
                 }
@@ -48,7 +48,7 @@ namespace KeyVault.Acmebot.Internal
                     var x509Certificates = await resp.Content.ReadAsCertificatesAsync();
 
                     // 指定された証明書チェーンに一致する場合は返す
-                    if (x509Certificates.Find(X509FindType.FindByIssuerName, preferredChain, true).Count > 0)
+                    if (x509Certificates.Find(X509FindType.FindByIssuerName, preferredChain, false).Count > 0)
                     {
                         return x509Certificates;
                     }
