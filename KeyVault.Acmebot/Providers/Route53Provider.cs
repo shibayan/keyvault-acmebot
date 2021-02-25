@@ -49,18 +49,19 @@ namespace KeyVault.Acmebot.Providers
 
         public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
         {
-            var change = new Change
+            var listRequest = new ListResourceRecordSetsRequest(zone.Id)
             {
-                Action = ChangeAction.DELETE,
-                ResourceRecordSet = new ResourceRecordSet
-                {
-                    Name = relativeRecordName,
-                    Type = RRType.TXT,
-                    TTL = 60
-                }
+                StartRecordName = relativeRecordName,
+                StartRecordType = RRType.TXT
             };
 
-            var request = new ChangeResourceRecordSetsRequest(zone.Id, new ChangeBatch(new List<Change> { change }));
+            var listResponse = await _amazonRoute53Client.ListResourceRecordSetsAsync(listRequest);
+
+            var changes = listResponse.ResourceRecordSets
+                                      .Select(x => new Change { Action = ChangeAction.DELETE, ResourceRecordSet = x })
+                                      .ToList();
+
+            var request = new ChangeResourceRecordSetsRequest(zone.Id, new ChangeBatch(changes));
 
             await _amazonRoute53Client.ChangeResourceRecordSetsAsync(request);
         }
