@@ -61,6 +61,7 @@ You will need the following:
 - Azure Subscription (required to deploy this solution)
 - Azure Key Vault (existing one or new Key Vault can be created at deployment time)
 - DNS provider (required to host your public DNS zone)
+  - Amazon Route 53
   - Azure DNS (The resource must be unlocked)
   - Cloudflare
   - DNS Made Easy
