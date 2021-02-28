@@ -96,16 +96,16 @@ For Azure Government
 
 Update the following configuration settings of the Function App:
 
-- Acmebot:VaultBaseUrl
+- `Acmebot:VaultBaseUrl`
   - DNS name of the Azure Key Vault (if you are using an existing Key Vault)
-- Acmebot:Webhook
+- `Acmebot:Webhook`
   - Webhook destination URL (optional, Slack and Microsoft Teams are recommended)
 
 There are also additional settings that will be automatically created by Key Vault Acmebot:
 
-- Acmebot:Endpoint
+- `Acmebot:Endpoint`
   - The ACME endpoint used to issue certificates
-- Acmebot:Contacts
+- `Acmebot:Contacts`
   - The email address (required) used in ACME account registration
 
 ### 3. Add settings for your choice DNS provider
