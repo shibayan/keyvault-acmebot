@@ -49,7 +49,7 @@ namespace KeyVault.Acmebot.Functions
         }
 
         [FunctionName(nameof(RenewCertificates) + "_" + nameof(Timer))]
-        public async Task Timer([TimerTrigger("0 0 0 * * 0")] TimerInfo timer, [DurableClient] IDurableClient starter, ILogger log)
+        public async Task Timer([TimerTrigger("0 0 0 * * 1,5")] TimerInfo timer, [DurableClient] IDurableClient starter, ILogger log)
         {
             // Function input comes from the request content.
             var instanceId = await starter.StartNewAsync(nameof(RenewCertificates) + "_" + nameof(Orchestrator));
@@ -57,7 +57,7 @@ namespace KeyVault.Acmebot.Functions
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
         }
 
-        private readonly RetryOptions _retryOptions = new RetryOptions(TimeSpan.FromMinutes(10), 2)
+        private readonly RetryOptions _retryOptions = new RetryOptions(TimeSpan.FromHours(6), 2)
         {
             Handle = ex => ex.InnerException?.InnerException is RetriableOrchestratorException
         };

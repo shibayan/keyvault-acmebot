@@ -15,7 +15,7 @@ namespace KeyVault.Acmebot.Functions
         {
             return starter.PurgeInstanceHistoryAsync(
                 DateTime.MinValue,
-                DateTime.UtcNow.AddDays(-30),
+                DateTime.UtcNow.AddMonths(-1),
                 new[]
                 {
                     OrchestrationStatus.Completed,
