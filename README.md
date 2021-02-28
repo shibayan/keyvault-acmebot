@@ -96,19 +96,25 @@ For Azure Government
 
 Update the following configuration settings of the Function App:
 
-- Acmebot:VaultBaseUrl
+- `Acmebot:VaultBaseUrl`
   - DNS name of the Azure Key Vault (if you are using an existing Key Vault)
-- Acmebot:Webhook
+- `Acmebot:Webhook`
   - Webhook destination URL (optional, Slack and Microsoft Teams are recommended)
 
 There are also additional settings that will be automatically created by Key Vault Acmebot:
 
-- Acmebot:Endpoint
+- `Acmebot:Endpoint`
   - The ACME endpoint used to issue certificates
-- Acmebot:Contacts
+- `Acmebot:Contacts`
   - The email address (required) used in ACME account registration
 
-### 3. Enable App Service Authentication
+### 3. Add settings for your choice DNS provider
+
+For instructions on how to configure each DNS provider, please refer to the following page.
+
+https://github.com/shibayan/keyvault-acmebot/wiki/DNS-Provider-Configuration
+
+### 4. Enable App Service Authentication
 
 You must enable Authentication on the Function App that is deployed as part of this application.
 
@@ -125,12 +131,6 @@ If you are using Sovereign Cloud, you may not be able to select Express. Enable 
 https://docs.microsoft.com/en-us/azure/app-service/configure-authentication-provider-aad#-configure-with-advanced-settings
 
 Finally, you can save your previous settings to enable App Service authentication.
-
-### 4. Add settings for your choice DNS provider
-
-For instructions on how to configure each DNS provider, please refer to the following page.
-
-https://github.com/shibayan/keyvault-acmebot/wiki/DNS-Provider-Configuration
 
 ### 5. Add to Key Vault access policies (if you use an existing Key Vault)
 
