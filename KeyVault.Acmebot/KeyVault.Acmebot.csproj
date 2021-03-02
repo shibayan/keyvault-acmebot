@@ -42,7 +42,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <Target Name="DeleteXmlDocumentation" AfterTargets="Publish">
-    <Delete Files="$(PublishDir)System.Reactive.xml;$(PublishDir)ACMESharp.xml" />
+  <Target Name="DeleteFiles" AfterTargets="Publish">
+    <Delete Files="$(PublishDir)System.Reactive.xml" />
   </Target>
 </Project>
