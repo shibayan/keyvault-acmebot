@@ -104,7 +104,8 @@
       },
       "properties": {
         "supportsHttpsTrafficOnly": true,
-        "allowBlobPublicAccess": false
+        "allowBlobPublicAccess": false,
+        "minimumTlsVersion": "TLS1_2"
       }
     },
     {
@@ -195,7 +196,9 @@
               "value": "[environment().name]"
             }
           ],
-          "clientAffinityEnabled": false
+          "clientAffinityEnabled": false,
+          "minTlsVersion": "1.2",
+          "scmMinTlsVersion": "1.2"
         },
         "ftpsState": "Disabled",
         "httpsOnly": true
