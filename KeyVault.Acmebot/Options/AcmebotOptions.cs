@@ -31,6 +31,8 @@ namespace KeyVault.Acmebot.Options
 
         public CloudflareOptions Cloudflare { get; set; }
 
+        public CustomDnsOptions CustomDns { get; set; }
+
         public DnsMadeEasyOptions DnsMadeEasy { get; set; }
 
         // Backward compatibility, Remove in the future

@@ -90,6 +90,11 @@ namespace KeyVault.Acmebot
                     return new CloudflareProvider(options.Cloudflare);
                 }
 
+                if (options.CustomDns != null)
+                {
+                    return new CustomDnsProvider(options.CustomDns);
+                }
+
                 if (options.DnsMadeEasy != null)
                 {
                     return new DnsMadeEasyProvider(options.DnsMadeEasy);
@@ -115,12 +120,12 @@ namespace KeyVault.Acmebot
                     return new TransIpProvider(options, options.TransIp, environment);
                 }
 
+                // Backward compatibility
                 if (options.AzureDns != null)
                 {
                     return new AzureDnsProvider(options.AzureDns, environment);
                 }
 
-                // Backward compatibility
                 if (options.SubscriptionId != null)
                 {
                     return new AzureDnsProvider(new AzureDnsOptions { SubscriptionId = options.SubscriptionId }, environment);
