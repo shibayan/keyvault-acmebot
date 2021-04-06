@@ -46,9 +46,9 @@ namespace KeyVault.Acmebot.Providers
                     Data = value
                 });
             }
-                        
+
             await _client.AddRecordAsync(zone.Id, entries);
-            
+
         }
 
         public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
@@ -69,7 +69,7 @@ namespace KeyVault.Acmebot.Providers
             {
                 _httpClient = new HttpClient(new ApiKeyHandler(apiKey, secretKey, new HttpClientHandler()))
                 {
-                    BaseAddress = new Uri(uri) 
+                    BaseAddress = new Uri(uri)
                 };
 
                 _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -108,14 +108,13 @@ namespace KeyVault.Acmebot.Providers
 
             public async Task AddRecordAsync(string zoneId, List<DnsEntry> entries)
             {
-                
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, $"v1/domains/{zoneId}/records")
                 {
                     Content = new StringContent(JsonConvert.SerializeObject(entries, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }), Encoding.UTF8, "application/json")
                 };
-                
+
                 var response = await _httpClient.SendAsync(request);
-                
+
                 response.EnsureSuccessStatusCode();
             }
 
@@ -188,7 +187,7 @@ namespace KeyVault.Acmebot.Providers
 
             [JsonProperty("type")]
             public string Type { get; set; }
-                   
+
             [JsonProperty("port")]
             public int? Port { get; set; }
 
@@ -204,6 +203,5 @@ namespace KeyVault.Acmebot.Providers
             [JsonProperty("weight")]
             public int? Weight { get; set; }
         }
-
     }
 }
