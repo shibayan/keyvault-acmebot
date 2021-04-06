@@ -57,7 +57,7 @@ namespace KeyVault.Acmebot.Functions
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
         }
 
-        private readonly RetryOptions _retryOptions = new RetryOptions(TimeSpan.FromHours(6), 2)
+        private readonly RetryOptions _retryOptions = new RetryOptions(TimeSpan.FromHours(12), 2)
         {
             Handle = ex => ex.InnerException?.InnerException is RetriableOrchestratorException
         };
