@@ -156,7 +156,7 @@ namespace KeyVault.Acmebot.Providers
 
                 protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
                 {
-                    string authorization = $"sso-key {ApiKey}:{ApiSecret}";
+                    var authorization = $"sso-key {ApiKey}:{ApiSecret}";
 
                     request.Headers.Add("Authorization", authorization);
 
