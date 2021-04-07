@@ -113,7 +113,7 @@ namespace KeyVault.Acmebot.Providers
                     Content = new StringContent(JsonConvert.SerializeObject(entries, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }), Encoding.UTF8, "application/json")
                 };
 
-                var response = await _httpClient.SendAsync(request);
+                var response = await _httpClient.PatchAsync(request, content);
 
                 response.EnsureSuccessStatusCode();
             }
