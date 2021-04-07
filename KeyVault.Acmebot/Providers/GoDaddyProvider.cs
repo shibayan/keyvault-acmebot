@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,7 +22,7 @@ namespace KeyVault.Acmebot.Providers
 
         private readonly GoDaddyClient _client;
 
-        public int PropagationSeconds => 10;
+        public int PropagationSeconds => 60;
 
         public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
         {
@@ -65,14 +63,15 @@ namespace KeyVault.Acmebot.Providers
 
         private class GoDaddyClient
         {
-            public GoDaddyClient(string apiKey, string secretKey, string uri)
+            public GoDaddyClient(string apiKey, string secretKey)
             {
                 _httpClient = new HttpClient(new ApiKeyHandler(apiKey, secretKey, new HttpClientHandler()))
                 {
-                    BaseAddress = new Uri(uri)
+                    BaseAddress = new Uri("https://api.godaddy.com")
                 };
 
                 _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
             }
 
             private readonly HttpClient _httpClient;
@@ -90,6 +89,7 @@ namespace KeyVault.Acmebot.Providers
 
             public async Task<IReadOnlyList<DnsEntry>> ListRecordsAsync(string zoneId)
             {
+
                 var response = await _httpClient.GetAsync($"v1/domains/{zoneId}/records");
 
                 response.EnsureSuccessStatusCode();
@@ -102,18 +102,14 @@ namespace KeyVault.Acmebot.Providers
             public async Task DeleteRecordAsync(string zoneId, DnsEntry entry)
             {
                 var response = await _httpClient.DeleteAsync($"v1/domains/{zoneId}/records/{entry.Type}/{entry.Name}");
-
                 response.EnsureSuccessStatusCode();
             }
 
             public async Task AddRecordAsync(string zoneId, List<DnsEntry> entries)
             {
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, $"v1/domains/{zoneId}/records")
-                {
-                    Content = new StringContent(JsonConvert.SerializeObject(entries, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }), Encoding.UTF8, "application/json")
-                };
+                var content = new StringContent(JsonConvert.SerializeObject(entries, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }), Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PatchAsync(request, content);
+                var response = await _httpClient.PatchAsync($"v1/domains/{zoneId}/records", content);
 
                 response.EnsureSuccessStatusCode();
             }
