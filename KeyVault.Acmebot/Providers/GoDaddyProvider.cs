@@ -19,7 +19,7 @@ namespace KeyVault.Acmebot.Providers
     {
         public GoDaddyProvider(GoDaddyOptions options)
         {
-            _client = new GoDaddyClient(options.ApiKey, options.ApiSecret, "https://api.godaddy.com");
+            _client = new GoDaddyClient(options.ApiKey, options.ApiSecret);
         }
 
         private readonly GoDaddyClient _client;
