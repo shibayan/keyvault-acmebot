@@ -35,7 +35,7 @@ namespace KeyVault.Acmebot.Providers
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
-            List<DnsEntry> entries = new List<DnsEntry>();
+            var entries = new List<DnsEntry>();
             foreach (var value in values)
             {
                 entries.Add(new DnsEntry
