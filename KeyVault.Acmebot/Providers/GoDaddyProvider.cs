@@ -101,7 +101,7 @@ namespace KeyVault.Acmebot.Providers
 
             public async Task DeleteRecordAsync(string zoneId, DnsEntry entry)
             {
-                var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Delete, $"v1/domains/{zoneId}/records/{entry.Type}/{entry.Name}"));
+                var response = await _httpClient.DeleteAsync($"v1/domains/{zoneId}/records/{entry.Type}/{entry.Name}");
 
                 response.EnsureSuccessStatusCode();
             }
