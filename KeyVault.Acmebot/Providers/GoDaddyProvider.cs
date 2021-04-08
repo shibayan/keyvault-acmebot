@@ -63,14 +63,26 @@ namespace KeyVault.Acmebot.Providers
 
         private class GoDaddyClient
         {
-            public GoDaddyClient(string apiKey, string secretKey)
+            public GoDaddyClient(string apiKey, string apiSecret)
             {
-                _httpClient = new HttpClient(new ApiKeyHandler(apiKey, secretKey, new HttpClientHandler()))
+                if (apiKey is null)
+                {
+                    throw new ArgumentNullException(nameof(apiKey));
+                }
+
+                if (apiSecret is null)
+                {
+                    throw new ArgumentNullException(nameof(apiSecret));
+                }
+
+
+                _httpClient = new HttpClient()
                 {
                     BaseAddress = new Uri("https://api.godaddy.com")
                 };
 
                 _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("sso-key", $"{apiKey}:{apiSecret}");
 
             }
 
@@ -113,55 +125,9 @@ namespace KeyVault.Acmebot.Providers
 
                 response.EnsureSuccessStatusCode();
             }
-
-            private sealed class ApiKeyHandler : DelegatingHandler
-            {
-                private string ApiKey { get; }
-                private string ApiSecret { get; }
-
-                public ApiKeyHandler(string apiKey, string apiSecret, HttpMessageHandler innerHandler) : base(innerHandler)
-                {
-                    if (apiKey is null)
-                    {
-                        throw new ArgumentNullException(nameof(apiKey));
-                    }
-
-                    if (apiSecret is null)
-                    {
-                        throw new ArgumentNullException(nameof(apiSecret));
-                    }
-
-                    if (innerHandler is null)
-                    {
-                        throw new ArgumentNullException(nameof(innerHandler));
-                    }
-
-                    if (string.IsNullOrWhiteSpace(apiKey))
-                    {
-                        throw new ArgumentException("API Key must be specified", nameof(apiKey));
-                    }
-
-                    if (string.IsNullOrWhiteSpace(apiSecret))
-                    {
-                        throw new ArgumentException("API Secret must be specified", nameof(apiSecret));
-                    }
-
-                    ApiKey = apiKey;
-                    ApiSecret = apiSecret;
-                }
-
-                protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-                {
-                    var authorization = $"sso-key {ApiKey}:{ApiSecret}";
-
-                    request.Headers.Add("Authorization", authorization);
-
-                    return base.SendAsync(request, cancellationToken);
-                }
-            }
         }
 
-        private class ZoneDomain
+        public class ZoneDomain
         {
             [JsonProperty("domain")]
             public string Domain { get; set; }
