@@ -65,6 +65,7 @@ You will need the following:
   - Azure DNS (The resource must be unlocked)
   - Cloudflare
   - DNS Made Easy
+  - GoDaddy
   - Google Cloud DNS
   - GratisDNS
   - TransIP DNS
