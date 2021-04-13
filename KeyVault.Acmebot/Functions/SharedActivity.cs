@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
@@ -115,8 +116,25 @@ namespace KeyVault.Acmebot.Functions
         }
 
         [FunctionName(nameof(Dns01Precondition))]
-        public async Task Dns01Precondition([ActivityTrigger] IReadOnlyList<string> dnsNames)
+        public async Task Dns01Precondition([ActivityTrigger] (string, IReadOnlyList<string>) input)
         {
+            var (certificateName, dnsNames) = input;
+
+            // 既存の Key Vault 証明書と SANs が一致するか確認
+            try
+            {
+                var policy = await _certificateClient.GetCertificatePolicyAsync(certificateName);
+
+                if (!policy.Value.SubjectAlternativeNames.DnsNames.OrderBy(x => x).SequenceEqual(dnsNames.OrderBy(x => x), StringComparer.OrdinalIgnoreCase))
+                {
+                    throw new PreconditionException($"DNS name(s) does not match the existing certificate. DnsNames = {string.Join(",", dnsNames)}, Existing DnsNames = {string.Join(",", policy.Value.SubjectAlternativeNames.DnsNames)}");
+                }
+            }
+            catch (Azure.RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
+            {
+                // 新しい証明書の場合はチェックしない
+            }
+
             // DNS zone が存在するか確認
             var zones = await _dnsProvider.ListZonesAsync();
 
@@ -324,14 +342,25 @@ namespace KeyVault.Acmebot.Functions
             try
             {
                 // Key Vault を使って CSR を作成
-                var subjectAlternativeNames = new SubjectAlternativeNames();
+                CertificatePolicy policy;
 
-                foreach (var dnsName in dnsNames)
+                try
                 {
-                    subjectAlternativeNames.DnsNames.Add(dnsName);
+                    // 既に SANs が一致していることを検証済みなので、証明書が存在する場合は現在のポリシーをそのまま使う
+                    policy = await _certificateClient.GetCertificatePolicyAsync(certificateName);
                 }
+                catch
+                {
+                    // 新規作成の場合は新しくポリシーを作成する
+                    var subjectAlternativeNames = new SubjectAlternativeNames();
 
-                var policy = new CertificatePolicy(WellKnownIssuerNames.Unknown, subjectAlternativeNames);
+                    foreach (var dnsName in dnsNames)
+                    {
+                        subjectAlternativeNames.DnsNames.Add(dnsName);
+                    }
+
+                    policy = new CertificatePolicy(WellKnownIssuerNames.Unknown, subjectAlternativeNames);
+                }
 
                 var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificateName, policy, tags: new Dictionary<string, string>
                 {
@@ -341,7 +370,7 @@ namespace KeyVault.Acmebot.Functions
 
                 csr = certificateOperation.Properties.Csr;
             }
-            catch
+            catch (Azure.RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.Conflict)
             {
                 var certificateOperation = await _certificateClient.GetCertificateOperationAsync(certificateName);
 
@@ -370,7 +399,7 @@ namespace KeyVault.Acmebot.Functions
             if (orderDetails.Payload.Status == "invalid")
             {
                 // invalid の場合は最初から実行が必要なので失敗させる
-                throw new InvalidOperationException($"Finalize request is invalid. Required retry at first.");
+                throw new InvalidOperationException("Finalize request is invalid. Required retry at first.");
             }
         }
 
