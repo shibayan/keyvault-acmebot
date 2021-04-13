@@ -20,7 +20,7 @@ namespace KeyVault.Acmebot.Functions
 
         Task<OrderDetails> Order(IReadOnlyList<string> dnsNames);
 
-        Task Dns01Precondition(IReadOnlyList<string> dnsNames);
+        Task Dns01Precondition((string, IReadOnlyList<string>) input);
 
         Task<(IReadOnlyList<AcmeChallengeResult>, int)> Dns01Authorization(IReadOnlyList<string> authorizationUrls);
 

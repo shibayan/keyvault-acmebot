@@ -19,7 +19,7 @@ namespace KeyVault.Acmebot.Functions
             var activity = context.CreateActivityProxy<ISharedActivity>();
 
             // 前提条件をチェック
-            await activity.Dns01Precondition(dnsNames);
+            await activity.Dns01Precondition((certificateName, dnsNames));
 
             // 新しく ACME Order を作成する
             var orderDetails = await activity.Order(dnsNames);
