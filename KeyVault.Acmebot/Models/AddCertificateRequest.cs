@@ -5,6 +5,9 @@ namespace KeyVault.Acmebot.Models
 {
     public class AddCertificateRequest : IValidatableObject
     {
+        [RegularExpression("^[0-9a-zA-Z-]+$")]
+        public string CertificateName { get; set; }
+
         public string[] DnsNames { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
