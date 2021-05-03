@@ -15,7 +15,7 @@
       </h1>
       <div id="app">
         <div class="field is-horizontal">
-          <div class="field-label">
+          <div class="field-label is-normal">
             <label class="label">DNS Zone</label>
           </div>
           <div class="field-body">
@@ -32,7 +32,7 @@
           </div>
         </div>
         <div class="field is-horizontal">
-          <div class="field-label">
+          <div class="field-label is-normal">
             <label class="label">DNS Names</label>
           </div>
           <div class="field-body">
@@ -65,6 +65,37 @@
           </div>
         </div>
         <div class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">Use Advanced Options?</label>
+          </div>
+          <div class="field-body">
+            <div class="field is-narrow">
+              <div class="control">
+                <label class="radio">
+                  <input type="radio" v-model="useAdvancedOptions" v-bind:value="true">
+                  Yes
+                </label>
+                <label class="radio">
+                  <input type="radio" v-model="useAdvancedOptions" v-bind:value="false">
+                  No
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="field is-horizontal" v-if="useAdvancedOptions">
+          <div class="field-label is-normal">
+            <label class="label">Certificate Name</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <p class="control">
+                <input v-model="certificateName" class="input" type="text" placeholder="Certificate name">
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="field is-horizontal">
           <div class="field-label"></div>
           <div class="field-body">
             <div class="field">
@@ -92,6 +123,8 @@
           zoneName: "",
           dnsNames: [],
           recordName: "",
+          useAdvancedOptions: false,
+          certificateName: "",
           loading: false,
           sending: false
         };
@@ -117,6 +150,8 @@
           this.zoneName = "";
           this.dnsNames = [];
           this.recordName = "";
+          this.useAdvancedOptions = false;
+          this.certificateName = "";
 
           this.load();
         },
@@ -139,8 +174,14 @@
         async submit() {
           this.sending = true;
 
+          const postData = { dnsNames: this.dnsNames };
+
+          if (this.useAdvancedOptions) {
+            postData.certificateName = this.certificateName;
+          }
+
           try {
-            let response = await axios.post("/api/certificate", { dnsNames: this.dnsNames });
+            let response = await axios.post("/api/certificate", postData);
 
             while (true) {
               await delay(5000);

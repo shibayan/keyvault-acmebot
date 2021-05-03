@@ -13,8 +13,7 @@ namespace KeyVault.Acmebot.Functions
         [FunctionName(nameof(IssueCertificate))]
         public async Task IssueCertificate([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            var dnsNames = context.GetInput<string[]>();
-            var certificateName = dnsNames[0].Replace("*", "wildcard").Replace(".", "-");
+            var (certificateName, dnsNames) = context.GetInput<(string, string[])>();
 
             var activity = context.CreateActivityProxy<ISharedActivity>();
 
