@@ -36,8 +36,10 @@ namespace KeyVault.Acmebot.Functions
                 return ValidationProblem(ModelState);
             }
 
+            var certificateName = request.DnsNames[0].Replace("*", "wildcard").Replace(".", "-");
+
             // Function input comes from the request content.
-            var instanceId = await starter.StartNewAsync(nameof(SharedOrchestrator.IssueCertificate), request.DnsNames);
+            var instanceId = await starter.StartNewAsync<object>(nameof(SharedOrchestrator.IssueCertificate), (certificateName, request.DnsNames));
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
