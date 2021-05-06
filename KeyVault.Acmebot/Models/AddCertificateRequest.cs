@@ -15,7 +15,7 @@ namespace KeyVault.Acmebot.Models
 
         public int? KeySize { get; set; }
 
-        [RegularExpression(@"^P\-(256|384|521|256K)$")]
+        [RegularExpression(@"^P(256|384|521|256K)$")]
         public string EllipticCurveName { get; set; }
 
         public bool? ReuseKeyOnRenewal { get; set; }
