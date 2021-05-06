@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 
+using Azure.Security.KeyVault.Certificates;
 using Azure.WebJobs.Extensions.HttpApi;
 
 using KeyVault.Acmebot.Models;
@@ -43,8 +44,23 @@ namespace KeyVault.Acmebot.Functions
                 certificateName = request.DnsNames[0].Replace("*", "wildcard").Replace(".", "-");
             }
 
+            var subjectAlternativeNames = new SubjectAlternativeNames();
+
+            foreach (var dnsName in request.DnsNames)
+            {
+                subjectAlternativeNames.DnsNames.Add(dnsName);
+            }
+
+            var certificatePolicy = new CertificatePolicy(WellKnownIssuerNames.Unknown, subjectAlternativeNames)
+            {
+                KeyType = request.KeyType,
+                KeySize = request.KeySize,
+                KeyCurveName = request.EllipticCurveName,
+                ReuseKey = request.ReuseKeyOnRenewal
+            };
+
             // Function input comes from the request content.
-            var instanceId = await starter.StartNewAsync<object>(nameof(SharedOrchestrator.IssueCertificate), (certificateName, request.DnsNames));
+            var instanceId = await starter.StartNewAsync<object>(nameof(SharedOrchestrator.IssueCertificate), (certificateName, certificatePolicy));
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 

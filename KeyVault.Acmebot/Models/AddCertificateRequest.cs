@@ -5,10 +5,20 @@ namespace KeyVault.Acmebot.Models
 {
     public class AddCertificateRequest : IValidatableObject
     {
+        public string[] DnsNames { get; set; }
+
         [RegularExpression("^[0-9a-zA-Z-]+$")]
         public string CertificateName { get; set; }
 
-        public string[] DnsNames { get; set; }
+        [RegularExpression("^(RSA|EC)$")]
+        public string KeyType { get; set; }
+
+        public int? KeySize { get; set; }
+
+        [RegularExpression(@"^P\-(256|384|521|256K)$")]
+        public string EllipticCurveName { get; set; }
+
+        public bool? ReuseKeyOnRenewal { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {

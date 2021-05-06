@@ -37,7 +37,9 @@ namespace KeyVault.Acmebot.Functions
                 try
                 {
                     // 証明書の更新処理を開始
-                    await context.CallSubOrchestratorWithRetryAsync(nameof(SharedOrchestrator.IssueCertificate), _retryOptions, (certificate.Name, dnsNames));
+                    var certificatePolicy = await activity.GetCertificatePolicy(certificate.Name);
+
+                    await context.CallSubOrchestratorWithRetryAsync(nameof(SharedOrchestrator.IssueCertificate), _retryOptions, (certificate.Name, certificatePolicy));
                 }
                 catch (Exception ex)
                 {

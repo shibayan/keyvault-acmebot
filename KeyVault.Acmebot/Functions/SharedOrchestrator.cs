@@ -1,5 +1,8 @@
-﻿using System.Threading;
+﻿using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+
+using Azure.Security.KeyVault.Certificates;
 
 using DurableTask.TypedProxy;
 
@@ -13,12 +16,14 @@ namespace KeyVault.Acmebot.Functions
         [FunctionName(nameof(IssueCertificate))]
         public async Task IssueCertificate([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            var (certificateName, dnsNames) = context.GetInput<(string, string[])>();
+            var (certificateName, certificatePolicy) = context.GetInput<(string, CertificatePolicy)>();
+
+            var dnsNames = certificatePolicy.SubjectAlternativeNames.DnsNames.ToArray();
 
             var activity = context.CreateActivityProxy<ISharedActivity>();
 
             // 前提条件をチェック
-            await activity.Dns01Precondition((certificateName, dnsNames));
+            await activity.Dns01Precondition(dnsNames);
 
             // 新しく ACME Order を作成する
             var orderDetails = await activity.Order(dnsNames);
@@ -46,7 +51,7 @@ namespace KeyVault.Acmebot.Functions
             }
 
             // Key Vault で CSR を作成し Finalize を実行
-            orderDetails = await activity.FinalizeOrder((certificateName, dnsNames, orderDetails));
+            orderDetails = await activity.FinalizeOrder((certificateName, certificatePolicy, orderDetails));
 
             // Finalize の時点でステータスが valid の時点はスキップ
             if (orderDetails.Payload.Status != "valid")
