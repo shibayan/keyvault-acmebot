@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 
 using ACMESharp.Protocol;
 
-using Azure.Security.KeyVault.Certificates;
-
 using DurableTask.TypedProxy;
 
 using KeyVault.Acmebot.Models;
@@ -20,7 +18,7 @@ namespace KeyVault.Acmebot.Functions
 
         Task<IReadOnlyList<string>> GetZones(object input = null);
 
-        Task<CertificatePolicy> GetCertificatePolicy(string certificateName);
+        Task<CertificatePolicyItem> GetCertificatePolicy(string certificateName);
 
         Task<OrderDetails> Order(IReadOnlyList<string> dnsNames);
 
@@ -36,7 +34,7 @@ namespace KeyVault.Acmebot.Functions
         [RetryOptions("00:00:05", 12, HandlerType = typeof(ExceptionRetryStrategy<RetriableActivityException>))]
         Task CheckIsReady((OrderDetails, IReadOnlyList<AcmeChallengeResult>) input);
 
-        Task<OrderDetails> FinalizeOrder((string, CertificatePolicy, OrderDetails) input);
+        Task<OrderDetails> FinalizeOrder((CertificatePolicyItem, OrderDetails) input);
 
         [RetryOptions("00:00:05", 12, HandlerType = typeof(ExceptionRetryStrategy<RetriableActivityException>))]
         Task CheckIsValid(OrderDetails orderDetails);

@@ -108,11 +108,19 @@ namespace KeyVault.Acmebot.Functions
         }
 
         [FunctionName(nameof(GetCertificatePolicy))]
-        public async Task<CertificatePolicy> GetCertificatePolicy([ActivityTrigger] string certificateName)
+        public async Task<CertificatePolicyItem> GetCertificatePolicy([ActivityTrigger] string certificateName)
         {
-            var policy = await _certificateClient.GetCertificatePolicyAsync(certificateName);
+            CertificatePolicy certificatePolicy = await _certificateClient.GetCertificatePolicyAsync(certificateName);
 
-            return policy;
+            return new CertificatePolicyItem
+            {
+                CertificateName = certificateName,
+                DnsNames = certificatePolicy.SubjectAlternativeNames.DnsNames.ToArray(),
+                KeyType = certificatePolicy.KeyType.Value.ToString(),
+                KeySize = certificatePolicy.KeySize,
+                KeyCurveName = certificatePolicy.KeyCurveName.Value.ToString(),
+                ReuseKey = certificatePolicy.ReuseKey
+            };
         }
 
         [FunctionName(nameof(Order))]
@@ -324,15 +332,17 @@ namespace KeyVault.Acmebot.Functions
         }
 
         [FunctionName(nameof(FinalizeOrder))]
-        public async Task<OrderDetails> FinalizeOrder([ActivityTrigger] (string, CertificatePolicy, OrderDetails) input)
+        public async Task<OrderDetails> FinalizeOrder([ActivityTrigger] (CertificatePolicyItem, OrderDetails) input)
         {
-            var (certificateName, certificatePolicy, orderDetails) = input;
+            var (certificatePolicyItem, orderDetails) = input;
 
             byte[] csr;
 
             try
             {
-                var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificateName, certificatePolicy, tags: new Dictionary<string, string>
+                var certificatePolicy = certificatePolicyItem.ToCertificatePolicy();
+
+                var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificatePolicyItem.CertificateName, certificatePolicy, tags: new Dictionary<string, string>
                 {
                     { "Issuer", IssuerName },
                     { "Endpoint", _options.Endpoint }
@@ -342,7 +352,7 @@ namespace KeyVault.Acmebot.Functions
             }
             catch (Azure.RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.Conflict)
             {
-                var certificateOperation = await _certificateClient.GetCertificateOperationAsync(certificateName);
+                var certificateOperation = await _certificateClient.GetCertificateOperationAsync(certificatePolicyItem.CertificateName);
 
                 csr = certificateOperation.Properties.Csr;
             }

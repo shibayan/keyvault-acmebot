@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 
-using Azure.Security.KeyVault.Certificates;
 using Azure.WebJobs.Extensions.HttpApi;
 
 using KeyVault.Acmebot.Models;
@@ -23,7 +22,7 @@ namespace KeyVault.Acmebot.Functions
 
         [FunctionName(nameof(AddCertificate) + "_" + nameof(HttpStart))]
         public async Task<IActionResult> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "certificate")] AddCertificateRequest request,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "certificate")] CertificatePolicyItem certificatePolicyItem,
             [DurableClient] IDurableClient starter,
             ILogger log)
         {
@@ -32,35 +31,18 @@ namespace KeyVault.Acmebot.Functions
                 return Unauthorized();
             }
 
-            if (!TryValidateModel(request))
+            if (!TryValidateModel(certificatePolicyItem))
             {
                 return ValidationProblem(ModelState);
             }
 
-            var certificateName = request.CertificateName;
-
-            if (string.IsNullOrEmpty(certificateName))
+            if (string.IsNullOrEmpty(certificatePolicyItem.CertificateName))
             {
-                certificateName = request.DnsNames[0].Replace("*", "wildcard").Replace(".", "-");
+                certificatePolicyItem.CertificateName = certificatePolicyItem.DnsNames[0].Replace("*", "wildcard").Replace(".", "-");
             }
-
-            var subjectAlternativeNames = new SubjectAlternativeNames();
-
-            foreach (var dnsName in request.DnsNames)
-            {
-                subjectAlternativeNames.DnsNames.Add(dnsName);
-            }
-
-            var certificatePolicy = new CertificatePolicy(WellKnownIssuerNames.Unknown, subjectAlternativeNames)
-            {
-                KeyType = request.KeyType,
-                KeySize = request.KeySize,
-                KeyCurveName = request.EllipticCurveName,
-                ReuseKey = request.ReuseKeyOnRenewal
-            };
 
             // Function input comes from the request content.
-            var instanceId = await starter.StartNewAsync<object>(nameof(SharedOrchestrator.IssueCertificate), (certificateName, certificatePolicy));
+            var instanceId = await starter.StartNewAsync<object>(nameof(SharedOrchestrator.IssueCertificate), certificatePolicyItem);
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 

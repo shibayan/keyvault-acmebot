@@ -145,19 +145,19 @@
             <div class="field">
               <div class="control">
                 <label class="radio">
-                  <input type="radio" value="P256" v-model="ellipticCurveName">
+                  <input type="radio" value="P256" v-model="keyCurveName">
                   P-256
                 </label>
                 <label class="radio">
-                  <input type="radio" value="P384" v-model="ellipticCurveName">
+                  <input type="radio" value="P384" v-model="keyCurveName">
                   P-384
                 </label>
                 <label class="radio">
-                  <input type="radio" value="P521" v-model="ellipticCurveName">
+                  <input type="radio" value="P521" v-model="keyCurveName">
                   P-521
                 </label>
                 <label class="radio">
-                  <input type="radio" value="P256K" v-model="ellipticCurveName">
+                  <input type="radio" value="P256K" v-model="keyCurveName">
                   P-256K
                 </label>
               </div>
@@ -172,11 +172,11 @@
             <div class="field">
               <div class="control">
                 <label class="radio">
-                  <input type="radio" v-model="reuseKeyOnRenewal" v-bind:value="true">
+                  <input type="radio" v-model="reuseKey" v-bind:value="true">
                   Yes
                 </label>
                 <label class="radio">
-                  <input type="radio" v-model="reuseKeyOnRenewal" v-bind:value="false">
+                  <input type="radio" v-model="reuseKey" v-bind:value="false">
                   No
                 </label>
               </div>
@@ -213,10 +213,10 @@
           recordName: "",
           useAdvancedOptions: false,
           certificateName: "",
-          reuseKeyOnRenewal: false,
           keyType: "RSA",
           keySize: "2048",
-          ellipticCurveName: "P-256",
+          keyCurveName: "P-256",
+          reuseKey: false,
           loading: false,
           sending: false
         };
@@ -270,10 +270,10 @@
 
           if (this.useAdvancedOptions) {
             postData.certificateName = this.certificateName;
-            postData.reuseKeyOnRenewal = this.reuseKeyOnRenewal;
             postData.keyType = this.keyType;
             postData.keySize = this.keySize;
-            postData.ellipticCurveName = this.ellipticCurveName;
+            postData.keyCurveName = this.keyCurveName;
+            postData.reuseKey = this.reuseKey;
           }
 
           try {
