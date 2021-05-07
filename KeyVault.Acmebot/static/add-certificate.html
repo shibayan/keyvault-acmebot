@@ -145,19 +145,19 @@
             <div class="field">
               <div class="control">
                 <label class="radio">
-                  <input type="radio" value="P256" v-model="keyCurveName">
+                  <input type="radio" value="P-256" v-model="keyCurveName">
                   P-256
                 </label>
                 <label class="radio">
-                  <input type="radio" value="P384" v-model="keyCurveName">
+                  <input type="radio" value="P-384" v-model="keyCurveName">
                   P-384
                 </label>
                 <label class="radio">
-                  <input type="radio" value="P521" v-model="keyCurveName">
+                  <input type="radio" value="P-521" v-model="keyCurveName">
                   P-521
                 </label>
                 <label class="radio">
-                  <input type="radio" value="P256K" v-model="keyCurveName">
+                  <input type="radio" value="P-256K" v-model="keyCurveName">
                   P-256K
                 </label>
               </div>
@@ -215,7 +215,7 @@
           certificateName: "",
           keyType: "RSA",
           keySize: "2048",
-          keyCurveName: "P256",
+          keyCurveName: "P-256",
           reuseKey: false,
           loading: false,
           sending: false
@@ -238,12 +238,7 @@
           this.loading = false;
         },
         reload() {
-          this.zones = [];
-          this.zoneName = "";
-          this.dnsNames = [];
-          this.recordName = "";
-          this.useAdvancedOptions = false;
-          this.certificateName = "";
+          Object.assign(this.$data, this.$options.data());
 
           this.load();
         },
@@ -266,14 +261,17 @@
         async submit() {
           this.sending = true;
 
-          const postData = { dnsNames: this.dnsNames };
+          const postData = {
+            dnsNames: this.dnsNames,
+            certificateName: this.certificateName,
+            keyType: this.keyType,
+            reuseKey: this.reuseKey
+          };
 
-          if (this.useAdvancedOptions) {
-            postData.certificateName = this.certificateName;
-            postData.keyType = this.keyType;
+          if (this.keyType === "RSA") {
             postData.keySize = this.keySize;
+          } else {
             postData.keyCurveName = this.keyCurveName;
-            postData.reuseKey = this.reuseKey;
           }
 
           try {

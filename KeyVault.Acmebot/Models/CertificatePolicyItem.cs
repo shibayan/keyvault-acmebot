@@ -24,7 +24,7 @@ namespace KeyVault.Acmebot.Models
         public int? KeySize { get; set; }
 
         [JsonProperty("keyCurveName")]
-        [RegularExpression(@"^P(256|384|521|256K)$")]
+        [RegularExpression(@"^P\-(256|384|521|256K)$")]
         public string KeyCurveName { get; set; }
 
         [JsonProperty("reuseKey")]
@@ -43,9 +43,13 @@ namespace KeyVault.Acmebot.Models
             {
                 KeyType = KeyType,
                 KeySize = KeySize,
-                KeyCurveName = KeyCurveName,
                 ReuseKey = ReuseKey
             };
+
+            if (!string.IsNullOrEmpty(KeyCurveName))
+            {
+                certificatePolicy.KeyCurveName = KeyCurveName;
+            }
 
             return certificatePolicy;
         }
