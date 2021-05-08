@@ -119,13 +119,13 @@ https://github.com/shibayan/keyvault-acmebot/wiki/DNS-Provider-Configuration
 
 You must enable Authentication on the Function App that is deployed as part of this application.
 
-In the Azure Portal, open the Function blade then select the `Authentication / Authorization` menu and enable App Service authentication. Select the `Login with Azure Active Directory` as the action to perform if the request is not authenticated. We recommend using Azure Active Directory as your authentication provider, but it works with other providers as well, although it's not supported.
+In the Azure Portal, open the Function blade then select the `Authentication` menu and enable App Service authentication. Click on the `Add identity provider` button to display the screen for adding a new identity provider. If you select `Microsoft` as your Identity provider, the required settings will be automatically filled in for you. The default settings are fine.
 
-![Enable App Service Authentication with AAD](https://user-images.githubusercontent.com/1356444/49693401-ecc7c400-fbb4-11e8-9ae1-5d376a4d8a05.png)
+![Add an Identity provider](https://user-images.githubusercontent.com/1356444/117532648-79e00300-b023-11eb-8cf1-92a11ffb115a.png)
 
-Select Azure Active Directory as the authentication provider, select `Express` as the management mode, and select OK.
+Make sure that the App Service Authentication setting is set to `Require authentication`. The permissions can basically be left at the default settings.
 
-![Create New Azure AD App](https://user-images.githubusercontent.com/1356444/49693412-6f508380-fbb5-11e8-81fb-6bbcbe47654e.png)
+![App Service Authentication settings](https://user-images.githubusercontent.com/1356444/117532660-8c5a3c80-b023-11eb-8573-df2e418d5c2f.png)
 
 If you are using Sovereign Cloud, you may not be able to select Express. Enable authentication from the advanced settings with reference to the following document.
 
