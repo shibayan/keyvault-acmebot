@@ -38,8 +38,12 @@ namespace KeyVault.Acmebot.Internal
             {
                 Id = certificate.Id,
                 Name = certificate.Name,
-                DnsNames = dnsNames != null && dnsNames.Length > 0 ? dnsNames : new[] { certificate.Policy.Subject.Substring(3) },
-                ExpiresOn = certificate.Properties.ExpiresOn.Value
+                DnsNames = dnsNames != null && dnsNames.Length > 0 ? dnsNames : new[] { certificate.Policy.Subject[3..] },
+                ExpiresOn = certificate.Properties.ExpiresOn.Value,
+                KeyType = certificate.Policy.KeyType?.ToString(),
+                KeySize = certificate.Policy.KeySize,
+                KeyCurveName = certificate.Policy.KeyCurveName?.ToString(),
+                ReuseKey = certificate.Policy.ReuseKey
             };
         }
     }

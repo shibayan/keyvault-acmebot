@@ -33,16 +33,6 @@
         </div>
         <div v-if="certificate !== ''" class="field is-horizontal">
           <div class="field-label is-normal">
-            <label class="label">Expire</label>
-          </div>
-          <div class="field-body">
-            <div class="content">
-              {{ certificate.expiresOn }}
-            </div>
-          </div>
-        </div>
-        <div v-if="certificate !== ''" class="field is-horizontal">
-          <div class="field-label is-normal">
             <label class="label">DNS Names</label>
           </div>
           <div class="field-body">
@@ -52,6 +42,56 @@
                   {{ toUnicode(dnsName) }}
                 </span>
               </div>
+            </div>
+          </div>
+        </div>
+        <div v-if="certificate !== ''" class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">Expire</label>
+          </div>
+          <div class="field-body">
+            <div class="content">
+              {{ certificate.expiresOn }}
+            </div>
+          </div>
+        </div>
+        <div v-if="certificate !== ''" class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">Key Type</label>
+          </div>
+          <div class="field-body">
+            <div class="content">
+              {{ certificate.keyType }}
+            </div>
+          </div>
+        </div>
+        <div v-if="certificate !== '' && certificate.keyType === 'RSA'" class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">Key Size</label>
+          </div>
+          <div class="field-body">
+            <div class="content">
+              {{ certificate.keySize }}
+            </div>
+          </div>
+        </div>
+        <div v-if="certificate !== '' && certificate.keyType === 'EC'" class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">Elliptic Curve Name</label>
+          </div>
+          <div class="field-body">
+            <div class="content">
+              {{ certificate.keyCurveName }}
+            </div>
+          </div>
+        </div>
+        <div v-if="certificate !== ''" class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">Reuse Key on Renewal?</label>
+          </div>
+          <div class="field-body">
+            <div class="content">
+              {{ certificate.reuseKey }}
             </div>
           </div>
         </div>
@@ -111,7 +151,7 @@
           this.sending = true;
 
           try {
-            let response = await axios.post("/api/certificate", { dnsNames: this.certificate.dnsNames });
+            let response = await axios.post("/api/certificate/" + this.certificate.name);
 
             while (true) {
               await delay(5000);

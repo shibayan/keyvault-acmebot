@@ -107,6 +107,22 @@ namespace KeyVault.Acmebot.Functions
             }
         }
 
+        [FunctionName(nameof(GetCertificatePolicy))]
+        public async Task<CertificatePolicyItem> GetCertificatePolicy([ActivityTrigger] string certificateName)
+        {
+            CertificatePolicy certificatePolicy = await _certificateClient.GetCertificatePolicyAsync(certificateName);
+
+            return new CertificatePolicyItem
+            {
+                CertificateName = certificateName,
+                DnsNames = certificatePolicy.SubjectAlternativeNames.DnsNames.ToArray(),
+                KeyType = certificatePolicy.KeyType?.ToString(),
+                KeySize = certificatePolicy.KeySize,
+                KeyCurveName = certificatePolicy.KeyCurveName?.ToString(),
+                ReuseKey = certificatePolicy.ReuseKey
+            };
+        }
+
         [FunctionName(nameof(Order))]
         public async Task<OrderDetails> Order([ActivityTrigger] IReadOnlyList<string> dnsNames)
         {
@@ -116,25 +132,8 @@ namespace KeyVault.Acmebot.Functions
         }
 
         [FunctionName(nameof(Dns01Precondition))]
-        public async Task Dns01Precondition([ActivityTrigger] (string, IReadOnlyList<string>) input)
+        public async Task Dns01Precondition([ActivityTrigger] IReadOnlyList<string> dnsNames)
         {
-            var (certificateName, dnsNames) = input;
-
-            // 既存の Key Vault 証明書と SANs が一致するか確認
-            try
-            {
-                var policy = await _certificateClient.GetCertificatePolicyAsync(certificateName);
-
-                if (!policy.Value.SubjectAlternativeNames.DnsNames.OrderBy(x => x).SequenceEqual(dnsNames.OrderBy(x => x), StringComparer.OrdinalIgnoreCase))
-                {
-                    throw new PreconditionException($"DNS name(s) does not match the existing certificate. DnsNames = {string.Join(",", dnsNames)}, Existing DnsNames = {string.Join(",", policy.Value.SubjectAlternativeNames.DnsNames)}");
-                }
-            }
-            catch (Azure.RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
-            {
-                // 新しい証明書の場合はチェックしない
-            }
-
             // DNS zone が存在するか確認
             var zones = await _dnsProvider.ListZonesAsync();
 
@@ -333,36 +332,17 @@ namespace KeyVault.Acmebot.Functions
         }
 
         [FunctionName(nameof(FinalizeOrder))]
-        public async Task<OrderDetails> FinalizeOrder([ActivityTrigger] (string, IReadOnlyList<string>, OrderDetails) input)
+        public async Task<OrderDetails> FinalizeOrder([ActivityTrigger] (CertificatePolicyItem, OrderDetails) input)
         {
-            var (certificateName, dnsNames, orderDetails) = input;
+            var (certificatePolicyItem, orderDetails) = input;
 
             byte[] csr;
 
             try
             {
-                // Key Vault を使って CSR を作成
-                CertificatePolicy policy;
+                var certificatePolicy = certificatePolicyItem.ToCertificatePolicy();
 
-                try
-                {
-                    // 既に SANs が一致していることを検証済みなので、証明書が存在する場合は現在のポリシーをそのまま使う
-                    policy = await _certificateClient.GetCertificatePolicyAsync(certificateName);
-                }
-                catch
-                {
-                    // 新規作成の場合は新しくポリシーを作成する
-                    var subjectAlternativeNames = new SubjectAlternativeNames();
-
-                    foreach (var dnsName in dnsNames)
-                    {
-                        subjectAlternativeNames.DnsNames.Add(dnsName);
-                    }
-
-                    policy = new CertificatePolicy(WellKnownIssuerNames.Unknown, subjectAlternativeNames);
-                }
-
-                var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificateName, policy, tags: new Dictionary<string, string>
+                var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificatePolicyItem.CertificateName, certificatePolicy, tags: new Dictionary<string, string>
                 {
                     { "Issuer", IssuerName },
                     { "Endpoint", _options.Endpoint }
@@ -372,7 +352,7 @@ namespace KeyVault.Acmebot.Functions
             }
             catch (Azure.RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.Conflict)
             {
-                var certificateOperation = await _certificateClient.GetCertificateOperationAsync(certificateName);
+                var certificateOperation = await _certificateClient.GetCertificateOperationAsync(certificatePolicyItem.CertificateName);
 
                 csr = certificateOperation.Properties.Csr;
             }
