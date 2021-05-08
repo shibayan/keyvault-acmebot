@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KeyVault.Acmebot.Options
+﻿namespace KeyVault.Acmebot.Options
 {
     public class GoDaddyOptions
     {

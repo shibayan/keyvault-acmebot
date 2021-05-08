@@ -1,8 +1,5 @@
-﻿using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-
-using Azure.Security.KeyVault.Certificates;
 
 using DurableTask.TypedProxy;
 

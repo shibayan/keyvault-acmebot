@@ -116,9 +116,9 @@ namespace KeyVault.Acmebot.Functions
             {
                 CertificateName = certificateName,
                 DnsNames = certificatePolicy.SubjectAlternativeNames.DnsNames.ToArray(),
-                KeyType = certificatePolicy.KeyType.Value.ToString(),
+                KeyType = certificatePolicy.KeyType?.ToString(),
                 KeySize = certificatePolicy.KeySize,
-                KeyCurveName = certificatePolicy.KeyCurveName.Value.ToString(),
+                KeyCurveName = certificatePolicy.KeyCurveName?.ToString(),
                 ReuseKey = certificatePolicy.ReuseKey
             };
         }

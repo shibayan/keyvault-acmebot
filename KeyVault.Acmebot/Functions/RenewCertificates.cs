@@ -30,8 +30,6 @@ namespace KeyVault.Acmebot.Functions
             // 証明書の更新を行う
             foreach (var certificate in certificates)
             {
-                var dnsNames = certificate.DnsNames;
-
                 log.LogInformation($"{certificate.Id} - {certificate.ExpiresOn}");
 
                 try
@@ -44,7 +42,7 @@ namespace KeyVault.Acmebot.Functions
                 catch (Exception ex)
                 {
                     // 失敗した場合はログに詳細を書き出して続きを実行する
-                    log.LogError($"Failed sub orchestration with DNS names = {string.Join(",", dnsNames)}");
+                    log.LogError($"Failed sub orchestration with DNS names = {string.Join(",", certificate.DnsNames)}");
                     log.LogError(ex.Message);
                 }
             }
