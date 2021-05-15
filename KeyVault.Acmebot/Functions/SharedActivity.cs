@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 using ACMESharp.Authorizations;
 using ACMESharp.Protocol;
+using ACMESharp.Protocol.Resources;
 
 using Azure.Security.KeyVault.Certificates;
 
@@ -20,6 +22,8 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
+using Newtonsoft.Json;
 
 namespace KeyVault.Acmebot.Functions
 {
@@ -103,6 +107,22 @@ namespace KeyVault.Acmebot.Functions
             }
         }
 
+        [FunctionName(nameof(GetCertificatePolicy))]
+        public async Task<CertificatePolicyItem> GetCertificatePolicy([ActivityTrigger] string certificateName)
+        {
+            CertificatePolicy certificatePolicy = await _certificateClient.GetCertificatePolicyAsync(certificateName);
+
+            return new CertificatePolicyItem
+            {
+                CertificateName = certificateName,
+                DnsNames = certificatePolicy.SubjectAlternativeNames.DnsNames.ToArray(),
+                KeyType = certificatePolicy.KeyType?.ToString(),
+                KeySize = certificatePolicy.KeySize,
+                KeyCurveName = certificatePolicy.KeyCurveName?.ToString(),
+                ReuseKey = certificatePolicy.ReuseKey
+            };
+        }
+
         [FunctionName(nameof(Order))]
         public async Task<OrderDetails> Order([ActivityTrigger] IReadOnlyList<string> dnsNames)
         {
@@ -117,11 +137,56 @@ namespace KeyVault.Acmebot.Functions
             // DNS zone が存在するか確認
             var zones = await _dnsProvider.ListZonesAsync();
 
+            var foundZones = new HashSet<DnsZone>();
+            var zoneNotFoundDnsNames = new List<string>();
+
             foreach (var dnsName in dnsNames)
             {
-                if (!zones.Any(x => string.Equals(dnsName, x.Name, StringComparison.OrdinalIgnoreCase) || dnsName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase)))
+                var zone = zones.Where(x => string.Equals(dnsName, x.Name, StringComparison.OrdinalIgnoreCase) || dnsName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase))
+                                .OrderByDescending(x => x.Name.Length)
+                                .FirstOrDefault();
+
+                // マッチする DNS zone が見つからない場合はエラー
+                if (zone == null)
                 {
-                    throw new InvalidOperationException($"DNS zone \"{dnsName}\" is not found");
+                    zoneNotFoundDnsNames.Add(dnsName);
+                    continue;
+                }
+
+                foundZones.Add(zone);
+            }
+
+            if (zoneNotFoundDnsNames.Count > 0)
+            {
+                throw new PreconditionException($"DNS zone(s) are not found. DnsNames = {string.Join(",", zoneNotFoundDnsNames)}");
+            }
+
+            // DNS zone に移譲されている Name servers が正しいか検証
+            foreach (var zone in foundZones)
+            {
+                // DNS provider が Name servers を返していなければスキップ
+                if (zone.NameServers == null || zone.NameServers.Count == 0)
+                {
+                    continue;
+                }
+
+                // DNS provider が Name servers を返している場合は NS レコードを確認
+                var queryResult = await _lookupClient.QueryAsync(zone.Name, QueryType.NS);
+
+                // 最後の . が付いている場合があるので削除して統一
+                var expectedNameServers = zone.NameServers
+                                              .Select(x => x.TrimEnd('.'))
+                                              .ToArray();
+
+                var actualNameServers = queryResult.Answers
+                                                   .OfType<DnsClient.Protocol.NsRecord>()
+                                                   .Select(x => x.NSDName.Value.TrimEnd('.'))
+                                                   .ToArray();
+
+                // 処理対象の DNS zone から取得した NS と実際に引いた NS の値が一つも一致しない場合はエラー
+                if (!actualNameServers.Intersect(expectedNameServers, StringComparer.OrdinalIgnoreCase).Any())
+                {
+                    throw new PreconditionException($"The delegated name server is not correct. DNS zone = {zone.Name}, Expected = {string.Join(",", expectedNameServers)}, Actual = {string.Join(",", actualNameServers)}");
                 }
             }
         }
@@ -168,7 +233,6 @@ namespace KeyVault.Acmebot.Functions
                 var acmeDnsRecordName = dnsRecordName.Replace($".{zone.Name}", "", StringComparison.OrdinalIgnoreCase);
 
                 await _dnsProvider.DeleteTxtRecordAsync(zone, acmeDnsRecordName);
-
                 await _dnsProvider.CreateTxtRecordAsync(zone, acmeDnsRecordName, lookup.Select(x => x.DnsRecordValue));
             }
 
@@ -235,54 +299,50 @@ namespace KeyVault.Acmebot.Functions
             if (orderDetails.Payload.Status == "pending" || orderDetails.Payload.Status == "processing")
             {
                 // pending か processing の場合はリトライする
-                throw new RetriableActivityException($"ACME domain validation is {orderDetails.Payload.Status}. It will retry automatically.");
+                throw new RetriableActivityException($"ACME validation status is {orderDetails.Payload.Status}. It will retry automatically.");
             }
 
             if (orderDetails.Payload.Status == "invalid")
             {
-                object lastError = null;
+                var problems = new List<Problem>();
 
                 foreach (var challengeResult in challengeResults)
                 {
                     var challenge = await acmeProtocolClient.GetChallengeDetailsAsync(challengeResult.Url);
 
-                    if (challenge.Status != "invalid")
+                    if (challenge.Status != "invalid" || challenge.Error == null)
                     {
                         continue;
                     }
 
-                    _logger.LogError($"ACME domain validation error: {challenge.Error}");
+                    _logger.LogError($"ACME domain validation error: {JsonConvert.SerializeObject(challenge.Error)}");
 
-                    lastError = challenge.Error;
+                    problems.Add(challenge.Error);
+                }
+
+                // 全てのエラーが dns 関係の場合は Orchestrator からリトライさせる
+                if (problems.All(x => x.Type == "urn:ietf:params:acme:error:dns"))
+                {
+                    throw new RetriableOrchestratorException("ACME validation status is invalid, but retriable error. It will retry automatically.");
                 }
 
                 // invalid の場合は最初から実行が必要なので失敗させる
-                throw new InvalidOperationException($"ACME domain validation is invalid. Required retry at first.\nLastError = {lastError}");
+                throw new InvalidOperationException($"ACME validation status is invalid. Required retry at first.\nLastError = {JsonConvert.SerializeObject(problems.Last())}");
             }
         }
 
         [FunctionName(nameof(FinalizeOrder))]
-        public async Task<CertificateItem> FinalizeOrder([ActivityTrigger] (IReadOnlyList<string>, OrderDetails) input)
+        public async Task<OrderDetails> FinalizeOrder([ActivityTrigger] (CertificatePolicyItem, OrderDetails) input)
         {
-            var (dnsNames, orderDetails) = input;
-
-            var certificateName = dnsNames[0].Replace("*", "wildcard").Replace(".", "-");
+            var (certificatePolicyItem, orderDetails) = input;
 
             byte[] csr;
 
             try
             {
-                // Key Vault を使って CSR を作成
-                var subjectAlternativeNames = new SubjectAlternativeNames();
+                var certificatePolicy = certificatePolicyItem.ToCertificatePolicy();
 
-                foreach (var dnsName in dnsNames)
-                {
-                    subjectAlternativeNames.DnsNames.Add(dnsName);
-                }
-
-                var policy = new CertificatePolicy(WellKnownIssuerNames.Unknown, subjectAlternativeNames);
-
-                var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificateName, policy, tags: new Dictionary<string, string>
+                var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificatePolicyItem.CertificateName, certificatePolicy, tags: new Dictionary<string, string>
                 {
                     { "Issuer", IssuerName },
                     { "Endpoint", _options.Endpoint }
@@ -290,20 +350,50 @@ namespace KeyVault.Acmebot.Functions
 
                 csr = certificateOperation.Properties.Csr;
             }
-            catch
+            catch (Azure.RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.Conflict)
             {
-                var certificateOperation = await _certificateClient.GetCertificateOperationAsync(certificateName);
+                var certificateOperation = await _certificateClient.GetCertificateOperationAsync(certificatePolicyItem.CertificateName);
 
                 csr = certificateOperation.Properties.Csr;
             }
 
-            // Order の最終処理を実行し、証明書を作成
+            // Order の最終処理を実行する
             var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
-            var finalize = await acmeProtocolClient.FinalizeOrderAsync(orderDetails.Payload.Finalize, csr);
+            return await acmeProtocolClient.FinalizeOrderAsync(orderDetails.Payload.Finalize, csr);
+        }
 
-            // 証明書をダウンロード
-            var x509Certificates = await acmeProtocolClient.GetOrderCertificateAsync(finalize, _options.PreferredChain);
+        [FunctionName(nameof(CheckIsValid))]
+        public async Task CheckIsValid([ActivityTrigger] OrderDetails orderDetails)
+        {
+            var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
+
+            orderDetails = await acmeProtocolClient.GetOrderDetailsAsync(orderDetails.OrderUrl, orderDetails);
+
+            if (orderDetails.Payload.Status == "pending" || orderDetails.Payload.Status == "processing")
+            {
+                // pending か processing の場合はリトライする
+                throw new RetriableActivityException($"Finalize request is {orderDetails.Payload.Status}. It will retry automatically.");
+            }
+
+            if (orderDetails.Payload.Status == "invalid")
+            {
+                // invalid の場合は最初から実行が必要なので失敗させる
+                throw new InvalidOperationException("Finalize request is invalid. Required retry at first.");
+            }
+        }
+
+        [FunctionName(nameof(MergeCertificate))]
+        public async Task<CertificateItem> MergeCertificate([ActivityTrigger] (string, OrderDetails) input)
+        {
+            var (certificateName, orderDetails) = input;
+
+            var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
+
+            orderDetails = await acmeProtocolClient.GetOrderDetailsAsync(orderDetails.OrderUrl, orderDetails);
+
+            // 証明書をダウンロードして Key Vault へ格納
+            var x509Certificates = await acmeProtocolClient.GetOrderCertificateAsync(orderDetails, _options.PreferredChain);
 
             var mergeCertificateOptions = new MergeCertificateOptions(
                 certificateName,

@@ -10,7 +10,7 @@ namespace KeyVault.Acmebot.Options
         [Required]
         public string Contacts { get; set; }
 
-        // Backward compatibility
+        // Backward compatibility, Remove in the future
         public string SubscriptionId { get; set; }
 
         [Required]
@@ -24,6 +24,8 @@ namespace KeyVault.Acmebot.Options
 
         public string PreferredChain { get; set; }
 
+        public ExternalAccountBindingOptions ExternalAccountBinding { get; set; }
+
         // Properties should be in alphabetical order
         public AzureDnsOptions AzureDns { get; set; }
 
@@ -31,9 +33,16 @@ namespace KeyVault.Acmebot.Options
 
         public DnsMadeEasyOptions DnsMadeEasy { get; set; }
 
+        public GoDaddyOptions GoDaddy { get; set; }
+
+        // Backward compatibility, Remove in the future
         public GoogleDnsOptions Google { get; set; }
 
+        public GoogleDnsOptions GoogleDns { get; set; }
+
         public GratisDnsOptions GratisDns { get; set; }
+
+        public Route53Options Route53 { get; set; }
 
         public TransIpOptions TransIp { get; set; }
     }

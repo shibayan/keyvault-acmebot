@@ -90,14 +90,29 @@ namespace KeyVault.Acmebot
                     return new CloudflareProvider(options.Cloudflare);
                 }
 
-                if (options.Google != null)
+                if (options.DnsMadeEasy != null)
                 {
-                    return new GoogleDnsProvider(options.Google);
+                    return new DnsMadeEasyProvider(options.DnsMadeEasy);
+                }
+
+                if (options.GoDaddy != null)
+                {
+                    return new GoDaddyProvider(options.GoDaddy);
+                }
+
+                if (options.GoogleDns != null || options.Google != null)
+                {
+                    return new GoogleDnsProvider(options.GoogleDns ?? options.Google);
                 }
 
                 if (options.GratisDns != null)
                 {
                     return new GratisDnsProvider(options.GratisDns);
+                }
+
+                if (options.Route53 != null)
+                {
+                    return new Route53Provider(options.Route53);
                 }
 
                 if (options.TransIp != null)
@@ -110,18 +125,13 @@ namespace KeyVault.Acmebot
                     return new AzureDnsProvider(options.AzureDns, environment);
                 }
 
-                if (options.DnsMadeEasy != null)
-                {
-                    return new DnsMadeEasyProvider(options, options.DnsMadeEasy, environment);
-                }
-
                 // Backward compatibility
                 if (options.SubscriptionId != null)
                 {
                     return new AzureDnsProvider(new AzureDnsOptions { SubscriptionId = options.SubscriptionId }, environment);
                 }
 
-                throw new NotSupportedException();
+                throw new NotSupportedException("DNS Provider is not configured. Please check the documentation and configure it.");
             });
         }
     }

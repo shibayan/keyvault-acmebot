@@ -30,31 +30,36 @@ namespace KeyVault.Acmebot.Functions
             // 証明書の更新を行う
             foreach (var certificate in certificates)
             {
-                var dnsNames = certificate.DnsNames;
-
                 log.LogInformation($"{certificate.Id} - {certificate.ExpiresOn}");
 
                 try
                 {
                     // 証明書の更新処理を開始
-                    await context.CallSubOrchestratorAsync(nameof(SharedOrchestrator.IssueCertificate), dnsNames);
+                    var certificatePolicyItem = await activity.GetCertificatePolicy(certificate.Name);
+
+                    await context.CallSubOrchestratorWithRetryAsync(nameof(SharedOrchestrator.IssueCertificate), _retryOptions, certificatePolicyItem);
                 }
                 catch (Exception ex)
                 {
                     // 失敗した場合はログに詳細を書き出して続きを実行する
-                    log.LogError($"Failed sub orchestration with DNS names = {string.Join(",", dnsNames)}");
+                    log.LogError($"Failed sub orchestration with DNS names = {string.Join(",", certificate.DnsNames)}");
                     log.LogError(ex.Message);
                 }
             }
         }
 
         [FunctionName(nameof(RenewCertificates) + "_" + nameof(Timer))]
-        public static async Task Timer([TimerTrigger("0 0 0 * * 1,3,5")] TimerInfo timer, [DurableClient] IDurableClient starter, ILogger log)
+        public async Task Timer([TimerTrigger("0 0 0 * * 1,5")] TimerInfo timer, [DurableClient] IDurableClient starter, ILogger log)
         {
             // Function input comes from the request content.
             var instanceId = await starter.StartNewAsync(nameof(RenewCertificates) + "_" + nameof(Orchestrator));
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
         }
+
+        private readonly RetryOptions _retryOptions = new RetryOptions(TimeSpan.FromHours(12), 2)
+        {
+            Handle = ex => ex.InnerException?.InnerException is RetriableOrchestratorException
+        };
     }
 }

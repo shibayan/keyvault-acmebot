@@ -17,20 +17,6 @@ We have started to address the following requirements:
 
 Key Vault allows for secure and centralized management of ACME certificates.
 
-## Announcements
-
-### Upgrade to Acmebot v3
-
-Key Vault Acmebot v3 has been released since December 31, 2019. Users deploying earlier than this are encouraged to upgrade to v3 by following the ugprade process described here:
-
-https://github.com/shibayan/keyvault-acmebot/issues/80
-
-### Automate Azure CDN / Front Door certificates deployment
-
-As of August 2020, Azure CDN / Front Door does not automatically deploy new Key Vault certificates. I develop an utility application to automatically deploy a new version of the certificate.
-
-https://github.com/shibayan/keyvault-certificate-rotation
-
 ## Table Of Contents
 
 - [Feature Support](#feature-support)
@@ -52,6 +38,7 @@ https://github.com/shibayan/keyvault-certificate-rotation
 - ACME-compliant Certification Authorities
   - [Let's Encrypt](https://letsencrypt.org/)
   - [Buypass Go SSL](https://www.buypass.com/ssl/resources/acme-free-ssl)
+  - [ZeroSSL](https://zerossl.com/features/acme/) (Requires EAB Credentials)
 
 ## Requirements
 
@@ -60,12 +47,14 @@ You will need the following:
 - Azure Subscription (required to deploy this solution)
 - Azure Key Vault (existing one or new Key Vault can be created at deployment time)
 - DNS provider (required to host your public DNS zone)
+  - Amazon Route 53
   - Azure DNS (The resource must be unlocked)
   - Cloudflare
+  - DNS Made Easy
+  - GoDaddy
   - Google Cloud DNS
   - GratisDNS
   - TransIP DNS
-  - DNS Made Easy
 - Email address (required to register with ACME)
 
 ## Getting Started
@@ -94,42 +83,41 @@ For Azure Government
 
 Update the following configuration settings of the Function App:
 
-- Acmebot:VaultBaseUrl
+- `Acmebot:VaultBaseUrl`
   - DNS name of the Azure Key Vault (if you are using an existing Key Vault)
-- Acmebot:Webhook
+- `Acmebot:Webhook`
   - Webhook destination URL (optional, Slack and Microsoft Teams are recommended)
 
-There are also additional settings that will be automatically created by Key Vault Acmebot
-- Acmebot:Endpoint
-  - The ACME endpoint used to issue certificates
-- Acmebot:Contacts
-  - The email address (required) used in ACME account registration
-- Acmebot:AzureDns:SubscriptionId
-  - Your Azure subscription ID in order to identify which DNS resources can be used for ACME
+There are also additional settings that will be automatically created by Key Vault Acmebot:
 
-### 3. Enable App Service Authentication
+- `Acmebot:Endpoint`
+  - The ACME endpoint used to issue certificates
+- `Acmebot:Contacts`
+  - The email address (required) used in ACME account registration
+
+### 3. Add settings for your choice DNS provider
+
+For instructions on how to configure each DNS provider, please refer to the following page.
+
+https://github.com/shibayan/keyvault-acmebot/wiki/DNS-Provider-Configuration
+
+### 4. Enable App Service Authentication
 
 You must enable Authentication on the Function App that is deployed as part of this application.
 
-In the Azure Portal, open the Function blade then select the `Authentication / Authorization` menu and enable App Service authentication. Select the `Login with Azure Active Directory` as the action to perform if the request is not authenticated. We recommend using Azure Active Directory as your authentication provider, but it works with other providers as well, although it's not supported.
+In the Azure Portal, open the Function blade then select the `Authentication` menu and enable App Service authentication. Click on the `Add identity provider` button to display the screen for adding a new identity provider. If you select `Microsoft` as your Identity provider, the required settings will be automatically filled in for you. The default settings are fine.
 
-![Enable App Service Authentication with AAD](https://user-images.githubusercontent.com/1356444/49693401-ecc7c400-fbb4-11e8-9ae1-5d376a4d8a05.png)
+![Add an Identity provider](https://user-images.githubusercontent.com/1356444/117532648-79e00300-b023-11eb-8cf1-92a11ffb115a.png)
 
-Select Azure Active Directory as the authentication provider, select `Express` as the management mode, and select OK.
+Make sure that the App Service Authentication setting is set to `Require authentication`. The permissions can basically be left at the default settings.
 
-![Create New Azure AD App](https://user-images.githubusercontent.com/1356444/49693412-6f508380-fbb5-11e8-81fb-6bbcbe47654e.png)
+![App Service Authentication settings](https://user-images.githubusercontent.com/1356444/117532660-8c5a3c80-b023-11eb-8573-df2e418d5c2f.png)
+
+If you are using Sovereign Cloud, you may not be able to select Express. Enable authentication from the advanced settings with reference to the following document.
+
+https://docs.microsoft.com/en-us/azure/app-service/configure-authentication-provider-aad#-configure-with-advanced-settings
 
 Finally, you can save your previous settings to enable App Service authentication.
-
-### 4. Add access control (IAM) to Azure DNS
-
-Open the `Access Control (IAM)` of the target DNS zone or resource group containing the DNS zone, and assign the role of `DNS Zone Contributor` to the deployed application.
-
-![temp](https://user-images.githubusercontent.com/1356444/64354572-a9628f00-d03a-11e9-93c9-0c12992ca9bf.png)
-
-When using a DNS provider other than Azure DNS, please refer to the following page for configuration.
-
-https://github.com/shibayan/keyvault-acmebot/wiki/DNS-Provider-Configuration
 
 ### 5. Add to Key Vault access policies (if you use an existing Key Vault)
 
@@ -167,12 +155,11 @@ After importing, the App Service will automatically check for certificate update
 
 - https://docs.microsoft.com/en-us/azure/application-gateway/key-vault-certs
 
-#### Azure CDN
+#### Azure CDN / Front Door
+
+Azure CDN / Front Door will now automatically deploy the latest version of the certificate when the Key Vault certificate is updated. Selecting `Latest` as the Key Vault certificate version will automatically update it.
 
 - https://docs.microsoft.com/en-us/azure/cdn/cdn-custom-ssl?tabs=option-2-enable-https-with-your-own-certificate
-
-#### Azure Front Door
-
 - https://docs.microsoft.com/en-us/azure/frontdoor/front-door-custom-domain-https#option-2-use-your-own-certificate
 
 #### API Management

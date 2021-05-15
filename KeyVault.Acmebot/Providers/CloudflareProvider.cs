@@ -29,7 +29,7 @@ namespace KeyVault.Acmebot.Providers
             var zones = await _cloudflareDnsClient.ListAllZonesAsync();
 
             // Zone API は Punycode されていない値を返すのでエンコードが必要
-            return zones.Select(x => new DnsZone { Id = x.Id, Name = _idnMapping.GetAscii(x.Name) }).ToArray();
+            return zones.Select(x => new DnsZone { Id = x.Id, Name = _idnMapping.GetAscii(x.Name), NameServers = x.NameServers }).ToArray();
         }
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
@@ -56,7 +56,7 @@ namespace KeyVault.Acmebot.Providers
             }
         }
 
-        public class CloudflareDnsClient
+        private class CloudflareDnsClient
         {
             public CloudflareDnsClient(string apiToken)
             {
@@ -124,7 +124,7 @@ namespace KeyVault.Acmebot.Providers
             }
         }
 
-        public class ApiResult<T>
+        private class ApiResult<T>
         {
             [JsonProperty("result")]
             public T[] Result { get; set; }
@@ -142,7 +142,7 @@ namespace KeyVault.Acmebot.Providers
             public object[] Messages { get; set; }
         }
 
-        public class ResultInfo
+        private class ResultInfo
         {
             [JsonProperty("page")]
             public int Page { get; set; }
@@ -160,7 +160,7 @@ namespace KeyVault.Acmebot.Providers
             public int TotalCount { get; set; }
         }
 
-        public class ZoneResult
+        private class ZoneResult
         {
             [JsonProperty("id")]
             public string Id { get; set; }
@@ -170,9 +170,12 @@ namespace KeyVault.Acmebot.Providers
 
             [JsonProperty("status")]
             public string Status { get; set; }
+
+            [JsonProperty("name_servers")]
+            public string[] NameServers { get; set; }
         }
 
-        public class DnsRecordResult
+        private class DnsRecordResult
         {
             [JsonProperty("id")]
             public string Id { get; set; }

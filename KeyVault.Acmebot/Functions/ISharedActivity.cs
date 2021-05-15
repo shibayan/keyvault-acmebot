@@ -18,6 +18,8 @@ namespace KeyVault.Acmebot.Functions
 
         Task<IReadOnlyList<string>> GetZones(object input = null);
 
+        Task<CertificatePolicyItem> GetCertificatePolicy(string certificateName);
+
         Task<OrderDetails> Order(IReadOnlyList<string> dnsNames);
 
         Task Dns01Precondition(IReadOnlyList<string> dnsNames);
@@ -32,7 +34,12 @@ namespace KeyVault.Acmebot.Functions
         [RetryOptions("00:00:05", 12, HandlerType = typeof(ExceptionRetryStrategy<RetriableActivityException>))]
         Task CheckIsReady((OrderDetails, IReadOnlyList<AcmeChallengeResult>) input);
 
-        Task<CertificateItem> FinalizeOrder((IReadOnlyList<string>, OrderDetails) input);
+        Task<OrderDetails> FinalizeOrder((CertificatePolicyItem, OrderDetails) input);
+
+        [RetryOptions("00:00:05", 12, HandlerType = typeof(ExceptionRetryStrategy<RetriableActivityException>))]
+        Task CheckIsValid(OrderDetails orderDetails);
+
+        Task<CertificateItem> MergeCertificate((string, OrderDetails) input);
 
         Task CleanupDnsChallenge(IReadOnlyList<AcmeChallengeResult> challengeResults);
 

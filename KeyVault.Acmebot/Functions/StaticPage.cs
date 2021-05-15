@@ -32,6 +32,19 @@ namespace KeyVault.Acmebot.Functions
             return File("static/add-certificate.html");
         }
 
+        [FunctionName(nameof(StaticPage) + "_" + nameof(BulkCertificate))]
+        public IActionResult BulkCertificate(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "static-page/bulk-certificate")] HttpRequest req,
+            ILogger log)
+        {
+            if (!IsEasyAuthEnabled || !User.Identity.IsAuthenticated)
+            {
+                return Forbid();
+            }
+
+            return File("static/bulk-certificate.html");
+        }
+
         [FunctionName(nameof(StaticPage) + "_" + nameof(RenewCertificate))]
         public IActionResult RenewCertificate(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "static-page/renew-certificate")] HttpRequest req,

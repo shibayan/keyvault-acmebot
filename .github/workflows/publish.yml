@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
 
     - name: Use .NET Core ${{ env.DOTNET_VERSION }}
       uses: actions/setup-dotnet@v1
@@ -23,10 +25,10 @@ jobs:
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
 
     - name: Publish Functions
-      run: dotnet publish -c Release -r win-x86 --self-contained false -o ./dist -p:Version=${{ steps.setup_version.outputs.VERSION }}
+      run: dotnet publish -c Release -r win-x86 --self-contained false -o ./dist -p:Version=${{ steps.setup_version.outputs.VERSION }} KeyVault.Acmebot
 
     - name: Zip Functions
-      run: 7z a latest.zip ./dist/*
+      run: 7z a -mx=9 latest.zip ./dist/*
 
     - name: Upload to Blob
       run: az storage blob upload -f latest.zip -c azure-keyvault-letsencrypt -n v3/latest.zip
