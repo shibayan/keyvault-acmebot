@@ -41,10 +41,14 @@ namespace KeyVault.Acmebot.Models
 
             var certificatePolicy = new CertificatePolicy(WellKnownIssuerNames.Unknown, subjectAlternativeNames)
             {
-                KeyType = KeyType,
                 KeySize = KeySize,
                 ReuseKey = ReuseKey
             };
+
+            if (!string.IsNullOrEmpty(KeyType))
+            {
+                certificatePolicy.KeyType = KeyType;
+            }
 
             if (!string.IsNullOrEmpty(KeyCurveName))
             {
