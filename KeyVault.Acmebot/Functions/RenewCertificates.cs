@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using DurableTask.TypedProxy;
@@ -15,6 +16,11 @@ namespace KeyVault.Acmebot.Functions
         public async Task Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
         {
             var activity = context.CreateActivityProxy<ISharedActivity>();
+
+            // スロットリング対策として 60 秒以内でジッターを追加する
+            var jitter = (uint)context.NewGuid().GetHashCode() % 60;
+
+            await context.CreateTimer(context.CurrentUtcDateTime.AddSeconds(jitter), CancellationToken.None);
 
             // 期限切れまで 30 日以内の証明書を取得する
             var certificates = await activity.GetExpiringCertificates(context.CurrentUtcDateTime);
