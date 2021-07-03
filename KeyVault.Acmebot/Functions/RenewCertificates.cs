@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using DurableTask.TypedProxy;
@@ -26,6 +27,11 @@ namespace KeyVault.Acmebot.Functions
 
                 return;
             }
+
+            // スロットリング対策として 60 秒以内でジッターを追加する
+            var jitter = (uint)context.NewGuid().GetHashCode() % 60;
+
+            await context.CreateTimer(context.CurrentUtcDateTime.AddSeconds(jitter), CancellationToken.None);
 
             // 証明書の更新を行う
             foreach (var certificate in certificates)
