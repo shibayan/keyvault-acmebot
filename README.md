@@ -47,14 +47,6 @@ You will need the following:
 - Azure Subscription (required to deploy this solution)
 - Azure Key Vault (existing one or new Key Vault can be created at deployment time)
 - DNS provider (required to host your public DNS zone)
-  - Amazon Route 53
-  - Azure DNS (The resource must be unlocked)
-  - Cloudflare
-  - DNS Made Easy
-  - GoDaddy
-  - Google Cloud DNS
-  - GratisDNS
-  - TransIP DNS
 - Email address (required to register with ACME)
 
 ## Getting Started
@@ -87,6 +79,7 @@ Update the following configuration settings of the Function App:
   - DNS name of the Azure Key Vault (if you are using an existing Key Vault)
 - `Acmebot:Webhook`
   - Webhook destination URL (optional, Slack and Microsoft Teams are recommended)
+  - Message will be sent when the process succeeds or fails
 
 There are also additional settings that will be automatically created by Key Vault Acmebot:
 
@@ -100,6 +93,17 @@ There are also additional settings that will be automatically created by Key Vau
 For instructions on how to configure each DNS provider, please refer to the following page.
 
 https://github.com/shibayan/keyvault-acmebot/wiki/DNS-Provider-Configuration
+
+#### Supported DNS providers
+
+- Amazon Route 53
+- Azure DNS
+- Cloudflare
+- DNS Made Easy
+- GoDaddy
+- Google Cloud DNS
+- GratisDNS
+- TransIP DNS
 
 ### 4. Enable App Service Authentication
 
