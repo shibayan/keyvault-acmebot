@@ -1,5 +1,5 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
     "appNamePrefix": {
@@ -96,7 +96,7 @@
     {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('storageAccountName')]",
-      "apiVersion": "2019-06-01",
+      "apiVersion": "2021-02-01",
       "location": "[resourceGroup().location]",
       "kind": "Storage",
       "sku": {
@@ -111,7 +111,7 @@
     {
       "type": "Microsoft.Web/serverfarms",
       "name": "[variables('appServicePlanName')]",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2020-12-01",
       "location": "[resourceGroup().location]",
       "sku": {
         "name": "Y1",
@@ -123,20 +123,20 @@
     {
       "type": "Microsoft.Insights/components",
       "name": "[variables('appInsightsName')]",
-      "apiVersion": "2015-05-01",
+      "apiVersion": "2020-02-02-preview",
       "location": "[resourceGroup().location]",
+      "kind": "web",
       "tags": {
         "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('functionAppName'))]": "Resource"
       },
       "properties": {
-        "Application_Type": "web",
-        "applicationId": "[variables('appInsightsName')]"
+        "Application_Type": "web"
       }
     },
     {
       "type": "Microsoft.Web/sites",
       "name": "[variables('functionAppName')]",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2020-12-01",
       "location": "[resourceGroup().location]",
       "kind": "functionapp",
       "identity": {
@@ -153,15 +153,15 @@
           "appSettings": [
             {
               "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
-              "value": "[concat('InstrumentationKey=', reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2015-05-01').InstrumentationKey, ';EndpointSuffix=', variables('appInsightsEndpoints')[environment().name])]"
+              "value": "[concat('InstrumentationKey=', reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02-preview').InstrumentationKey, ';EndpointSuffix=', variables('appInsightsEndpoints')[environment().name])]"
             },
             {
               "name": "AzureWebJobsStorage",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'), '2018-11-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]"
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'), '2021-02-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]"
             },
             {
               "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'), '2018-11-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]"
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'), '2021-02-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]"
             },
             {
               "name": "WEBSITE_CONTENTSHARE",
@@ -205,14 +205,14 @@
       },
       "resources": [
         {
-          "apiVersion": "2020-06-01",
-          "name": "metadata",
           "type": "config",
+          "name": "metadata",
+          "apiVersion": "2020-12-01",
           "dependsOn": [
             "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]"
           ],
           "properties": {
-            "synctriggersstatus": "[listsyncfunctiontriggerstatus(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2020-06-01').status]"
+            "synctriggersstatus": "[listsyncfunctiontriggerstatus(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2020-12-01').status]"
           }
         }
       ]
@@ -234,7 +234,7 @@
         },
         "accessPolicies": [
           {
-            "objectId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2020-06-01', 'Full').identity.principalId]",
+            "objectId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2020-12-01', 'Full').identity.principalId]",
             "tenantId": "[subscription().tenantId]",
             "permissions": {
               "certificates": [ "get", "list", "create", "update" ]
@@ -247,7 +247,7 @@
     {
       "type": "Microsoft.Authorization/roleAssignments",
       "name": "[parameters('roleNameGuid')]",
-      "apiVersion": "2020-04-01-preview",
+      "apiVersion": "2020-10-01-preview",
       "condition": "[and(parameters('createWithKeyVault'), parameters('enableRbacAuthorization'))]",
       "scope": "[concat('Microsoft.KeyVault/vaults', '/', variables('keyVaultName'))]",
       "dependsOn": [
@@ -255,7 +255,7 @@
       ],
       "properties": {
         "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions/', 'a4417e6f-fecd-4de8-b567-7b0420556985')]",
-        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2020-06-01', 'Full').identity.principalId]"
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2020-12-01', 'Full').identity.principalId]"
       }
     }
   ],
@@ -266,7 +266,7 @@
     },
     "identity": {
       "type": "object",
-      "value": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2020-06-01', 'Full').identity]"
+      "value": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2020-12-01', 'Full').identity]"
     },
     "keyVaultName": {
       "type": "string",
