@@ -19,6 +19,19 @@ namespace KeyVault.Acmebot.Functions
         {
         }
 
+        [FunctionName(nameof(StaticPage) + "_" + nameof(Dashboard))]
+        public IActionResult Dashboard(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "static-page/dashboard")] HttpRequest req,
+            ILogger log)
+        {
+            if (!IsEasyAuthEnabled || !User.IsAppAuthorized())
+            {
+                return Forbid();
+            }
+
+            return File("static/dashboard.html");
+        }
+
         [FunctionName(nameof(StaticPage) + "_" + nameof(AddCertificate))]
         public IActionResult AddCertificate(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "static-page/add-certificate")] HttpRequest req,

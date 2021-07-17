@@ -1,6 +1,12 @@
 {
   "$schema": "http://json.schemastore.org/proxies",
   "proxies": {
+    "Dashboard_Proxy": {
+      "matchCondition": {
+        "route": "dashboard"
+      },
+      "backendUri": "http://localhost/api/static-page/dashboard"
+    },
     "AddCertificate_Proxy": {
       "matchCondition": {
         "route": "add-certificate"
