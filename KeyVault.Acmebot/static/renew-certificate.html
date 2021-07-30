@@ -136,7 +136,7 @@
               this.certificates = response.data;
             }
           } catch (error) {
-            alert(error);
+            alert(error.response.data.output);
           }
 
           this.loading = false;

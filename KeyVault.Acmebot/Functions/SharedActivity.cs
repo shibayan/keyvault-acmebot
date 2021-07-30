@@ -364,7 +364,7 @@ namespace KeyVault.Acmebot.Functions
         }
 
         [FunctionName(nameof(CheckIsValid))]
-        public async Task CheckIsValid([ActivityTrigger] OrderDetails orderDetails)
+        public async Task<OrderDetails> CheckIsValid([ActivityTrigger] OrderDetails orderDetails)
         {
             var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
@@ -381,6 +381,8 @@ namespace KeyVault.Acmebot.Functions
                 // invalid の場合は最初から実行が必要なので失敗させる
                 throw new InvalidOperationException("Finalize request is invalid. Required retry at first.");
             }
+
+            return orderDetails;
         }
 
         [FunctionName(nameof(MergeCertificate))]
@@ -389,8 +391,6 @@ namespace KeyVault.Acmebot.Functions
             var (certificateName, orderDetails) = input;
 
             var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
-
-            orderDetails = await acmeProtocolClient.GetOrderDetailsAsync(orderDetails.OrderUrl, orderDetails);
 
             // 証明書をダウンロードして Key Vault へ格納
             var x509Certificates = await acmeProtocolClient.GetOrderCertificateAsync(orderDetails, _options.PreferredChain);
