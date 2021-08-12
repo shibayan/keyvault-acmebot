@@ -28,8 +28,8 @@ namespace KeyVault.Acmebot.Functions
                 return;
             }
 
-            // スロットリング対策として 60 秒以内でジッターを追加する
-            var jitter = (uint)context.NewGuid().GetHashCode() % 60;
+            // スロットリング対策として 120 秒以内でジッターを追加する
+            var jitter = (uint)context.NewGuid().GetHashCode() % 120;
 
             await context.CreateTimer(context.CurrentUtcDateTime.AddSeconds(jitter), CancellationToken.None);
 
@@ -55,7 +55,7 @@ namespace KeyVault.Acmebot.Functions
         }
 
         [FunctionName(nameof(RenewCertificates) + "_" + nameof(Timer))]
-        public async Task Timer([TimerTrigger("0 0 0 * * 1,5")] TimerInfo timer, [DurableClient] IDurableClient starter, ILogger log)
+        public async Task Timer([TimerTrigger("0 0 0 * * 1,3,5")] TimerInfo timer, [DurableClient] IDurableClient starter, ILogger log)
         {
             // Function input comes from the request content.
             var instanceId = await starter.StartNewAsync(nameof(RenewCertificates) + "_" + nameof(Orchestrator));
