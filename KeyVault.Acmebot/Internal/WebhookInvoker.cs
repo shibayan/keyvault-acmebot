@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 using KeyVault.Acmebot.Options;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
+using Newtonsoft.Json;
 
 namespace KeyVault.Acmebot.Internal
 {
@@ -71,8 +74,8 @@ namespace KeyVault.Acmebot.Internal
             {
                 model = new
                 {
-                    title = certificateName,
-                    text = string.Join("\n", dnsNames),
+                    title = "Acmebot",
+                    text = $"A new certificate has been issued.\n\n**Certificate Name**: {certificateName}\n\n**Expiration Date**: {expirationDate}\n\n**DNS Names**: {string.Join(", ", dnsNames)}",
                     themeColor = "2EB886"
                 };
             }
@@ -117,8 +120,8 @@ namespace KeyVault.Acmebot.Internal
             {
                 model = new
                 {
-                    title = functionName,
-                    text = reason,
+                    title = "Acmebot",
+                    text = $"**{functionName}**\n\n**Reason**\n\n{reason}",
                     themeColor = "A30200"
                 };
             }
@@ -138,7 +141,9 @@ namespace KeyVault.Acmebot.Internal
         {
             var httpClient = _httpClientFactory.CreateClient();
 
-            var response = await httpClient.PostAsJsonAsync(_options.Webhook, model);
+            var content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
+
+            var response = await httpClient.PostAsync(_options.Webhook, content);
 
             if (!response.IsSuccessStatusCode)
             {
