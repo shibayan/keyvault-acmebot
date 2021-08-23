@@ -14,6 +14,11 @@
         Dashboard
       </h1>
       <div id="app">
+        <h2>Certificates</h2>
+        <ul>
+          <li v-for="certificate in certificates">{{ certificate.name }} Expires {{ certificate.expiresOn }}</li>
+        </ul>
+        <h2>Renewal history</h2>
       </div>
     </div>
   </section>
@@ -25,9 +30,24 @@
     const app = {
       data() {
         return {
+          certificates: []
         };
       },
       methods: {
+        async load() {
+          try {
+            const response = await axios.get("/api/certificates");
+
+            if (response.status === 200) {
+              this.certificates = response.data;
+            }
+          } catch (error) {
+            alert(error.response.data.output);
+          }
+        }
+      },
+      beforeMount() {
+        this.load();
       }
     };
 
