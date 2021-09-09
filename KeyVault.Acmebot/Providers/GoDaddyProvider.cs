@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using KeyVault.Acmebot.Options;
+using KeyVault.Acmebot.Internal;
 
 using Newtonsoft.Json;
 
@@ -91,7 +92,7 @@ namespace KeyVault.Acmebot.Providers
 
                 response.EnsureSuccessStatusCode();
 
-                var domains = await response.Content.ReadAsAsync<List<ZoneDomain>>();
+                var domains = await response.Content.ReadAsAsync<ZoneDomain[]>();
 
                 return domains;
             }
@@ -102,7 +103,7 @@ namespace KeyVault.Acmebot.Providers
 
                 response.EnsureSuccessStatusCode();
 
-                var entries = await response.Content.ReadAsAsync<List<DnsEntry>>();
+                var entries = await response.Content.ReadAsAsync<DnsEntry[]>();
 
                 return entries;
             }
@@ -114,11 +115,9 @@ namespace KeyVault.Acmebot.Providers
                 response.EnsureSuccessStatusCode();
             }
 
-            public async Task AddRecordAsync(string zoneId, List<DnsEntry> entries)
+            public async Task AddRecordAsync(string zoneId, IReadOnlyList<DnsEntry> entries)
             {
-                var content = new StringContent(JsonConvert.SerializeObject(entries, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }), Encoding.UTF8, "application/json");
-
-                var response = await _httpClient.PatchAsync($"v1/domains/{zoneId}/records", content);
+                var response = await _httpClient.PatchAsync($"v1/domains/{zoneId}/records", entries);
 
                 response.EnsureSuccessStatusCode();
             }

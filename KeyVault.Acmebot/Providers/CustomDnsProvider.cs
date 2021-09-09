@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
 
 using KeyVault.Acmebot.Options;
-
-using Newtonsoft.Json;
+using KeyVault.Acmebot.Internal;
 
 namespace KeyVault.Acmebot.Providers
 {
@@ -31,18 +29,20 @@ namespace KeyVault.Acmebot.Providers
 
         public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
         {
-            var content = await _httpClient.GetStringAsync("zones");
+            var response = await _httpClient.GetAsync("zones");
 
-            return JsonConvert.DeserializeObject<DnsZone[]>(content);
+            response.EnsureSuccessStatusCode();
+
+            var zones = await response.Content.ReadAsAsync<DnsZone[]>();
+
+            return zones;
         }
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
             var recordName = $"{relativeRecordName}.{zone.Name}";
 
-            var content = new StringContent(JsonConvert.SerializeObject(new { type = "TXT", ttl = 60, values }), Encoding.UTF8, "application/json");
-
-            var response = await _httpClient.PostAsync($"zones/{zone.Id}/records/{recordName}", content);
+            var response = await _httpClient.PostAsync($"zones/{zone.Id}/records/{recordName}", new { type = "TXT", ttl = 60, values });
 
             response.EnsureSuccessStatusCode();
         }
