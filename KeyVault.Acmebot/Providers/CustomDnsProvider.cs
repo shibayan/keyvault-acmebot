@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 
 using KeyVault.Acmebot.Options;
@@ -35,18 +36,24 @@ namespace KeyVault.Acmebot.Providers
             return JsonConvert.DeserializeObject<DnsZone[]>(content);
         }
 
-        public Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
+        public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
             var recordName = $"{relativeRecordName}.{zone.Name}";
 
-            return _httpClient.PostAsJsonAsync("records/create", new { zone.Id, recordName, values });
+            var content = new StringContent(JsonConvert.SerializeObject(new { type = "TXT", ttl = 60, values }), Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync($"zones/{zone.Id}/records/{recordName}", content);
+
+            response.EnsureSuccessStatusCode();
         }
 
-        public Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
+        public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
         {
             var recordName = $"{relativeRecordName}.{zone.Name}";
 
-            return _httpClient.PostAsJsonAsync("records/delete", new { zone.Id, recordName });
+            var response = await _httpClient.DeleteAsync($"zones/{zone.Id}/records/{recordName}");
+
+            response.EnsureSuccessStatusCode();
         }
     }
 }

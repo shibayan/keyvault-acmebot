@@ -33,19 +33,19 @@ namespace KeyVault.Acmebot.Providers
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
             var entries = new List<DnsEntry>();
+
             foreach (var value in values)
             {
                 entries.Add(new DnsEntry
                 {
                     Name = relativeRecordName,
                     Type = "TXT",
-                    TTL = 600,
+                    TTL = 60,
                     Data = value
                 });
             }
 
             await _client.AddRecordAsync(zone.Id, entries);
-
         }
 
         public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
@@ -74,15 +74,13 @@ namespace KeyVault.Acmebot.Providers
                     throw new ArgumentNullException(nameof(apiSecret));
                 }
 
-
-                _httpClient = new HttpClient()
+                _httpClient = new HttpClient
                 {
                     BaseAddress = new Uri("https://api.godaddy.com")
                 };
 
                 _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("sso-key", $"{apiKey}:{apiSecret}");
-
             }
 
             private readonly HttpClient _httpClient;
@@ -100,7 +98,6 @@ namespace KeyVault.Acmebot.Providers
 
             public async Task<IReadOnlyList<DnsEntry>> ListRecordsAsync(string zoneId)
             {
-
                 var response = await _httpClient.GetAsync($"v1/domains/{zoneId}/records");
 
                 response.EnsureSuccessStatusCode();
@@ -113,6 +110,7 @@ namespace KeyVault.Acmebot.Providers
             public async Task DeleteRecordAsync(string zoneId, DnsEntry entry)
             {
                 var response = await _httpClient.DeleteAsync($"v1/domains/{zoneId}/records/{entry.Type}/{entry.Name}");
+
                 response.EnsureSuccessStatusCode();
             }
 
