@@ -19,6 +19,7 @@ namespace KeyVault.Acmebot.Providers
             };
 
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-Api-Key", options.ApiKey);
 
             PropagationSeconds = options.PropagationSeconds;
         }
