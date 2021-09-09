@@ -9,8 +9,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using KeyVault.Acmebot.Options;
 using KeyVault.Acmebot.Internal;
+using KeyVault.Acmebot.Options;
 
 using Newtonsoft.Json;
 
