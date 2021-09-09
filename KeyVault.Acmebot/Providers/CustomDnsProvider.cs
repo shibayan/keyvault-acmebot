@@ -42,7 +42,7 @@ namespace KeyVault.Acmebot.Providers
         {
             var recordName = $"{relativeRecordName}.{zone.Name}";
 
-            var response = await _httpClient.PostAsync($"zones/{zone.Id}/records/{recordName}", new { type = "TXT", ttl = 60, values });
+            var response = await _httpClient.PutAsync($"zones/{zone.Id}/records/{recordName}", new { type = "TXT", ttl = 60, values });
 
             response.EnsureSuccessStatusCode();
         }
