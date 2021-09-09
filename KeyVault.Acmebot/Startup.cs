@@ -100,6 +100,11 @@ namespace KeyVault.Acmebot
                     return new DnsMadeEasyProvider(options.DnsMadeEasy);
                 }
 
+                if (options.GoDaddy != null)
+                {
+                    return new GoDaddyProvider(options.GoDaddy);
+                }
+
                 if (options.GoogleDns != null || options.Google != null)
                 {
                     return new GoogleDnsProvider(options.GoogleDns ?? options.Google);

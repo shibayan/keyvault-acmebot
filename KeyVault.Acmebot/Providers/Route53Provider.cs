@@ -64,14 +64,15 @@ namespace KeyVault.Acmebot.Providers
 
             var listResponse = await _amazonRoute53Client.ListResourceRecordSetsAsync(listRequest);
 
-            if (listResponse.ResourceRecordSets.Count == 0)
+            var changes = listResponse.ResourceRecordSets
+                                      .Where(x => x.Name == recordName && x.Type == RRType.TXT)
+                                      .Select(x => new Change { Action = ChangeAction.DELETE, ResourceRecordSet = x })
+                                      .ToList();
+
+            if (changes.Count == 0)
             {
                 return;
             }
-
-            var changes = listResponse.ResourceRecordSets
-                                      .Select(x => new Change { Action = ChangeAction.DELETE, ResourceRecordSet = x })
-                                      .ToList();
 
             var request = new ChangeResourceRecordSetsRequest(zone.Id, new ChangeBatch(changes));
 

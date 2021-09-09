@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 
 using DurableTask.TypedProxy;
 
+using KeyVault.Acmebot.Models;
+
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
@@ -13,16 +15,15 @@ namespace KeyVault.Acmebot.Functions
         [FunctionName(nameof(IssueCertificate))]
         public async Task IssueCertificate([OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            var dnsNames = context.GetInput<string[]>();
-            var certificateName = dnsNames[0].Replace("*", "wildcard").Replace(".", "-");
+            var certificatePolicy = context.GetInput<CertificatePolicyItem>();
 
             var activity = context.CreateActivityProxy<ISharedActivity>();
 
             // 前提条件をチェック
-            await activity.Dns01Precondition(dnsNames);
+            await activity.Dns01Precondition(certificatePolicy.DnsNames);
 
             // 新しく ACME Order を作成する
-            var orderDetails = await activity.Order(dnsNames);
+            var orderDetails = await activity.Order(certificatePolicy.DnsNames);
 
             // 既に確認済みの場合は Challenge をスキップする
             if (orderDetails.Payload.Status != "ready")
@@ -47,20 +48,20 @@ namespace KeyVault.Acmebot.Functions
             }
 
             // Key Vault で CSR を作成し Finalize を実行
-            orderDetails = await activity.FinalizeOrder((certificateName, dnsNames, orderDetails));
+            orderDetails = await activity.FinalizeOrder((certificatePolicy, orderDetails));
 
             // Finalize の時点でステータスが valid の時点はスキップ
             if (orderDetails.Payload.Status != "valid")
             {
                 // Finalize 後のステータスが valid になるまで 60 秒待機
-                await activity.CheckIsValid(orderDetails);
+                orderDetails = await activity.CheckIsValid(orderDetails);
             }
 
             // 証明書をダウンロードし Key Vault に保存
-            var certificate = await activity.MergeCertificate((certificateName, orderDetails));
+            var certificate = await activity.MergeCertificate((certificatePolicy.CertificateName, orderDetails));
 
             // 証明書の更新が完了後に Webhook を送信する
-            await activity.SendCompletedEvent((certificate.Name, certificate.ExpiresOn, dnsNames));
+            await activity.SendCompletedEvent((certificate.Name, certificate.ExpiresOn, certificatePolicy.DnsNames));
         }
     }
 }

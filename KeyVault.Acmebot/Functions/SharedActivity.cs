@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
@@ -104,6 +105,22 @@ namespace KeyVault.Acmebot.Functions
             {
                 return Array.Empty<string>();
             }
+        }
+
+        [FunctionName(nameof(GetCertificatePolicy))]
+        public async Task<CertificatePolicyItem> GetCertificatePolicy([ActivityTrigger] string certificateName)
+        {
+            CertificatePolicy certificatePolicy = await _certificateClient.GetCertificatePolicyAsync(certificateName);
+
+            return new CertificatePolicyItem
+            {
+                CertificateName = certificateName,
+                DnsNames = certificatePolicy.SubjectAlternativeNames.DnsNames.ToArray(),
+                KeyType = certificatePolicy.KeyType?.ToString(),
+                KeySize = certificatePolicy.KeySize,
+                KeyCurveName = certificatePolicy.KeyCurveName?.ToString(),
+                ReuseKey = certificatePolicy.ReuseKey
+            };
         }
 
         [FunctionName(nameof(Order))]
@@ -315,25 +332,17 @@ namespace KeyVault.Acmebot.Functions
         }
 
         [FunctionName(nameof(FinalizeOrder))]
-        public async Task<OrderDetails> FinalizeOrder([ActivityTrigger] (string, IReadOnlyList<string>, OrderDetails) input)
+        public async Task<OrderDetails> FinalizeOrder([ActivityTrigger] (CertificatePolicyItem, OrderDetails) input)
         {
-            var (certificateName, dnsNames, orderDetails) = input;
+            var (certificatePolicyItem, orderDetails) = input;
 
             byte[] csr;
 
             try
             {
-                // Key Vault を使って CSR を作成
-                var subjectAlternativeNames = new SubjectAlternativeNames();
+                var certificatePolicy = certificatePolicyItem.ToCertificatePolicy();
 
-                foreach (var dnsName in dnsNames)
-                {
-                    subjectAlternativeNames.DnsNames.Add(dnsName);
-                }
-
-                var policy = new CertificatePolicy(WellKnownIssuerNames.Unknown, subjectAlternativeNames);
-
-                var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificateName, policy, tags: new Dictionary<string, string>
+                var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificatePolicyItem.CertificateName, certificatePolicy, tags: new Dictionary<string, string>
                 {
                     { "Issuer", IssuerName },
                     { "Endpoint", _options.Endpoint }
@@ -341,9 +350,9 @@ namespace KeyVault.Acmebot.Functions
 
                 csr = certificateOperation.Properties.Csr;
             }
-            catch
+            catch (Azure.RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.Conflict)
             {
-                var certificateOperation = await _certificateClient.GetCertificateOperationAsync(certificateName);
+                var certificateOperation = await _certificateClient.GetCertificateOperationAsync(certificatePolicyItem.CertificateName);
 
                 csr = certificateOperation.Properties.Csr;
             }
@@ -355,7 +364,7 @@ namespace KeyVault.Acmebot.Functions
         }
 
         [FunctionName(nameof(CheckIsValid))]
-        public async Task CheckIsValid([ActivityTrigger] OrderDetails orderDetails)
+        public async Task<OrderDetails> CheckIsValid([ActivityTrigger] OrderDetails orderDetails)
         {
             var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
@@ -370,8 +379,10 @@ namespace KeyVault.Acmebot.Functions
             if (orderDetails.Payload.Status == "invalid")
             {
                 // invalid の場合は最初から実行が必要なので失敗させる
-                throw new InvalidOperationException($"Finalize request is invalid. Required retry at first.");
+                throw new InvalidOperationException("Finalize request is invalid. Required retry at first.");
             }
+
+            return orderDetails;
         }
 
         [FunctionName(nameof(MergeCertificate))]
@@ -380,8 +391,6 @@ namespace KeyVault.Acmebot.Functions
             var (certificateName, orderDetails) = input;
 
             var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
-
-            orderDetails = await acmeProtocolClient.GetOrderDetailsAsync(orderDetails.OrderUrl, orderDetails);
 
             // 証明書をダウンロードして Key Vault へ格納
             var x509Certificates = await acmeProtocolClient.GetOrderCertificateAsync(orderDetails, _options.PreferredChain);

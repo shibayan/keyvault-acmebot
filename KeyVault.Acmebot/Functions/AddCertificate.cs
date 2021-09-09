@@ -2,6 +2,7 @@
 
 using Azure.WebJobs.Extensions.HttpApi;
 
+using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Models;
 
 using Microsoft.AspNetCore.Http;
@@ -22,59 +23,31 @@ namespace KeyVault.Acmebot.Functions
 
         [FunctionName(nameof(AddCertificate) + "_" + nameof(HttpStart))]
         public async Task<IActionResult> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "certificate")] AddCertificateRequest request,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "certificate")] CertificatePolicyItem certificatePolicyItem,
             [DurableClient] IDurableClient starter,
             ILogger log)
         {
-            if (!User.Identity.IsAuthenticated)
+            if (!User.IsAppAuthorized())
             {
                 return Unauthorized();
             }
 
-            if (!TryValidateModel(request))
+            if (!TryValidateModel(certificatePolicyItem))
             {
                 return ValidationProblem(ModelState);
             }
 
+            if (string.IsNullOrEmpty(certificatePolicyItem.CertificateName))
+            {
+                certificatePolicyItem.CertificateName = certificatePolicyItem.DnsNames[0].Replace("*", "wildcard").Replace(".", "-");
+            }
+
             // Function input comes from the request content.
-            var instanceId = await starter.StartNewAsync(nameof(SharedOrchestrator.IssueCertificate), request.DnsNames);
+            var instanceId = await starter.StartNewAsync(nameof(SharedOrchestrator.IssueCertificate), certificatePolicyItem);
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
-            return AcceptedAtFunction(nameof(AddCertificate) + "_" + nameof(HttpPoll), new { instanceId }, null);
-        }
-
-        [FunctionName(nameof(AddCertificate) + "_" + nameof(HttpPoll))]
-        public async Task<IActionResult> HttpPoll(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "certificate/{instanceId}")] HttpRequest req,
-            string instanceId,
-            [DurableClient] IDurableClient starter)
-        {
-            if (!User.Identity.IsAuthenticated)
-            {
-                return Unauthorized();
-            }
-
-            var status = await starter.GetStatusAsync(instanceId);
-
-            if (status == null)
-            {
-                return BadRequest();
-            }
-
-            if (status.RuntimeStatus == OrchestrationRuntimeStatus.Failed)
-            {
-                return Problem(status.Output.ToString());
-            }
-
-            if (status.RuntimeStatus == OrchestrationRuntimeStatus.Running ||
-                status.RuntimeStatus == OrchestrationRuntimeStatus.Pending ||
-                status.RuntimeStatus == OrchestrationRuntimeStatus.ContinuedAsNew)
-            {
-                return AcceptedAtFunction(nameof(AddCertificate) + "_" + nameof(HttpPoll), new { instanceId }, null);
-            }
-
-            return Ok();
+            return AcceptedAtFunction(nameof(GetInstanceState) + "_" + nameof(GetInstanceState.HttpStart), new { instanceId }, null);
         }
     }
 }
