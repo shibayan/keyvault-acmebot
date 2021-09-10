@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
+using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Options;
 
 using Newtonsoft.Json;
@@ -73,7 +74,7 @@ namespace KeyVault.Acmebot.Providers
 
             public async Task<IReadOnlyList<ZoneResult>> ListAllZonesAsync()
             {
-                int page = 1;
+                var page = 1;
                 var zones = new List<ZoneResult>();
 
                 ApiResult<ZoneResult> result;
@@ -102,7 +103,7 @@ namespace KeyVault.Acmebot.Providers
 
             public async Task CreateDnsRecordAsync(string zone, string name, string content)
             {
-                var response = await _httpClient.PostAsJsonAsync($"/client/v4/zones/{zone}/dns_records", new { type = "TXT", name, content, ttl = 60 });
+                var response = await _httpClient.PostAsync($"/client/v4/zones/{zone}/dns_records", new { type = "TXT", name, content, ttl = 60 });
 
                 response.EnsureSuccessStatusCode();
             }

@@ -127,10 +127,7 @@ namespace KeyVault.Acmebot.Providers
                     DnsEntry = entry
                 };
 
-                var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Delete, $"domains/{zoneName}/dns")
-                {
-                    Content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json")
-                });
+                var response = await _httpClient.DeleteAsync($"domains/{zoneName}/dns", request);
 
                 response.EnsureSuccessStatusCode();
             }
@@ -144,10 +141,7 @@ namespace KeyVault.Acmebot.Providers
                     DnsEntry = entry
                 };
 
-                var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"domains/{zoneName}/dns")
-                {
-                    Content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json")
-                });
+                var response = await _httpClient.PostAsync($"domains/{zoneName}/dns", request);
 
                 response.EnsureSuccessStatusCode();
             }

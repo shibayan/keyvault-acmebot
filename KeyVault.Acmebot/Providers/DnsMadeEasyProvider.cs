@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Options;
 
 using Newtonsoft.Json;
@@ -97,17 +98,14 @@ namespace KeyVault.Acmebot.Providers
 
             public async Task DeleteRecordAsync(string zoneId, DnsEntry entry)
             {
-                var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Delete, $"dns/managed/{zoneId}/records/{entry.Id}"));
+                var response = await _httpClient.DeleteAsync($"dns/managed/{zoneId}/records/{entry.Id}");
 
                 response.EnsureSuccessStatusCode();
             }
 
             public async Task AddRecordAsync(string zoneId, DnsEntry entry)
             {
-                var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"dns/managed/{zoneId}/records")
-                {
-                    Content = new StringContent(JsonConvert.SerializeObject(entry), Encoding.UTF8, "application/json")
-                });
+                var response = await _httpClient.PostAsync($"dns/managed/{zoneId}/records", entry);
 
                 response.EnsureSuccessStatusCode();
             }
