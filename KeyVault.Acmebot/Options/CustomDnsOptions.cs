@@ -7,5 +7,7 @@
         public string Endpoint { get; set; }
 
         public string ApiKey { get; set; }
+
+        public string ApiKeyHeaderName { get; set; } = "X-Api-Key";
     }
 }
