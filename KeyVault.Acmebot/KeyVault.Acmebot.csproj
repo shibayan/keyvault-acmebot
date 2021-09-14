@@ -14,7 +14,7 @@
     <PackageReference Include="Google.Apis.Dns.v1" Version="1.55.0.2412" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.5.1" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="3.1.18" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0-*" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.0.0-*" />
     <PackageReference Include="WebJobs.Extensions.HttpApi" Version="2.0.0-*" />
   </ItemGroup>
