@@ -5,7 +5,7 @@ on:
     tags: [ v* ]
 
 env:
-  DOTNET_VERSION: 3.1.x
+  DOTNET_VERSION: 6.0.x
 
 jobs:
   publish:
@@ -19,6 +19,7 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
+        include-prerelease: true
 
     - name: Setup Version
       id: setup_version
@@ -31,6 +32,6 @@ jobs:
       run: 7z a -mx=9 latest.zip ./dist/*
 
     - name: Upload to Blob
-      run: az storage blob upload -f latest.zip -c azure-keyvault-letsencrypt -n v3/latest.zip
+      run: az storage blob upload -f latest.zip -c azure-keyvault-letsencrypt -n v4/latest.zip
       env:
         AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}

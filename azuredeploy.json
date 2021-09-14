@@ -169,11 +169,11 @@
             },
             {
               "name": "WEBSITE_RUN_FROM_PACKAGE",
-              "value": "https://shibayan.blob.core.windows.net/azure-keyvault-letsencrypt/v3/latest.zip"
+              "value": "https://shibayan.blob.core.windows.net/azure-keyvault-letsencrypt/v4/latest.zip"
             },
             {
               "name": "FUNCTIONS_EXTENSION_VERSION",
-              "value": "~3"
+              "value": "~4"
             },
             {
               "name": "FUNCTIONS_WORKER_RUNTIME",
@@ -198,6 +198,7 @@
           ],
           "clientAffinityEnabled": false,
           "minTlsVersion": "1.2",
+          "netFrameworkVersion": "v6.0",
           "scmMinTlsVersion": "1.2"
         },
         "ftpsState": "Disabled",

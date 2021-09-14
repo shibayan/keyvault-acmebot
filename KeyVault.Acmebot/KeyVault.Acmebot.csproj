@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <AzureFunctionsVersion>v3</AzureFunctionsVersion>
+    <TargetFramework>net6.0</TargetFramework>
+    <AzureFunctionsVersion>v4</AzureFunctionsVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.Route53" Version="3.7.1.25" />
@@ -14,9 +14,9 @@
     <PackageReference Include="Google.Apis.Dns.v1" Version="1.55.0.2412" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.5.1" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="3.1.19" />
-    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.13" />
-    <PackageReference Include="WebJobs.Extensions.HttpApi" Version="1.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="3.1.18" />
+    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.0.0-*" />
+    <PackageReference Include="WebJobs.Extensions.HttpApi" Version="2.0.0-*" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ACMESharpCore\src\ACMESharp\ACMESharp.csproj" />
