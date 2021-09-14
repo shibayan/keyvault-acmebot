@@ -115,6 +115,11 @@ namespace KeyVault.Acmebot
                     return new GratisDnsProvider(options.GratisDns);
                 }
 
+                if (options.LiquidWeb != null)
+                {
+                    return new LiquidWebProvider(options.LiquidWeb);
+                }
+
                 if (options.Route53 != null)
                 {
                     return new Route53Provider(options.Route53);
