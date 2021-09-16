@@ -197,8 +197,8 @@
             }
           ],
           "clientAffinityEnabled": false,
-          "minTlsVersion": "1.2",
           "netFrameworkVersion": "v6.0",
+          "minTlsVersion": "1.2",
           "scmMinTlsVersion": "1.2"
         },
         "ftpsState": "Disabled",
