@@ -102,9 +102,9 @@ namespace KeyVault.Acmebot
                     return new GoDaddyProvider(options.GoDaddy);
                 }
 
-                if (options.GoogleDns != null || options.Google != null)
+                if (options.GoogleDns != null)
                 {
-                    return new GoogleDnsProvider(options.GoogleDns ?? options.Google);
+                    return new GoogleDnsProvider(options.GoogleDns);
                 }
 
                 if (options.GratisDns != null)
