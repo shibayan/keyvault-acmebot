@@ -77,6 +77,11 @@ namespace KeyVault.Acmebot
                 var options = provider.GetRequiredService<IOptions<AcmebotOptions>>().Value;
                 var environment = provider.GetRequiredService<AzureEnvironment>();
 
+                if (options.AzureDns != null)
+                {
+                    return new AzureDnsProvider(options.AzureDns, environment);
+                }
+
                 if (options.Cloudflare != null)
                 {
                     return new CloudflareProvider(options.Cloudflare);
@@ -115,17 +120,6 @@ namespace KeyVault.Acmebot
                 if (options.TransIp != null)
                 {
                     return new TransIpProvider(options, options.TransIp, environment);
-                }
-
-                // Backward compatibility
-                if (options.AzureDns != null)
-                {
-                    return new AzureDnsProvider(options.AzureDns, environment);
-                }
-
-                if (options.SubscriptionId != null)
-                {
-                    return new AzureDnsProvider(new AzureDnsOptions { SubscriptionId = options.SubscriptionId }, environment);
                 }
 
                 throw new NotSupportedException("DNS Provider is not configured. Please check the documentation and configure it.");
