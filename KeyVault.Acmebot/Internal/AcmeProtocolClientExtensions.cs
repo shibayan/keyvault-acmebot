@@ -22,7 +22,7 @@ namespace KeyVault.Acmebot.Internal
                 defaultX509Certificates = await resp.Content.ReadAsCertificatesAsync();
 
                 // 証明書チェーンが未指定の場合は即返す
-                if (preferredChain == null)
+                if (string.IsNullOrEmpty(preferredChain))
                 {
                     return defaultX509Certificates;
                 }
