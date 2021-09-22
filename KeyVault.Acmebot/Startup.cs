@@ -107,11 +107,6 @@ namespace KeyVault.Acmebot
                     return new GoogleDnsProvider(options.GoogleDns);
                 }
 
-                if (options.GratisDns != null)
-                {
-                    return new GratisDnsProvider(options.GratisDns);
-                }
-
                 if (options.Route53 != null)
                 {
                     return new Route53Provider(options.Route53);
