@@ -34,7 +34,7 @@ namespace KeyVault.Acmebot.Functions
 
         [FunctionName(nameof(GetDnsZones) + "_" + nameof(HttpStart))]
         public async Task<IActionResult> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "dns-zones")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/dns-zones")] HttpRequest req,
             [DurableClient] IDurableClient starter,
             ILogger log)
         {

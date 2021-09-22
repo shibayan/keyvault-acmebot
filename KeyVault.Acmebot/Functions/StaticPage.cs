@@ -21,7 +21,7 @@ namespace KeyVault.Acmebot.Functions
 
         [FunctionName(nameof(StaticPage) + "_" + nameof(AddCertificate))]
         public IActionResult AddCertificate(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "static-page/add-certificate")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "add-certificate")] HttpRequest req,
             ILogger log)
         {
             if (!IsEasyAuthEnabled || !User.IsAppAuthorized())
@@ -34,7 +34,7 @@ namespace KeyVault.Acmebot.Functions
 
         [FunctionName(nameof(StaticPage) + "_" + nameof(BulkCertificate))]
         public IActionResult BulkCertificate(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "static-page/bulk-certificate")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "bulk-certificate")] HttpRequest req,
             ILogger log)
         {
             if (!IsEasyAuthEnabled || !User.Identity.IsAuthenticated)
@@ -47,7 +47,7 @@ namespace KeyVault.Acmebot.Functions
 
         [FunctionName(nameof(StaticPage) + "_" + nameof(RenewCertificate))]
         public IActionResult RenewCertificate(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "static-page/renew-certificate")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "renew-certificate")] HttpRequest req,
             ILogger log)
         {
             if (!IsEasyAuthEnabled || !User.IsAppAuthorized())

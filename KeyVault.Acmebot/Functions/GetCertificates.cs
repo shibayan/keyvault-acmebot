@@ -35,7 +35,7 @@ namespace KeyVault.Acmebot.Functions
 
         [FunctionName(nameof(GetCertificates) + "_" + nameof(HttpStart))]
         public async Task<IActionResult> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "certificates")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/certificates")] HttpRequest req,
             [DurableClient] IDurableClient starter,
             ILogger log)
         {
