@@ -21,7 +21,7 @@ namespace KeyVault.Acmebot.Providers
 
         private readonly GoDaddyClient _client;
 
-        public int PropagationSeconds => 60;
+        public int PropagationSeconds => 600;
 
         public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
         {
@@ -40,7 +40,7 @@ namespace KeyVault.Acmebot.Providers
                 {
                     Name = relativeRecordName,
                     Type = "TXT",
-                    TTL = 60,
+                    TTL = 600,
                     Data = value
                 });
             }
