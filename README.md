@@ -134,11 +134,11 @@ The default check timing is 00:00 UTC. If you need to change the time zone, use 
 
 ### How to use the issued certificate in Azure services
 
-https://github.com/shibayan/keyvault-acmebot/wiki/How-to-use-in-Azure-services
+See also https://github.com/shibayan/keyvault-acmebot/wiki/How-to-use-in-Azure-services
 
 ## Frequently Asked Questions
 
-https://github.com/shibayan/keyvault-acmebot/wiki/Frequently-Asked-Questions
+See also https://github.com/shibayan/keyvault-acmebot/wiki/Frequently-Asked-Questions
 
 ## Thanks
 
