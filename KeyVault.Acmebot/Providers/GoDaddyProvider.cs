@@ -144,21 +144,6 @@ namespace KeyVault.Acmebot.Providers
 
             [JsonProperty("type")]
             public string Type { get; set; }
-
-            [JsonProperty("port")]
-            public int? Port { get; set; }
-
-            [JsonProperty("priority")]
-            public int? Priority { get; set; }
-
-            [JsonProperty("protocol")]
-            public string Protocol { get; set; }
-
-            [JsonProperty("service")]
-            public string Service { get; set; }
-
-            [JsonProperty("weight")]
-            public int? Weight { get; set; }
         }
     }
 }
