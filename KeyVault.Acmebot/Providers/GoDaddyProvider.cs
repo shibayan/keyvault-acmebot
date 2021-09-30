@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -20,6 +22,7 @@ namespace KeyVault.Acmebot.Providers
         }
 
         private readonly GoDaddyClient _client;
+        private readonly IdnMapping _idnMapping = new IdnMapping();
 
         public int PropagationSeconds => 600;
 
@@ -27,7 +30,7 @@ namespace KeyVault.Acmebot.Providers
         {
             var zones = await _client.ListZonesAsync();
 
-            return zones.Select(x => new DnsZone { Id = x.Domain, Name = x.Domain }).ToArray();
+            return zones.Select(x => new DnsZone { Id = x.DomainId, Name = _idnMapping.GetAscii(x.Domain) }).ToArray();
         }
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
@@ -45,19 +48,12 @@ namespace KeyVault.Acmebot.Providers
                 });
             }
 
-            await _client.AddRecordAsync(zone.Id, entries);
+            await _client.AddRecordAsync(zone.Name, entries);
         }
 
         public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
         {
-            var records = await _client.ListRecordsAsync(zone.Id);
-
-            var recordsToDelete = records.Where(r => r.Name == relativeRecordName && r.Type == "TXT");
-
-            foreach (var record in recordsToDelete)
-            {
-                await _client.DeleteRecordAsync(zone.Id, record);
-            }
+            await _client.DeleteRecordAsync(zone.Name, "TXT", relativeRecordName);
         }
 
         private class GoDaddyClient
@@ -96,27 +92,19 @@ namespace KeyVault.Acmebot.Providers
                 return domains;
             }
 
-            public async Task<IReadOnlyList<DnsEntry>> ListRecordsAsync(string zoneId)
+            public async Task DeleteRecordAsync(string domain, string type, string name)
             {
-                var response = await _httpClient.GetAsync($"v1/domains/{zoneId}/records");
+                var response = await _httpClient.DeleteAsync($"v1/domains/{domain}/records/{type}/{name}");
 
-                response.EnsureSuccessStatusCode();
-
-                var entries = await response.Content.ReadAsAsync<DnsEntry[]>();
-
-                return entries;
+                if (response.StatusCode != HttpStatusCode.NotFound)
+                {
+                    response.EnsureSuccessStatusCode();
+                }
             }
 
-            public async Task DeleteRecordAsync(string zoneId, DnsEntry entry)
+            public async Task AddRecordAsync(string domain, IReadOnlyList<DnsEntry> entries)
             {
-                var response = await _httpClient.DeleteAsync($"v1/domains/{zoneId}/records/{entry.Type}/{entry.Name}");
-
-                response.EnsureSuccessStatusCode();
-            }
-
-            public async Task AddRecordAsync(string zoneId, IReadOnlyList<DnsEntry> entries)
-            {
-                var response = await _httpClient.PatchAsync($"v1/domains/{zoneId}/records", entries);
+                var response = await _httpClient.PatchAsync($"v1/domains/{domain}/records", entries);
 
                 response.EnsureSuccessStatusCode();
             }
