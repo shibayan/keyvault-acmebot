@@ -30,7 +30,7 @@ namespace KeyVault.Acmebot.Providers
         {
             var zones = await _client.ListZonesAsync();
 
-            return zones.Select(x => new DnsZone { Id = x.DomainId, Name = _idnMapping.GetAscii(x.Domain) }).ToArray();
+            return zones.Select(x => new DnsZone { Id = x.DomainId, Name = _idnMapping.GetAscii(x.Domain), NameServers = x.NameServers }).ToArray();
         }
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
@@ -83,7 +83,7 @@ namespace KeyVault.Acmebot.Providers
 
             public async Task<IReadOnlyList<ZoneDomain>> ListZonesAsync()
             {
-                var response = await _httpClient.GetAsync("v1/domains?statuses=ACTIVE");
+                var response = await _httpClient.GetAsync("v1/domains?statuses=ACTIVE&includes=nameServers");
 
                 response.EnsureSuccessStatusCode();
 
@@ -117,6 +117,9 @@ namespace KeyVault.Acmebot.Providers
 
             [JsonProperty("domainId")]
             public string DomainId { get; set; }
+
+            [JsonProperty("nameServers")]
+            public string[] NameServers { get; set; }
         }
 
         public class DnsEntry
