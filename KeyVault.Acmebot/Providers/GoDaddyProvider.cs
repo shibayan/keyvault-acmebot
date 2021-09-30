@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -22,7 +21,6 @@ namespace KeyVault.Acmebot.Providers
         }
 
         private readonly GoDaddyClient _client;
-        private readonly IdnMapping _idnMapping = new IdnMapping();
 
         public int PropagationSeconds => 600;
 
@@ -30,7 +28,7 @@ namespace KeyVault.Acmebot.Providers
         {
             var zones = await _client.ListZonesAsync();
 
-            return zones.Select(x => new DnsZone { Id = x.DomainId, Name = _idnMapping.GetAscii(x.Domain), NameServers = x.NameServers }).ToArray();
+            return zones.Select(x => new DnsZone { Id = x.DomainId, Name = x.Domain, NameServers = x.NameServers }).ToArray();
         }
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
