@@ -47,11 +47,11 @@
         </div>
         <div v-if="certificate !== ''" class="field is-horizontal">
           <div class="field-label">
-            <label class="label">Expire</label>
+            <label class="label">Expires On</label>
           </div>
           <div class="field-body">
             <div class="content">
-              {{ certificate.expiresOn }}
+              {{ formatExpiresOn(certificate.expiresOn) }}
             </div>
           </div>
         </div>
@@ -184,6 +184,12 @@
         },
         toUnicode(value) {
           return punycode.toUnicode(value);
+        },
+        formatExpiresOn(value) {
+          const date = new Date(value);
+          const remainDays = Math.round((date - Date.now()) / (1000 * 60 * 60 * 24));
+
+          return `${date.toLocaleString()} (Remain ${remainDays} days)`;
         }
       },
       beforeMount() {

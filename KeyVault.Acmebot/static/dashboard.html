@@ -14,17 +14,38 @@
         Dashboard
       </h1>
       <div id="app">
-        <h2>Certificates</h2>
-        <ul>
-          <li v-for="certificate in certificates">{{ certificate.name }} Expires {{ certificate.expiresOn }}</li>
-        </ul>
-        <h2>Renewal history</h2>
+        <h2 class="title is-4">Managed certificates</h2>
+        <table class="table is-hoverable is-fullwidth">
+          <thead>
+            <tr>
+              <th>Certificate name</th>
+              <th>DNS Names</th>
+              <th>Expires On</th>
+              <th>Key Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="certificate in certificates">
+              <td>{{ certificate.name }}</td>
+              <td>
+                <div class="tags">
+                  <span v-for="dnsName in certificate.dnsNames" class="tag is-light is-medium">
+                    {{ toUnicode(dnsName) }}
+                  </span>
+                </div>
+              </td>
+              <td>{{ formatExpiresOn(certificate.expiresOn) }}</td>
+              <td>{{ certificate.keyType }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <h2 class="title is-4">Certificates renewal history</h2>
       </div>
     </div>
   </section>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.11/vue.global.prod.min.js" integrity="sha512-RiF+Jrmab5nvkymjQZrHxYRi83mZj3cblSwolvamR1phU+rN9gUBPGEU7P+tvaKncRSk8dXvJhyhKb0BpYgj9A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.4/axios.min.js" integrity="sha512-lTLt+W7MrmDfKam+r3D2LURu0F47a3QaW5nF0c6Hl0JDZ57ruei+ovbg7BrZ+0bjVJ5YgzsAWE+RreERbpPE1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/punycode/1.4.1/punycode.min.js" integrity="sha512-YZlXEJ9dOHnIn3LXSS3RpbhAtTQZWw2VOywaMsC8p7/0DyGu0gEf0pFhkQtE/i4pQpgGUDY7cicb401Tf/5sRA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.11/vue.global.prod.min.js" integrity="sha512-RiF+Jrmab5nvkymjQZrHxYRi83mZj3cblSwolvamR1phU+rN9gUBPGEU7P+tvaKncRSk8dXvJhyhKb0BpYgj9A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.4/axios.min.js" integrity="sha512-lTLt+W7MrmDfKam+r3D2LURu0F47a3QaW5nF0c6Hl0JDZ57ruei+ovbg7BrZ+0bjVJ5YgzsAWE+RreERbpPE1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/punycode/1.4.1/punycode.min.js" integrity="sha512-YZlXEJ9dOHnIn3LXSS3RpbhAtTQZWw2VOywaMsC8p7/0DyGu0gEf0pFhkQtE/i4pQpgGUDY7cicb401Tf/5sRA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script>
     const app = {
       data() {
@@ -38,11 +59,20 @@
             const response = await axios.get("/api/certificates");
 
             if (response.status === 200) {
-              this.certificates = response.data;
+              this.certificates = response.data.sort((x, y) => x.expiresOn.localeCompare(y.expiresOn));
             }
           } catch (error) {
             alert(error.response.data.output);
           }
+        },
+        toUnicode(value) {
+          return punycode.toUnicode(value);
+        },
+        formatExpiresOn(value) {
+          const date = new Date(value);
+          const remainDays = Math.round((date - Date.now()) / (1000 * 60 * 60 * 24));
+
+          return `${date.toLocaleString()} (Remain ${remainDays} days)`;
         }
       },
       beforeMount() {
