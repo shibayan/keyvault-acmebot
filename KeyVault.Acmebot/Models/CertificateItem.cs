@@ -22,6 +22,9 @@ namespace KeyVault.Acmebot.Models
         [JsonProperty("expiresOn")]
         public DateTimeOffset ExpiresOn { get; set; }
 
+        [JsonProperty("x509Thumbprint")]
+        public string X509Thumbprint { get; set; }
+
         [JsonProperty("keyType")]
         public string KeyType { get; set; }
 
