@@ -39,6 +39,7 @@ namespace KeyVault.Acmebot.Internal
                 Id = certificate.Id,
                 Name = certificate.Name,
                 DnsNames = dnsNames != null && dnsNames.Length > 0 ? dnsNames : new[] { certificate.Policy.Subject[3..] },
+                CreatedOn = certificate.Properties.CreatedOn.Value,
                 ExpiresOn = certificate.Properties.ExpiresOn.Value,
                 KeyType = certificate.Policy.KeyType?.ToString(),
                 KeySize = certificate.Policy.KeySize,

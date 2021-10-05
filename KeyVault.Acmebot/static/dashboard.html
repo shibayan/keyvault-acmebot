@@ -21,11 +21,11 @@
             </span>
             <span>Add</span>
           </a>
-          <a class="button" href="../renew-certificate">
+          <a class="button" @click="refresh">
             <span class="icon">
               <i class="fas fa-sync"></i>
             </span>
-            <span>Renew</span>
+            <span>Refresh</span>
           </a>
         </div>
         <h2 class="title is-4">Managed certificates</h2>
@@ -34,6 +34,7 @@
             <tr>
               <th>Certificate name</th>
               <th>DNS Names</th>
+              <th>Created On</th>
               <th>Expires On</th>
               <th></th>
             </tr>
@@ -48,6 +49,7 @@
                   </span>
                 </div>
               </td>
+              <td>{{ formatCreatedOn(certificate.createdOn) }}</td>
               <td>{{ formatExpiresOn(certificate.expiresOn) }}</td>
               <td>
                 <div class="buttons are-small">
@@ -101,6 +103,16 @@
                           {{ toUnicode(dnsName) }}
                         </span>
                       </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">Created On</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ formatCreatedOn(certificate.createdOn) }}
                     </div>
                   </div>
                 </div>
@@ -169,6 +181,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.4/axios.min.js" integrity="sha512-lTLt+W7MrmDfKam+r3D2LURu0F47a3QaW5nF0c6Hl0JDZ57ruei+ovbg7BrZ+0bjVJ5YgzsAWE+RreERbpPE1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/punycode/1.4.1/punycode.min.js" integrity="sha512-YZlXEJ9dOHnIn3LXSS3RpbhAtTQZWw2VOywaMsC8p7/0DyGu0gEf0pFhkQtE/i4pQpgGUDY7cicb401Tf/5sRA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script>
+    const delay = (millisecondsDelay) => {
+      return new Promise(resolve => setTimeout(() => resolve(), millisecondsDelay));
+    }
+
     const app = {
       data() {
         return {
@@ -190,7 +206,7 @@
             alert(error.response.data.output);
           }
         },
-        async reload() {
+        async refresh() {
           this.certificates = [];
           this.certificate = "";
 
@@ -233,12 +249,16 @@
             }
           }
 
-          await this.reload();
-
           this.sending = false;
+          this.modalActive = false;
+
+          await this.refresh();
         },
         toUnicode(value) {
           return punycode.toUnicode(value);
+        },
+        formatCreatedOn(value) {
+          return new Date(value).toLocaleString();
         },
         formatExpiresOn(value) {
           const date = new Date(value);

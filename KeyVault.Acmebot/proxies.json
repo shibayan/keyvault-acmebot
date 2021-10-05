@@ -18,12 +18,6 @@
         "route": "bulk-certificate"
       },
       "backendUri": "http://localhost/api/static-page/bulk-certificate"
-    },
-    "RenewCertificate_Proxy": {
-      "matchCondition": {
-        "route": "renew-certificate"
-      },
-      "backendUri": "http://localhost/api/static-page/renew-certificate"
     }
   }
 }

@@ -58,19 +58,6 @@ namespace KeyVault.Acmebot.Functions
             return File("static/bulk-certificate.html");
         }
 
-        [FunctionName(nameof(StaticPage) + "_" + nameof(RenewCertificate))]
-        public IActionResult RenewCertificate(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "static-page/renew-certificate")] HttpRequest req,
-            ILogger log)
-        {
-            if (!IsEasyAuthEnabled || !User.IsAppAuthorized())
-            {
-                return Forbid();
-            }
-
-            return File("static/renew-certificate.html");
-        }
-
         private static bool IsEasyAuthEnabled => bool.TryParse(Environment.GetEnvironmentVariable("WEBSITE_AUTH_ENABLED"), out var result) && result;
     }
 }
