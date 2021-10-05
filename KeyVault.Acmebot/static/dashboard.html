@@ -11,9 +11,23 @@
   <section class="section">
     <div class="container">
       <h1 class="title">
-        Dashboard
+        Key Vault Acmebot
       </h1>
       <div id="app">
+        <div class="buttons are-small">
+          <a class="button" href="./add-certificate">
+            <span class="icon">
+              <i class="fas fa-plus"></i>
+            </span>
+            <span>Add</span>
+          </a>
+          <a class="button" href="../renew-certificate">
+            <span class="icon">
+              <i class="fas fa-sync"></i>
+            </span>
+            <span>Renew</span>
+          </a>
+        </div>
         <h2 class="title is-4">Managed certificates</h2>
         <table class="table is-hoverable is-fullwidth">
           <thead>
@@ -21,7 +35,7 @@
               <th>Certificate name</th>
               <th>DNS Names</th>
               <th>Expires On</th>
-              <th>Key Type</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -35,11 +49,119 @@
                 </div>
               </td>
               <td>{{ formatExpiresOn(certificate.expiresOn) }}</td>
-              <td>{{ certificate.keyType }}</td>
+              <td>
+                <div class="buttons are-small">
+                  <button class="button is-info" @click="details(certificate)">Details</button>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
         <h2 class="title is-4">Certificates renewal history</h2>
+        <table class="table is-hoverable">
+          <thead>
+            <tr>
+              <th>Certificate name</th>
+              <th>DNS Names</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="certificate in certificates">
+              <td>{{ certificate.name }}</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="modal" :class="{ 'is-active': modalActive }">
+          <div class="modal-background"></div>
+          <div class="modal-card">
+            <header class="modal-card-head">
+              <p class="modal-card-title">Details</p>
+            </header>
+            <section class="modal-card-body">
+              <div v-if="certificate !== ''">
+                <div class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">Certificate Name</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ certificate.name }}
+                    </div>
+                  </div>
+                </div>
+                <div class="field is-horizontal">
+                  <div class="field-label is-normal">
+                    <label class="label">DNS Names</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      <div class="tags">
+                        <span v-for="dnsName in certificate.dnsNames" class="tag is-light is-medium">
+                          {{ toUnicode(dnsName) }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">Expires On</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ formatExpiresOn(certificate.expiresOn) }}
+                    </div>
+                  </div>
+                </div>
+                <div class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">Key Type</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ certificate.keyType }}
+                    </div>
+                  </div>
+                </div>
+                <div v-if="certificate.keyType === 'RSA'" class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">Key Size</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ certificate.keySize }} bit
+                    </div>
+                  </div>
+                </div>
+                <div v-if="certificate.keyType === 'EC'" class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">Elliptic Curve Name</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ certificate.keyCurveName }}
+                    </div>
+                  </div>
+                </div>
+                <div class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">Reuse Key on Renewal?</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ certificate.reuseKey }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <footer class="modal-card-foot">
+              <button class="button is-primary" @click="renew" :class="{ 'is-loading': sending }">Renew</button>
+              <button class="button" @click="modalActive = false">Close</button>
+            </footer>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -50,7 +172,10 @@
     const app = {
       data() {
         return {
-          certificates: []
+          certificates: [],
+          certificate: "",
+          sending: false,
+          modalActive: false
         };
       },
       methods: {
@@ -65,6 +190,53 @@
             alert(error.response.data.output);
           }
         },
+        async reload() {
+          this.certificates = [];
+          this.certificate = "";
+
+          await this.load();
+        },
+        details(certificate) {
+          this.certificate = certificate;
+
+          this.modalActive = true;
+        },
+        async renew() {
+          this.sending = true;
+
+          try {
+            let response = await axios.post("/api/certificate/" + this.certificate.name);
+
+            while (true) {
+              await delay(5000);
+
+              response = await axios.get(response.headers["location"]);
+
+              if (response.status === 200) {
+                alert("The certificate was successfully issued.");
+                break;
+              }
+            }
+          } catch (error) {
+            const problem = error.response.data;
+
+            if (error.response.status === 400) {
+              const errors = [];
+
+              for (let key in problem.errors) {
+                errors.push(problem.errors[key][0]);
+              }
+
+              alert(errors.join("\n"));
+            } else {
+              alert(problem.detail);
+            }
+          }
+
+          await this.reload();
+
+          this.sending = false;
+        },
         toUnicode(value) {
           return punycode.toUnicode(value);
         },
@@ -72,11 +244,11 @@
           const date = new Date(value);
           const remainDays = Math.round((date - Date.now()) / (1000 * 60 * 60 * 24));
 
-          return `${date.toLocaleString()} (Remain ${remainDays} days)`;
+          return `${date.toLocaleString()} (Expires in ${remainDays} days)`;
         }
       },
-      beforeMount() {
-        this.load();
+      async beforeMount() {
+        await this.load();
       }
     };
 
