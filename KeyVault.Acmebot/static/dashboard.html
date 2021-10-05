@@ -14,21 +14,23 @@
         Key Vault Acmebot
       </h1>
       <div id="app">
-        <div class="buttons are-small">
-          <a class="button" href="./add-certificate">
-            <span class="icon">
-              <i class="fas fa-plus"></i>
-            </span>
-            <span>Add</span>
-          </a>
-          <a class="button" @click="refresh">
-            <span class="icon">
-              <i class="fas fa-sync"></i>
-            </span>
-            <span>Refresh</span>
-          </a>
-        </div>
-        <h2 class="title is-4">Managed certificates</h2>
+        <h2 class="title is-4">
+          Managed certificates
+          <div class="buttons are-small">
+            <a class="button" @click="openAdd">
+              <span class="icon">
+                <i class="fas fa-plus"></i>
+              </span>
+              <span>Add</span>
+            </a>
+            <a class="button" @click="refresh">
+              <span class="icon">
+                <i class="fas fa-sync"></i>
+              </span>
+              <span>Refresh</span>
+            </a>
+          </div>
+        </h2>
         <table class="table is-hoverable is-fullwidth">
           <thead>
             <tr>
@@ -53,7 +55,7 @@
               <td>{{ formatExpiresOn(certificate.expiresOn) }}</td>
               <td>
                 <div class="buttons are-small">
-                  <button class="button is-info" @click="details(certificate)">Details</button>
+                  <button class="button is-info" @click="openDetails(certificate)">Details</button>
                 </div>
               </td>
             </tr>
@@ -74,21 +76,206 @@
             </tr>
           </tbody>
         </table>
-        <div class="modal" :class="{ 'is-active': modalActive }">
+        <!-- Add certificate model -->
+        <div class="modal" :class="{ 'is-active': add.modalActive }">
+          <div class="modal-background"></div>
+          <div class="modal-card">
+            <header class="modal-card-head">
+              <p class="modal-card-title">Add certificate</p>
+            </header>
+            <section class="modal-card-body">
+              <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <label class="label">DNS Zone</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control">
+                      <div class="select" :class="{ 'is-loading': add.loading }">
+                        <select v-model="add.zoneName">
+                          <option disabled value="">Please select one</option>
+                          <option v-for="zone in add.zones" :value="zone">{{ toUnicode(zone) }}</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <label class="label">DNS Names</label>
+                </div>
+                <div class="field-body">
+                  <div class="field has-addons">
+                    <p class="control">
+                      <input v-model="add.recordName" class="input" type="text" placeholder="Record name" :disabled="add.zoneName.length === 0">
+                    </p>
+                    <p class="control">
+                      <a class="button is-static">
+                        .{{ toUnicode(add.zoneName) }}
+                      </a>
+                    </p>
+                    <p class="control">
+                      <button class="button is-info" @click="addDnsName" :disabled="add.zoneName.length === 0">Add</button>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal">
+                <div class="field-label"></div>
+                <div class="field-body">
+                  <div class="content">
+                    <div class="tags">
+                      <span v-for="dnsName in add.dnsNames" class="tag is-light is-medium">
+                        {{ toUnicode(dnsName) }}
+                        <button class="delete is-small" @click="removeDnsName(dnsName)"></button>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal">
+                <div class="field-label">
+                  <label class="label">Use Advanced Options?</label>
+                </div>
+                <div class="field-body">
+                  <div class="field is-narrow">
+                    <div class="control">
+                      <label class="radio">
+                        <input type="radio" v-model="add.useAdvancedOptions" v-bind:value="true">
+                        Yes
+                      </label>
+                      <label class="radio">
+                        <input type="radio" v-model="add.useAdvancedOptions" v-bind:value="false">
+                        No
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal" v-if="add.useAdvancedOptions">
+                <div class="field-label is-normal">
+                  <label class="label">Certificate Name</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <p class="control">
+                      <input v-model="add.certificateName" class="input" type="text" placeholder="Certificate name">
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal" v-if="add.useAdvancedOptions">
+                <div class="field-label">
+                  <label class="label">Key Type</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control">
+                      <label class="radio">
+                        <input type="radio" value="RSA" v-model="add.keyType">
+                        RSA
+                      </label>
+                      <label class="radio">
+                        <input type="radio" value="EC" v-model="add.keyType">
+                        EC
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal" v-if="add.useAdvancedOptions && add.keyType === 'RSA'">
+                <div class="field-label">
+                  <label class="label">Key Size</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control">
+                      <label class="radio">
+                        <input type="radio" value="2048" v-model="add.keySize">
+                        2048
+                      </label>
+                      <label class="radio">
+                        <input type="radio" value="3072" v-model="add.keySize">
+                        3072
+                      </label>
+                      <label class="radio">
+                        <input type="radio" value="4096" v-model="add.keySize">
+                        4096
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal" v-if="add.useAdvancedOptions && add.keyType === 'EC'">
+                <div class="field-label">
+                  <label class="label">Elliptic Curve Name</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control">
+                      <label class="radio">
+                        <input type="radio" value="P-256" v-model="add.keyCurveName">
+                        P-256
+                      </label>
+                      <label class="radio">
+                        <input type="radio" value="P-384" v-model="add.keyCurveName">
+                        P-384
+                      </label>
+                      <label class="radio">
+                        <input type="radio" value="P-521" v-model="add.keyCurveName">
+                        P-521
+                      </label>
+                      <label class="radio">
+                        <input type="radio" value="P-256K" v-model="add.keyCurveName">
+                        P-256K
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal" v-if="add.useAdvancedOptions">
+                <div class="field-label">
+                  <label class="label">Reuse Key on Renewal?</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control">
+                      <label class="radio">
+                        <input type="radio" v-model="add.reuseKey" v-bind:value="true">
+                        Yes
+                      </label>
+                      <label class="radio">
+                        <input type="radio" v-model="add.reuseKey" v-bind:value="false">
+                        No
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <footer class="modal-card-foot">
+              <button class="button is-primary" @click="submit" :class="{ 'is-loading': sending }">Submit</button>
+              <button class="button" @click="add.modalActive = false">Cancel</button>
+            </footer>
+          </div>
+        </div>
+        <!-- Details certificate modal -->
+        <div class="modal" :class="{ 'is-active': details.modalActive }">
           <div class="modal-background"></div>
           <div class="modal-card">
             <header class="modal-card-head">
               <p class="modal-card-title">Details</p>
             </header>
             <section class="modal-card-body">
-              <div v-if="certificate !== ''">
+              <div v-if="details.certificate !== ''">
                 <div class="field is-horizontal">
                   <div class="field-label">
                     <label class="label">Certificate Name</label>
                   </div>
                   <div class="field-body">
                     <div class="content">
-                      {{ certificate.name }}
+                      {{ details.certificate.name }}
                     </div>
                   </div>
                 </div>
@@ -99,7 +286,7 @@
                   <div class="field-body">
                     <div class="content">
                       <div class="tags">
-                        <span v-for="dnsName in certificate.dnsNames" class="tag is-light is-medium">
+                        <span v-for="dnsName in details.certificate.dnsNames" class="tag is-light is-medium">
                           {{ toUnicode(dnsName) }}
                         </span>
                       </div>
@@ -112,7 +299,7 @@
                   </div>
                   <div class="field-body">
                     <div class="content">
-                      {{ formatCreatedOn(certificate.createdOn) }}
+                      {{ formatCreatedOn(details.certificate.createdOn) }}
                     </div>
                   </div>
                 </div>
@@ -122,7 +309,7 @@
                   </div>
                   <div class="field-body">
                     <div class="content">
-                      {{ formatExpiresOn(certificate.expiresOn) }}
+                      {{ formatExpiresOn(details.certificate.expiresOn) }}
                     </div>
                   </div>
                 </div>
@@ -132,7 +319,7 @@
                   </div>
                   <div class="field-body">
                     <div class="content">
-                      {{ certificate.x509Thumbprint }}
+                      {{ details.certificate.x509Thumbprint }}
                     </div>
                   </div>
                 </div>
@@ -142,27 +329,27 @@
                   </div>
                   <div class="field-body">
                     <div class="content">
-                      {{ certificate.keyType }}
+                      {{ details.certificate.keyType }}
                     </div>
                   </div>
                 </div>
-                <div v-if="certificate.keyType === 'RSA'" class="field is-horizontal">
+                <div v-if="details.certificate.keyType === 'RSA'" class="field is-horizontal">
                   <div class="field-label">
                     <label class="label">Key Size</label>
                   </div>
                   <div class="field-body">
                     <div class="content">
-                      {{ certificate.keySize }} bit
+                      {{ details.certificate.keySize }} bit
                     </div>
                   </div>
                 </div>
-                <div v-if="certificate.keyType === 'EC'" class="field is-horizontal">
+                <div v-if="details.certificate.keyType === 'EC'" class="field is-horizontal">
                   <div class="field-label">
                     <label class="label">Elliptic Curve Name</label>
                   </div>
                   <div class="field-body">
                     <div class="content">
-                      {{ certificate.keyCurveName }}
+                      {{ details.certificate.keyCurveName }}
                     </div>
                   </div>
                 </div>
@@ -172,15 +359,15 @@
                   </div>
                   <div class="field-body">
                     <div class="content">
-                      {{ certificate.reuseKey }}
+                      {{ details.certificate.reuseKey }}
                     </div>
                   </div>
                 </div>
               </div>
             </section>
             <footer class="modal-card-foot">
-              <button class="button is-primary" @click="renew" :class="{ 'is-loading': sending }">Renew</button>
-              <button class="button" @click="modalActive = false">Close</button>
+              <button class="button is-primary" @click="renew" :class="{ 'is-loading': details.sending }">Renew</button>
+              <button class="button" @click="details.modalActive = false">Close</button>
             </footer>
           </div>
         </div>
@@ -199,9 +386,26 @@
       data() {
         return {
           certificates: [],
-          certificate: "",
-          sending: false,
-          modalActive: false
+          add: {
+            zones: [],
+            zoneName: "",
+            dnsNames: [],
+            recordName: "",
+            useAdvancedOptions: false,
+            certificateName: "",
+            keyType: "RSA",
+            keySize: "2048",
+            keyCurveName: "P-256",
+            reuseKey: false,
+            loading: false,
+            sending: false,
+            modalActive: false
+          },
+          details: {
+            certificate: "",
+            sending: false,
+            modalActive: false
+          }
         };
       },
       methods: {
@@ -217,21 +421,59 @@
           }
         },
         async refresh() {
-          this.certificates = [];
-          this.certificate = "";
+          Object.assign(this.$data, this.$options.data());
 
           await this.load();
         },
-        details(certificate) {
-          this.certificate = certificate;
-
-          this.modalActive = true;
-        },
-        async renew() {
-          this.sending = true;
+        async loadDnsZones() {
+          this.add.loading = true;
 
           try {
-            let response = await axios.post("/api/certificate/" + this.certificate.name);
+            const response = await axios.get("/api/dns-zones");
+
+            if (response.status === 200) {
+              this.add.zones = response.data;
+            }
+          } catch (error) {
+            alert(error.response.data.output);
+          }
+
+          this.add.loading = false;
+        },
+        addDnsName() {
+          if (this.add.zoneName === "") {
+            return;
+          }
+
+          const dnsName = this.add.recordName === "" ? this.add.zoneName : punycode.toASCII(this.add.recordName) + "." + this.add.zoneName;
+
+          if (this.add.dnsNames.indexOf(dnsName) === -1) {
+            this.add.dnsNames.push(dnsName);
+          }
+
+          this.add.recordName = "";
+        },
+        removeDnsName(dnsName) {
+          this.add.dnsNames = this.add.dnsNames.filter(x => x !== dnsName);
+        },
+        async submit() {
+          this.add.sending = true;
+
+          const postData = {
+            dnsNames: this.add.dnsNames,
+            certificateName: this.add.certificateName,
+            keyType: this.add.keyType,
+            reuseKey: this.add.reuseKey
+          };
+
+          if (this.add.keyType === "RSA") {
+            postData.keySize = this.add.keySize;
+          } else {
+            postData.keyCurveName = this.add.keyCurveName;
+          }
+
+          try {
+            let response = await axios.post("/api/certificate", postData);
 
             while (true) {
               await delay(5000);
@@ -259,8 +501,54 @@
             }
           }
 
-          this.sending = false;
-          this.modalActive = false;
+          this.add.sending = false;
+
+          await this.refresh();
+        },
+        async openAdd() {
+          this.add.modalActive = true;
+
+          await this.loadDnsZones();
+        },
+        openDetails(certificate) {
+          this.details.certificate = certificate;
+
+          this.details.modalActive = true;
+        },
+        async renew() {
+          this.details.sending = true;
+
+          try {
+            let response = await axios.post("/api/certificate/" + this.details.certificate.name);
+
+            while (true) {
+              await delay(5000);
+
+              response = await axios.get(response.headers["location"]);
+
+              if (response.status === 200) {
+                alert("The certificate was successfully issued.");
+                break;
+              }
+            }
+          } catch (error) {
+            const problem = error.response.data;
+
+            if (error.response.status === 400) {
+              const errors = [];
+
+              for (let key in problem.errors) {
+                errors.push(problem.errors[key][0]);
+              }
+
+              alert(errors.join("\n"));
+            } else {
+              alert(problem.detail);
+            }
+          }
+
+          this.details.sending = false;
+          this.details.modalActive = false;
 
           await this.refresh();
         },
