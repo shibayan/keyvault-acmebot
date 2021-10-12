@@ -32,32 +32,6 @@ namespace KeyVault.Acmebot.Functions
             return File("static/dashboard.html");
         }
 
-        [FunctionName(nameof(StaticPage) + "_" + nameof(AddCertificate))]
-        public IActionResult AddCertificate(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "static-page/add-certificate")] HttpRequest req,
-            ILogger log)
-        {
-            if (!IsEasyAuthEnabled || !User.IsAppAuthorized())
-            {
-                return Forbid();
-            }
-
-            return File("static/add-certificate.html");
-        }
-
-        [FunctionName(nameof(StaticPage) + "_" + nameof(BulkCertificate))]
-        public IActionResult BulkCertificate(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "static-page/bulk-certificate")] HttpRequest req,
-            ILogger log)
-        {
-            if (!IsEasyAuthEnabled || !User.Identity.IsAuthenticated)
-            {
-                return Forbid();
-            }
-
-            return File("static/bulk-certificate.html");
-        }
-
         private static bool IsEasyAuthEnabled => bool.TryParse(Environment.GetEnvironmentVariable("WEBSITE_AUTH_ENABLED"), out var result) && result;
     }
 }

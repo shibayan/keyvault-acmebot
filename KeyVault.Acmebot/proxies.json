@@ -6,18 +6,6 @@
         "route": "dashboard"
       },
       "backendUri": "http://localhost/api/static-page/dashboard"
-    },
-    "AddCertificate_Proxy": {
-      "matchCondition": {
-        "route": "add-certificate"
-      },
-      "backendUri": "http://localhost/api/static-page/add-certificate"
-    },
-    "BulkCertificate_Proxy": {
-      "matchCondition": {
-        "route": "bulk-certificate"
-      },
-      "backendUri": "http://localhost/api/static-page/bulk-certificate"
     }
   }
 }

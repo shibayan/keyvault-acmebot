@@ -28,9 +28,6 @@
     <None Update="static\dashboard.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="static\bulk-certificate.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="static\add-certificate.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -255,7 +255,7 @@
               </div>
             </section>
             <footer class="modal-card-foot">
-              <button class="button is-primary" @click="submit" :class="{ 'is-loading': sending }">Submit</button>
+              <button class="button is-primary" @click="addCertificate" :class="{ 'is-loading': sending }">Add</button>
               <button class="button" @click="add.modalActive = false">Cancel</button>
             </footer>
           </div>
@@ -366,7 +366,8 @@
               </div>
             </section>
             <footer class="modal-card-foot">
-              <button class="button is-primary" @click="renew" :class="{ 'is-loading': details.sending }">Renew</button>
+              <button class="button is-primary" @click="renewCertificate" :class="{ 'is-loading': details.sending }">Renew</button>
+              <button class="button is-danger" @click="revokeCertificate" :class="{ 'is-loading': details.sending }">Revoke</button>
               <button class="button" @click="details.modalActive = false">Close</button>
             </footer>
           </div>
@@ -456,7 +457,7 @@
         removeDnsName(dnsName) {
           this.add.dnsNames = this.add.dnsNames.filter(x => x !== dnsName);
         },
-        async submit() {
+        async addCertificate() {
           this.add.sending = true;
 
           const postData = {
@@ -502,6 +503,7 @@
           }
 
           this.add.sending = false;
+          this.add.modalActive = false;
 
           await this.refresh();
         },
@@ -515,11 +517,11 @@
 
           this.details.modalActive = true;
         },
-        async renew() {
+        async renewCertificate() {
           this.details.sending = true;
 
           try {
-            let response = await axios.post("/api/certificate/" + this.details.certificate.name);
+            let response = await axios.post(`/api/certificate/${this.details.certificate.name}`);
 
             while (true) {
               await delay(5000);
@@ -551,6 +553,41 @@
           this.details.modalActive = false;
 
           await this.refresh();
+        },
+        async revokeCertificate() {
+          this.details.sending = true;
+
+          try {
+            let response = await axios.post(`/api/certificate/${this.details.certificate.name}/revoke`);
+
+            while (true) {
+              await delay(5000);
+
+              response = await axios.get(response.headers["location"]);
+
+              if (response.status === 200) {
+                alert("The certificate was successfully revoked.");
+                break;
+              }
+            }
+          } catch (error) {
+            const problem = error.response.data;
+
+            if (error.response.status === 400) {
+              const errors = [];
+
+              for (let key in problem.errors) {
+                errors.push(problem.errors[key][0]);
+              }
+
+              alert(errors.join("\n"));
+            } else {
+              alert(problem.detail);
+            }
+          }
+
+          this.details.sending = false;
+          this.details.modalActive = false;
         },
         toUnicode(value) {
           return punycode.toUnicode(value);
