@@ -47,5 +47,6 @@ namespace KeyVault.Acmebot.Options
         public Route53Options Route53 { get; set; }
 
         public TransIpOptions TransIp { get; set; }
+        public GandiLiveDnsOptions Gandi { get; set; }
     }
 }

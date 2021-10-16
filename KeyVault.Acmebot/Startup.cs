@@ -87,6 +87,11 @@ namespace KeyVault.Acmebot
                     return new CustomDnsProvider(options.CustomDns);
                 }
 
+                if (options.Gandi != null)
+                {
+                    return new GandiDnsProvider(options.Gandi);
+                }
+
                 if (options.DnsMadeEasy != null)
                 {
                     return new DnsMadeEasyProvider(options.DnsMadeEasy);
