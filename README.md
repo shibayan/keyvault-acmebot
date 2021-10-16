@@ -91,6 +91,7 @@ https://github.com/shibayan/keyvault-acmebot/wiki/DNS-Provider-Configuration
 - Google Cloud DNS
 - GratisDNS
 - TransIP DNS
+- Gandi LiveDNS
 
 ### 4. Enable App Service Authentication
 
