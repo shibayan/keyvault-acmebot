@@ -42,13 +42,10 @@ namespace KeyVault.Acmebot.Providers
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
-            var recordName = $"{relativeRecordName}.{zone.Name}";
+            var recordName = $"{relativeRecordName}";
 
-            var response = await _httpClient.PostAsync($"zones/{zone.Id}/records", new
+            var response = await _httpClient.PostAsync($"domains/{zone.Name}/records/{recordName}/TXT", new
             {
-                rrset_name = recordName,
-                rrset_type = "A",
-                rrset_ttl = 60,
                 rrset_values = values.ToArray()
             });
 
@@ -57,9 +54,15 @@ namespace KeyVault.Acmebot.Providers
 
         public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
         {
-            var recordName = $"{relativeRecordName}.{zone.Name}";
+            var recordName = $"{relativeRecordName}";
 
-            var response = await _httpClient.DeleteAsync($"zones/{zone.Id}/records/{recordName}");
+            var responseGet = await _httpClient.GetAsync($"domains/{zone.Name}/records/{recordName}/TXT");
+            if (responseGet.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return;
+            }
+
+            var response = await _httpClient.DeleteAsync($"domains/{zone.Name}/records/{recordName}/TXT");
 
             response.EnsureSuccessStatusCode();
         }
