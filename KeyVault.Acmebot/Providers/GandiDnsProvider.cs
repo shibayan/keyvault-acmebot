@@ -28,7 +28,12 @@ namespace KeyVault.Acmebot.Providers
         {
             var zones = await _client.ListZonesAsync();
 
-            return zones.Select(x => new DnsZone { Id = x.Uuid, Name = x.Name, NameServers = new string[] { x.PrimaryNameServer } }).ToArray();
+            /**
+             * Do NOT include the PrimaryNameServer element from the DnsZone list for now, 
+             * the return value from Gandi when returning zones is not the expected value when doing the intersect at the Dns01Precondition method 
+             **/
+
+            return zones.Select(x => new DnsZone { Id = x.Uuid, Name = x.Name, NameServers = new string[] { } }).ToArray();
         }
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
@@ -85,7 +90,7 @@ namespace KeyVault.Acmebot.Providers
                 var response = await _httpClient.PostAsync($"domains/{zoneName}/records/{relativeRecordName}/TXT", new
                 {
                     rrset_values = values.ToArray(),
-                    rrset_ttl = 60
+                    rrset_ttl = 300 //300 is the minimal value
                 });
 
                 response.EnsureSuccessStatusCode();
