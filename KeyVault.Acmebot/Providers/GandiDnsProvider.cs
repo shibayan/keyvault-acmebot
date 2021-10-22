@@ -28,7 +28,7 @@ namespace KeyVault.Acmebot.Providers
         {
             var zones = await _client.ListZonesAsync();
 
-            return zones.Select(x => new DnsZone { Id = x.Uuid, Name = x.Name, NameServers = [x.PrimaryNameServer] }).ToArray();
+            return zones.Select(x => new DnsZone { Id = x.Uuid, Name = x.Name, NameServers = new string[] { x.PrimaryNameServer } }).ToArray();
         }
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
