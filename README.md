@@ -87,11 +87,11 @@ https://github.com/shibayan/keyvault-acmebot/wiki/DNS-Provider-Configuration
 - Azure DNS
 - Cloudflare
 - DNS Made Easy
+- Gandi LiveDNS
 - GoDaddy
 - Google Cloud DNS
 - GratisDNS
 - TransIP DNS
-- Gandi LiveDNS
 
 ### 4. Enable App Service Authentication
 

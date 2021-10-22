@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -12,59 +13,81 @@ namespace KeyVault.Acmebot.Providers
 {
     public class GandiDnsProvider : IDnsProvider
     {
-        public GandiDnsProvider(GandiLiveDnsOptions options)
+        public GandiDnsProvider(GandDnsOptions options)
         {
-            _httpClient = new HttpClient
-            {
-                BaseAddress = new Uri("https://dns.api.gandi.net/api/v5/")
-            };
-
-            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-Api-Key", options.ApiKey);
-
-            PropagationSeconds = 10;
+            _client = new GandiDnsClient(options.ApiKey);
         }
 
-        private readonly HttpClient _httpClient;
+        private readonly GandiDnsClient _client;
 
-        public int PropagationSeconds { get; }
+        public int PropagationSeconds => 10;
 
         public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
         {
-            var response = await _httpClient.GetAsync("zones");
-
-            response.EnsureSuccessStatusCode();
-
-            var zones = await response.Content.ReadAsAsync<DnsZone[]>();
+            var zones = await _client.ListZonesAsync();
 
             return zones;
         }
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
-            var recordName = $"{relativeRecordName}";
-
-            var response = await _httpClient.PostAsync($"domains/{zone.Name}/records/{recordName}/TXT", new
-            {
-                rrset_values = values.ToArray()
-            });
-
-            response.EnsureSuccessStatusCode();
+            await _client.AddRecordAsync(zone.Name, relativeRecordName, values);
         }
 
         public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
         {
-            var recordName = $"{relativeRecordName}";
+            await _client.DeleteRecordAsync(zone.Name, relativeRecordName);
+        }
 
-            var responseGet = await _httpClient.GetAsync($"domains/{zone.Name}/records/{recordName}/TXT");
-            if (responseGet.StatusCode == System.Net.HttpStatusCode.NotFound)
+        private class GandiDnsClient
+        {
+            public GandiDnsClient(string apiKey)
             {
-                return;
+                if (apiKey is null)
+                {
+                    throw new ArgumentNullException(nameof(apiKey));
+                }
+
+                _httpClient = new HttpClient
+                {
+                    BaseAddress = new Uri("https://dns.api.gandi.net/api/v5/")
+                };
+
+                _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-Api-Key", apiKey);
             }
 
-            var response = await _httpClient.DeleteAsync($"domains/{zone.Name}/records/{recordName}/TXT");
+            private readonly HttpClient _httpClient;
 
-            response.EnsureSuccessStatusCode();
+            public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
+            {
+                var response = await _httpClient.GetAsync("zones");
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadAsAsync<DnsZone[]>();
+            }
+
+            public async Task DeleteRecordAsync(string zoneName, string relativeRecordName)
+            {
+                var response = await _httpClient.DeleteAsync($"domains/{zoneName}/records/{relativeRecordName}/TXT");
+
+                if (response.StatusCode != HttpStatusCode.NotFound)
+                {
+                    response.EnsureSuccessStatusCode();
+                }
+            }
+
+            public async Task AddRecordAsync(string zoneName, string relativeRecordName, IEnumerable<string> values)
+            {
+                var response = await _httpClient.PostAsync($"domains/{zoneName}/records/{relativeRecordName}/TXT", new
+                {
+                    rrset_values = values.ToArray(),
+                    rrset_ttl = 60
+                });
+
+                response.EnsureSuccessStatusCode();
+            }
         }
     }
 }

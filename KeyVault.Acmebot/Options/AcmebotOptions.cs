@@ -35,6 +35,8 @@ namespace KeyVault.Acmebot.Options
 
         public DnsMadeEasyOptions DnsMadeEasy { get; set; }
 
+        public GandDnsOptions Gandi { get; set; }
+
         public GoDaddyOptions GoDaddy { get; set; }
 
         // Backward compatibility, Remove in the future
@@ -47,6 +49,5 @@ namespace KeyVault.Acmebot.Options
         public Route53Options Route53 { get; set; }
 
         public TransIpOptions TransIp { get; set; }
-        public GandiLiveDnsOptions Gandi { get; set; }
     }
 }
