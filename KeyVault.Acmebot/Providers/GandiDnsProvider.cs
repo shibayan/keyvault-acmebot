@@ -33,7 +33,7 @@ namespace KeyVault.Acmebot.Providers
              * the return value from Gandi when returning zones is not the expected value when doing the intersect at the Dns01Precondition method 
              **/
 
-            return zones.Select(x => new DnsZone { Id = x.Uuid, Name = x.Name, NameServers = new string[] { } }).ToArray();
+            return zones.Select(x => new DnsZone { Id = x.Uuid, Name = x.Name }).ToArray();
         }
 
         public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
