@@ -22,7 +22,7 @@ namespace KeyVault.Acmebot.Providers
 
         private readonly GandiDnsClient _client;
 
-        public int PropagationSeconds => 10;
+        public int PropagationSeconds => 300;
 
         public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
         {
