@@ -34,14 +34,14 @@ namespace KeyVault.Acmebot.Providers
             return zones.Select(x => new DnsZone { Id = x.Uuid, Name = x.Name }).ToArray();
         }
 
-        public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
+        public Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
-            await _client.AddRecordAsync(zone.Name, relativeRecordName, values);
+            return _client.AddRecordAsync(zone.Name, relativeRecordName, values);
         }
 
-        public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
+        public Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
         {
-            await _client.DeleteRecordAsync(zone.Name, relativeRecordName);
+            return _client.DeleteRecordAsync(zone.Name, relativeRecordName);
         }
 
         private class GandiDnsClient
