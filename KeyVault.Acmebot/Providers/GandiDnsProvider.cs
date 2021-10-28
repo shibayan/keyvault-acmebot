@@ -15,7 +15,7 @@ namespace KeyVault.Acmebot.Providers
 {
     public class GandiDnsProvider : IDnsProvider
     {
-        public GandiDnsProvider(GandDnsOptions options)
+        public GandiDnsProvider(GandiDnsOptions options)
         {
             _client = new GandiDnsClient(options.ApiKey);
         }
