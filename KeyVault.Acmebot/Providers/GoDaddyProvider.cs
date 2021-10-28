@@ -31,7 +31,7 @@ namespace KeyVault.Acmebot.Providers
             return zones.Select(x => new DnsZone { Id = x.DomainId, Name = x.Domain, NameServers = x.NameServers }).ToArray();
         }
 
-        public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
+        public Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
             var entries = new List<DnsEntry>();
 
@@ -46,12 +46,12 @@ namespace KeyVault.Acmebot.Providers
                 });
             }
 
-            await _client.AddRecordAsync(zone.Name, entries);
+            return _client.AddRecordAsync(zone.Name, entries);
         }
 
-        public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
+        public Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
         {
-            await _client.DeleteRecordAsync(zone.Name, "TXT", relativeRecordName);
+            return _client.DeleteRecordAsync(zone.Name, "TXT", relativeRecordName);
         }
 
         private class GoDaddyClient

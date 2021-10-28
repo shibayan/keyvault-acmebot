@@ -40,7 +40,7 @@ namespace KeyVault.Acmebot.Providers
                         .ToArray();
         }
 
-        public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
+        public Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
             var recordName = $"{relativeRecordName}.{zone.Name}.";
 
@@ -58,7 +58,7 @@ namespace KeyVault.Acmebot.Providers
                 }
             };
 
-            await _dnsService.Changes.Create(change, _credsParameters.ProjectId, zone.Id).ExecuteAsync();
+            return _dnsService.Changes.Create(change, _credsParameters.ProjectId, zone.Id).ExecuteAsync();
         }
 
         public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)

@@ -41,7 +41,7 @@ namespace KeyVault.Acmebot.Providers
             return zones;
         }
 
-        public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
+        public Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
             var resourceGroup = ExtractResourceGroup(zone.Id);
 
@@ -56,14 +56,14 @@ namespace KeyVault.Acmebot.Providers
                 recordSet.TxtRecords.Add(new TxtRecord { Value = { value } });
             }
 
-            await _dnsManagementClient.RecordSets.CreateOrUpdateAsync(resourceGroup, zone.Name, relativeRecordName, RecordType.TXT, recordSet);
+            return _dnsManagementClient.RecordSets.CreateOrUpdateAsync(resourceGroup, zone.Name, relativeRecordName, RecordType.TXT, recordSet);
         }
 
-        public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
+        public Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
         {
             var resourceGroup = ExtractResourceGroup(zone.Id);
 
-            await _dnsManagementClient.RecordSets.DeleteAsync(resourceGroup, zone.Name, relativeRecordName, RecordType.TXT);
+            return _dnsManagementClient.RecordSets.DeleteAsync(resourceGroup, zone.Name, relativeRecordName, RecordType.TXT);
         }
 
         private static string ExtractResourceGroup(string resourceId)

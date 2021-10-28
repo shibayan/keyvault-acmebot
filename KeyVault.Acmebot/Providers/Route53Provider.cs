@@ -31,7 +31,7 @@ namespace KeyVault.Acmebot.Providers
             return zones.HostedZones.Select(x => new DnsZone { Id = x.Id, Name = x.Name.TrimEnd('.') }).ToArray();
         }
 
-        public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
+        public Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
             var recordName = $"{relativeRecordName}.{zone.Name}.";
 
@@ -49,7 +49,7 @@ namespace KeyVault.Acmebot.Providers
 
             var request = new ChangeResourceRecordSetsRequest(zone.Id, new ChangeBatch(new List<Change> { change }));
 
-            await _amazonRoute53Client.ChangeResourceRecordSetsAsync(request);
+            return _amazonRoute53Client.ChangeResourceRecordSetsAsync(request);
         }
 
         public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)

@@ -13,14 +13,14 @@ using Newtonsoft.Json;
 
 namespace KeyVault.Acmebot.Providers
 {
-    public class GandiDnsProvider : IDnsProvider
+    public class GandiProvider : IDnsProvider
     {
-        public GandiDnsProvider(GandDnsOptions options)
+        public GandiProvider(GandiOptions options)
         {
-            _client = new GandiDnsClient(options.ApiKey);
+            _client = new GandiClient(options.ApiKey);
         }
 
-        private readonly GandiDnsClient _client;
+        private readonly GandiClient _client;
 
         public int PropagationSeconds => 300;
 
@@ -28,27 +28,25 @@ namespace KeyVault.Acmebot.Providers
         {
             var zones = await _client.ListZonesAsync();
 
-            /**
-             * Do NOT include the PrimaryNameServer element from the DnsZone list for now, 
-             * the return value from Gandi when returning zones is not the expected value when doing the intersect at the Dns01Precondition method 
-             **/
+            // Do NOT include the PrimaryNameServer element from the DnsZone list for now,
+            // the return value from Gandi when returning zones is not the expected value when doing the intersect at the Dns01Precondition method
 
             return zones.Select(x => new DnsZone { Id = x.Uuid, Name = x.Name }).ToArray();
         }
 
-        public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
+        public Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
         {
-            await _client.AddRecordAsync(zone.Name, relativeRecordName, values);
+            return _client.AddRecordAsync(zone.Name, relativeRecordName, values);
         }
 
-        public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
+        public Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
         {
-            await _client.DeleteRecordAsync(zone.Name, relativeRecordName);
+            return _client.DeleteRecordAsync(zone.Name, relativeRecordName);
         }
 
-        private class GandiDnsClient
+        private class GandiClient
         {
-            public GandiDnsClient(string apiKey)
+            public GandiClient(string apiKey)
             {
                 if (apiKey is null)
                 {
