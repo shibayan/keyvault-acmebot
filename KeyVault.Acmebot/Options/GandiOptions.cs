@@ -1,6 +1,6 @@
 ﻿namespace KeyVault.Acmebot.Options
 {
-    public class GandiDnsOptions
+    public class GandiOptions
     {
         public string ApiKey { get; set; }
     }

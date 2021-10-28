@@ -94,7 +94,7 @@ namespace KeyVault.Acmebot
 
                 if (options.Gandi != null)
                 {
-                    return new GandiDnsProvider(options.Gandi);
+                    return new GandiProvider(options.Gandi);
                 }
 
                 if (options.GoDaddy != null)

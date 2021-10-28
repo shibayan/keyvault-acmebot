@@ -13,14 +13,14 @@ using Newtonsoft.Json;
 
 namespace KeyVault.Acmebot.Providers
 {
-    public class GandiDnsProvider : IDnsProvider
+    public class GandiProvider : IDnsProvider
     {
-        public GandiDnsProvider(GandiDnsOptions options)
+        public GandiProvider(GandiOptions options)
         {
-            _client = new GandiDnsClient(options.ApiKey);
+            _client = new GandiClient(options.ApiKey);
         }
 
-        private readonly GandiDnsClient _client;
+        private readonly GandiClient _client;
 
         public int PropagationSeconds => 300;
 
@@ -44,9 +44,9 @@ namespace KeyVault.Acmebot.Providers
             return _client.DeleteRecordAsync(zone.Name, relativeRecordName);
         }
 
-        private class GandiDnsClient
+        private class GandiClient
         {
-            public GandiDnsClient(string apiKey)
+            public GandiClient(string apiKey)
             {
                 if (apiKey is null)
                 {
