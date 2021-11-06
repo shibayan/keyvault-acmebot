@@ -16,14 +16,14 @@
       <div id="app">
         <h2 class="title is-4">
           Managed certificates
-          <div class="buttons are-small">
+          <div class="buttons are-small is-inline-block is-pulled-right">
             <a class="button" @click="openAdd">
               <span class="icon">
                 <i class="fas fa-plus"></i>
               </span>
               <span>Add</span>
             </a>
-            <a class="button" @click="refresh">
+            <a class="button" @click="refresh" :class="{ 'is-loading': loading }">
               <span class="icon">
                 <i class="fas fa-sync"></i>
               </span>
@@ -58,21 +58,6 @@
                   <button class="button is-info" @click="openDetails(certificate)">Details</button>
                 </div>
               </td>
-            </tr>
-          </tbody>
-        </table>
-        <h2 class="title is-4">Certificates renewal history</h2>
-        <table class="table is-hoverable">
-          <thead>
-            <tr>
-              <th>Certificate name</th>
-              <th>DNS Names</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="certificate in certificates">
-              <td>{{ certificate.name }}</td>
-              <td></td>
             </tr>
           </tbody>
         </table>
@@ -254,9 +239,9 @@
                 </div>
               </div>
             </section>
-            <footer class="modal-card-foot">
-              <button class="button is-primary" @click="addCertificate" :class="{ 'is-loading': sending }">Add</button>
-              <button class="button" @click="add.modalActive = false">Cancel</button>
+            <footer class="modal-card-foot is-justify-content-flex-end">
+              <button class="button is-primary" @click="addCertificate" :class="{ 'is-loading': add.sending }">Add</button>
+              <button class="button" @click="add.modalActive = false" :disabled="add.sending">Cancel</button>
             </footer>
           </div>
         </div>
@@ -265,7 +250,7 @@
           <div class="modal-background"></div>
           <div class="modal-card">
             <header class="modal-card-head">
-              <p class="modal-card-title">Details</p>
+              <p class="modal-card-title">Details certificate</p>
             </header>
             <section class="modal-card-body">
               <div v-if="details.certificate !== ''">
@@ -365,10 +350,10 @@
                 </div>
               </div>
             </section>
-            <footer class="modal-card-foot">
+            <footer class="modal-card-foot is-justify-content-flex-end">
               <button class="button is-primary" @click="renewCertificate" :class="{ 'is-loading': details.sending }">Renew</button>
               <button class="button is-danger" @click="revokeCertificate" :class="{ 'is-loading': details.sending }">Revoke</button>
-              <button class="button" @click="details.modalActive = false">Close</button>
+              <button class="button" @click="details.modalActive = false" :disabled="details.sending">Close</button>
             </footer>
           </div>
         </div>
@@ -387,6 +372,7 @@
       data() {
         return {
           certificates: [],
+          loading: false,
           add: {
             zones: [],
             zoneName: "",
@@ -411,6 +397,8 @@
       },
       methods: {
         async load() {
+          this.loading = true;
+
           try {
             const response = await axios.get("/api/certificates");
 
@@ -420,6 +408,8 @@
           } catch (error) {
             alert(error.response.data.output);
           }
+
+          this.loading = false;
         },
         async refresh() {
           Object.assign(this.$data, this.$options.data());
