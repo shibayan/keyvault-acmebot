@@ -123,6 +123,16 @@ namespace KeyVault.Acmebot.Functions
             };
         }
 
+        [FunctionName(nameof(RevokeCertificate))]
+        public async Task RevokeCertificate([ActivityTrigger] string certificateName)
+        {
+            var response = await _certificateClient.GetCertificateAsync(certificateName);
+
+            var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
+
+            await acmeProtocolClient.RevokeCertificateAsync(response.Value.Cer);
+        }
+
         [FunctionName(nameof(Order))]
         public async Task<OrderDetails> Order([ActivityTrigger] IReadOnlyList<string> dnsNames)
         {
