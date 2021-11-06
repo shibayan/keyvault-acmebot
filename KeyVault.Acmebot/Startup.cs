@@ -27,11 +27,9 @@ namespace KeyVault.Acmebot
         {
             var context = builder.GetContext();
 
-            var section = context.Configuration.GetSection("Acmebot");
-
             // Add Options
             builder.Services.AddOptions<AcmebotOptions>()
-                   .Bind(section.Exists() ? section : context.Configuration.GetSection("LetsEncrypt"))
+                   .Bind(context.Configuration.GetSection("Acmebot"))
                    .ValidateDataAnnotations();
 
             // Add Services
