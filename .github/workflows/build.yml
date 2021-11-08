@@ -21,7 +21,6 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
-        include-prerelease: true
 
     - name: Install .NET Core format tool
       run: dotnet tool update -g dotnet-format
