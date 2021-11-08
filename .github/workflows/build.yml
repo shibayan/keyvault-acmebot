@@ -22,11 +22,8 @@ jobs:
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    - name: Install .NET Core format tool
-      run: dotnet tool update -g dotnet-format
-
     - name: Build project
       run: dotnet build -c Release
 
     - name: Lint C# code
-      run: dotnet format --verify-no-changes --exclude ACMESharpCore --verbosity detailed
+      run: dotnet format --verify-no-changes --exclude ACMESharpCore --verbosity detailed --no-restore
