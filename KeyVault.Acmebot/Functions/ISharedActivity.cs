@@ -20,6 +20,8 @@ namespace KeyVault.Acmebot.Functions
 
         Task<CertificatePolicyItem> GetCertificatePolicy(string certificateName);
 
+        Task RevokeCertificate(string certificateName);
+
         Task<OrderDetails> Order(IReadOnlyList<string> dnsNames);
 
         Task Dns01Precondition(IReadOnlyList<string> dnsNames);

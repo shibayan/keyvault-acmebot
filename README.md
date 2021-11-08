@@ -25,6 +25,7 @@ Key Vault allows for secure and centralized management of ACME certificates.
 - [Usage](#usage)
 - [Frequently Asked Questions](#frequently-asked-questions)
 - [Thanks](#thanks)
+- [Sponsors](#sponsors)
 - [License](#license)
 
 ## Feature Support
@@ -32,10 +33,10 @@ Key Vault allows for secure and centralized management of ACME certificates.
 - All Azure App Services (Web Apps / Functions / Containers, regardless of OS)
 - Azure CDN and Front Door
 - Azure Application Gateway v2
+- Issuing certificates for Wildcard and Zone Apex
 - Issuing certificates with SANs (subject alternative names) (one certificate for multiple domains)
-- Issuing certificates and wildcard certificates for Zone Apex domains
 - Automated certificate renewal
-- ACME-compliant Certification Authorities
+- ACME v2 compliants Certification Authorities
   - [Let's Encrypt](https://letsencrypt.org/)
   - [Buypass Go SSL](https://www.buypass.com/ssl/resources/acme-free-ssl)
   - [ZeroSSL](https://zerossl.com/features/acme/) (Requires EAB Credentials)
@@ -53,23 +54,9 @@ You will need the following:
 
 ### 1. Deploy Acmebot
 
-For Azure Cloud
-
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fshibayan%2Fkeyvault-acmebot%2Fmaster%2Fazuredeploy.json" target="_blank">
-  <img src="https://aka.ms/deploytoazurebutton" />
-</a>
-
-For Azure China
-
-<a href="https://portal.azure.cn/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fshibayan%2Fkeyvault-acmebot%2Fmaster%2Fazuredeploy.json" target="_blank">
-  <img src="https://aka.ms/deploytoazurebutton" />
-</a>
-
-For Azure Government
-
-<a href="https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fshibayan%2Fkeyvault-acmebot%2Fmaster%2Fazuredeploy.json" target="_blank">
-  <img src="https://aka.ms/deploytoazurebutton" />
-</a>
+| Azure (Public) | Azure China | Azure Government |
+| :---: | :---: | :---: |
+| <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fshibayan%2Fkeyvault-acmebot%2Fmaster%2Fazuredeploy.json" target="_blank"><img src="https://aka.ms/deploytoazurebutton" /></a> | <a href="https://portal.azure.cn/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fshibayan%2Fkeyvault-acmebot%2Fmaster%2Fazuredeploy.json" target="_blank"><img src="https://aka.ms/deploytoazurebutton" /></a> | <a href="https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fshibayan%2Fkeyvault-acmebot%2Fmaster%2Fazuredeploy.json" target="_blank"><img src="https://aka.ms/deploytoazurebutton" /></a> |
 
 ### 2. Add application settings
 
@@ -100,6 +87,7 @@ https://github.com/shibayan/keyvault-acmebot/wiki/DNS-Provider-Configuration
 - Azure DNS
 - Cloudflare
 - DNS Made Easy
+- Gandi LiveDNS
 - GoDaddy
 - Google Cloud DNS
 - GratisDNS
@@ -147,48 +135,21 @@ The default check timing is 00:00 UTC. If you need to change the time zone, use 
 
 ### How to use the issued certificate in Azure services
 
-#### App Service (Web Apps / Functions / Containers)
-
-You can import the Key Vault certificate to the App Service by opening the `TLS/SSL Settings` from Azure Portal and selecting the `Import Key Vault Certificate` button from the `Private Key Certificate (.pfx)`.
-
-![image](https://user-images.githubusercontent.com/1356444/64438173-974c2380-d102-11e9-88c0-5ed34a5ce42a.png)
-
-After importing, the App Service will automatically check for certificate updates.
-
-#### Application Gateway v2
-
-- https://docs.microsoft.com/en-us/azure/application-gateway/key-vault-certs
-
-#### Azure CDN / Front Door
-
-Azure CDN / Front Door will now automatically deploy the latest version of the certificate when the Key Vault certificate is updated. Selecting `Latest` as the Key Vault certificate version will automatically update it.
-
-- https://docs.microsoft.com/en-us/azure/cdn/cdn-custom-ssl?tabs=option-2-enable-https-with-your-own-certificate
-- https://docs.microsoft.com/en-us/azure/frontdoor/front-door-custom-domain-https#option-2-use-your-own-certificate
-
-#### API Management
-
-- https://docs.microsoft.com/en-us/azure/api-management/configure-custom-domain
-
-#### Other services
-
-The issued certificate can be downloaded from Key Vault and used elsewhere, either in Azure or outside Azure.
+See also https://github.com/shibayan/keyvault-acmebot/wiki/How-to-use-in-Azure-services
 
 ## Frequently Asked Questions
 
-### Remove a Certificate
-
-To Remove a certificate from the system delete it from the Key Vault. Key Vault Acmebot will no longer renew the certificate.
-
-### Reinstalling Or Updating Key Vault Acmebot
-
-To Reinstall or Upgrade Key Vault Acmebot without removing your certificates, ensure that the Key Vault is not removed. Key Vault Acmebot will use the exisiting certificates and vault after upgrade or reinstall
+See also https://github.com/shibayan/keyvault-acmebot/wiki/Frequently-Asked-Questions
 
 ## Thanks
 
 - [ACMESharp Core](https://github.com/PKISharp/ACMESharpCore) by @ebekker
 - [Durable Functions](https://github.com/Azure/azure-functions-durable-extension) by @cgillum and contributors
 - [DnsClient.NET](https://github.com/MichaCo/DnsClient.NET) by @MichaCo
+
+## Sponsors
+
+[![ZEN Architects](docs/images/zenarchitects.png)](https://zenarchitects.co.jp)
 
 ## License
 

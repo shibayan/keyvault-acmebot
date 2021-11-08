@@ -4,8 +4,8 @@
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Route53" Version="3.7.1.25" />
-    <PackageReference Include="Azure.Identity" Version="1.4.1" />
+    <PackageReference Include="AWSSDK.Route53" Version="3.7.1.50" />
+    <PackageReference Include="Azure.Identity" Version="1.5.0" />
     <PackageReference Include="Azure.ResourceManager.Dns" Version="1.0.0-preview.1" />
     <PackageReference Include="Azure.Security.KeyVault.Certificates" Version="4.2.0" />
     <PackageReference Include="Azure.Security.KeyVault.Keys" Version="4.2.0" />
@@ -13,7 +13,7 @@
     <PackageReference Include="DurableTask.TypedProxy" Version="2.2.1" />
     <PackageReference Include="Google.Apis.Dns.v1" Version="1.55.0.2412" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.5.1" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.6.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0-*" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.0.1" />
     <PackageReference Include="WebJobs.Extensions.HttpApi" Version="2.0.0-*" />
@@ -25,10 +25,7 @@
     <None Update="host.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="static\bulk-certificate.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="static\renew-certificate.html">
+    <None Update="static\dashboard.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="static\add-certificate.html">

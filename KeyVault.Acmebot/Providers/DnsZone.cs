@@ -1,12 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace KeyVault.Acmebot.Providers
 {
     public class DnsZone : IEquatable<DnsZone>
     {
+        private readonly IdnMapping _idnMapping = new IdnMapping();
+
+        private string _name;
+
         public string Id { get; set; }
-        public string Name { get; set; }
+
+        public string Name
+        {
+            get => _name;
+            set => _name = _idnMapping.GetAscii(value);
+        }
+
         public IReadOnlyList<string> NameServers { get; set; }
 
         public bool Equals(DnsZone other)

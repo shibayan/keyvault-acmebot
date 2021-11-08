@@ -32,6 +32,8 @@ namespace KeyVault.Acmebot.Options
 
         public DnsMadeEasyOptions DnsMadeEasy { get; set; }
 
+        public GandiOptions Gandi { get; set; }
+
         public GoDaddyOptions GoDaddy { get; set; }
 
         public GoogleDnsOptions GoogleDns { get; set; }
