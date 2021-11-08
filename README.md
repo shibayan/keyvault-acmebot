@@ -119,19 +119,17 @@ Open the access policy of the Key Vault and add the `Certificate management` acc
 
 ## Usage
 
-### Issue a new certificate
+### Manage certificates
 
-Access `https://YOUR-FUNCTIONS.azurewebsites.net/add-certificate` with a browser and authenticate with Azure Active Directory and the Web UI will be displayed. Select the target domain from that screen, add the required subdomains, and run, and after a few tens of seconds, the certificate will be issued.
+Access `https://YOUR-FUNCTIONS.azurewebsites.net/dashboard` with a browser, you will see a list of certificates managed by Acmebot. From this dashboard, you can easily issue new certificates and renew and revoke existing ones.
 
-![Add certificate](https://user-images.githubusercontent.com/1356444/64176075-9b283d80-ce97-11e9-8ee7-02530d0c03f2.png)
+![dashboard](https://user-images.githubusercontent.com/1356444/140616620-5e961f22-fdb6-4414-9556-5d4a003cd223.png)
 
-If the `Access Control (IAM)` setting is not correct, nothing will be shown in the drop-down list.
+The dashboard feature is currently in preview. If you have any bugs or feature suggestions, please let us know in issue [#341](https://github.com/shibayan/keyvault-acmebot/issues/341).
 
-### Renew an existing certificate
+### Automatic renew an existing certificate
 
-All existing ACME certificates are automatically renewed 30 days before their expiration.
-
-The default check timing is 00:00 UTC. If you need to change the time zone, use `WEBSITE_TIME_ZONE` to set the time zone.
+All existing ACME certificates are automatically renewed 30 days before their expiration. The default check timing is 00:00 UTC. If you need to change the time zone, use `WEBSITE_TIME_ZONE` to set the time zone.
 
 ### How to use the issued certificate in Azure services
 
