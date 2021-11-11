@@ -18,6 +18,7 @@
       "extendedSessionIdleTimeoutInSeconds": 120
     },
     "http": {
+      "routePrefix": "",
       "customHeaders": {
         "Cache-Control": "no-store"
       }

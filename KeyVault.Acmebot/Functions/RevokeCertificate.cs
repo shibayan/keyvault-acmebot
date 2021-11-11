@@ -32,7 +32,7 @@ namespace KeyVault.Acmebot.Functions
 
         [FunctionName(nameof(RevokeCertificate) + "_" + nameof(HttpStart))]
         public async Task<IActionResult> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "certificate/{certificateName}/revoke")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/certificate/{certificateName}/revoke")] HttpRequest req,
             string certificateName,
             [DurableClient] IDurableClient starter,
             ILogger log)
