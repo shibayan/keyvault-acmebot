@@ -23,7 +23,7 @@ namespace KeyVault.Acmebot.Functions
 
         [FunctionName(nameof(AddCertificate) + "_" + nameof(HttpStart))]
         public async Task<IActionResult> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "certificate")] CertificatePolicyItem certificatePolicyItem,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/certificate")] CertificatePolicyItem certificatePolicyItem,
             [DurableClient] IDurableClient starter,
             ILogger log)
         {

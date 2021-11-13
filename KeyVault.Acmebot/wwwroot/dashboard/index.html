@@ -511,7 +511,7 @@
           this.details.sending = true;
 
           try {
-            let response = await axios.post(`/api/certificate/${this.details.certificate.name}`);
+            let response = await axios.post(`/api/certificate/${this.details.certificate.name}/renew`);
 
             while (true) {
               await delay(5000);

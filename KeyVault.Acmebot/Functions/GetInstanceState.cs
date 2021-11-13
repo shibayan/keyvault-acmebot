@@ -21,7 +21,7 @@ namespace KeyVault.Acmebot.Functions
 
         [FunctionName(nameof(GetInstanceState) + "_" + nameof(HttpStart))]
         public async Task<IActionResult> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "state/{instanceId}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/state/{instanceId}")] HttpRequest req,
             string instanceId,
             [DurableClient] IDurableClient starter)
         {
