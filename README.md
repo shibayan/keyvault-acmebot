@@ -129,7 +129,7 @@ The dashboard feature is currently in preview. If you have any bugs or feature s
 
 ### Automatic renew an existing certificate
 
-All existing ACME certificates are automatically renewed 30 days before their expiration. The default check timing is 00:00 UTC. If you need to change the time zone, use `WEBSITE_TIME_ZONE` to set the time zone.
+All existing ACME certificates are automatically renewed 30 days before their expiration. The default check timing is 00:00 UTC. If you need to change the time zone, use [WEBSITE_TIME_ZONE](https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer?tabs=csharp#ncrontab-time-zones) to set the time zone.
 
 ### How to use the issued certificate in Azure services
 
