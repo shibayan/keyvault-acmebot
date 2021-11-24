@@ -116,10 +116,12 @@ namespace KeyVault.Acmebot.Functions
         {
             CertificatePolicy certificatePolicy = await _certificateClient.GetCertificatePolicyAsync(certificateName);
 
+            var dnsNames = certificatePolicy.SubjectAlternativeNames.DnsNames.ToArray();
+
             return new CertificatePolicyItem
             {
                 CertificateName = certificateName,
-                DnsNames = certificatePolicy.SubjectAlternativeNames.DnsNames.ToArray(),
+                DnsNames = dnsNames.Length > 0 ? dnsNames : new[] { certificatePolicy.Subject[3..] },
                 KeyType = certificatePolicy.KeyType?.ToString(),
                 KeySize = certificatePolicy.KeySize,
                 KeyCurveName = certificatePolicy.KeyCurveName?.ToString(),
