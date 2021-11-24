@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dashboard | Key Vault Acmebot</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css" integrity="sha512-IgmDkwzs96t4SrChW29No3NXBIBv8baW490zk5aXvhCD8vuZM3yUSkbyTBcXohkySecyzIrUwiF/qV0cuPcL3Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    @media screen and (min-width: 769px), print {
+      .field-label {
+        flex-grow: 2;
+      }
+    }
+  </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js" integrity="sha512-Tn2m0TIpgVyTzzvmxLNuqbSJH3JP8jm+Cy3hvHrW7ndTDcJ1w5mBiksqDBb8GpE2ksktFvDB/ykZ0mDpsZj20w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
@@ -42,7 +49,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="certificate in certificates">
+            <tr v-for="certificate in managedCertificates">
               <td>{{ certificate.name }}</td>
               <td>
                 <div class="tags">
@@ -61,6 +68,37 @@
             </tr>
           </tbody>
         </table>
+        <div class="columns">
+          <div class="column is-half">
+            <h2 class="title is-4">Unmanaged certificates</h2>
+            <table class="table is-hoverable is-fullwidth">
+              <thead>
+                <tr>
+                  <th>Certificate name</th>
+                  <th>DNS Names</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="certificate in unmanagedCertificates">
+                  <td>{{ certificate.name }}</td>
+                  <td>
+                    <div class="tags">
+                      <span v-for="dnsName in certificate.dnsNames" class="tag is-light is-medium">
+                        {{ toUnicode(dnsName) }}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="buttons are-small">
+                      <button class="button is-info" @click="openDetails(certificate)">Details</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
         <!-- Add certificate model -->
         <div class="modal" :class="{ 'is-active': add.modalActive }">
           <div class="modal-background"></div>
@@ -348,11 +386,21 @@
                     </div>
                   </div>
                 </div>
+                <div class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">Managed by Acmebot?</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ details.certificate.isManaged }}
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
             <footer class="modal-card-foot is-justify-content-flex-end">
               <button class="button is-primary" @click="renewCertificate" :class="{ 'is-loading': details.sending }">Renew</button>
-              <button class="button is-danger" @click="revokeCertificate" :class="{ 'is-loading': details.sending }">Revoke</button>
+              <button class="button is-danger" @click="revokeCertificate" :class="{ 'is-loading': details.sending }" v-if="details.certificate.isManaged">Revoke</button>
               <button class="button" @click="details.modalActive = false" :disabled="details.sending">Close</button>
             </footer>
           </div>
@@ -394,6 +442,14 @@
             modalActive: false
           }
         };
+      },
+      computed: {
+        managedCertificates() {
+          return this.certificates.filter(x => x.isManaged);
+        },
+        unmanagedCertificates() {
+          return this.certificates.filter(x => !x.isManaged);
+        }
       },
       methods: {
         async load() {
@@ -519,7 +575,7 @@
               response = await axios.get(response.headers["location"]);
 
               if (response.status === 200) {
-                alert("The certificate was successfully issued.");
+                alert("The certificate was successfully renewed.");
                 break;
               }
             }
@@ -548,32 +604,13 @@
           this.details.sending = true;
 
           try {
-            let response = await axios.post(`/api/certificate/${this.details.certificate.name}/revoke`);
+            const response = await axios.post(`/api/certificate/${this.details.certificate.name}/revoke`);
 
-            while (true) {
-              await delay(5000);
-
-              response = await axios.get(response.headers["location"]);
-
-              if (response.status === 200) {
-                alert("The certificate was successfully revoked.");
-                break;
-              }
+            if (response.status === 200) {
+              alert("The certificate was successfully revoked.");
             }
           } catch (error) {
-            const problem = error.response.data;
-
-            if (error.response.status === 400) {
-              const errors = [];
-
-              for (let key in problem.errors) {
-                errors.push(problem.errors[key][0]);
-              }
-
-              alert(errors.join("\n"));
-            } else {
-              alert(problem.detail);
-            }
+            alert(error.response.data.output);
           }
 
           this.details.sending = false;

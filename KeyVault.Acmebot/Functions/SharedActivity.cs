@@ -61,7 +61,7 @@ namespace KeyVault.Acmebot.Functions
 
             await foreach (var certificate in certificates)
             {
-                if (!certificate.TagsFilter(IssuerName, _options.Endpoint))
+                if (!certificate.IsAcmebotManaged(IssuerName, _options.Endpoint))
                 {
                     continue;
                 }
@@ -86,7 +86,11 @@ namespace KeyVault.Acmebot.Functions
 
             await foreach (var certificate in certificates)
             {
-                result.Add((await _certificateClient.GetCertificateAsync(certificate.Name)).Value.ToCertificateItem());
+                var certificateItem = (await _certificateClient.GetCertificateAsync(certificate.Name)).Value.ToCertificateItem();
+
+                certificateItem.IsManaged = certificate.IsAcmebotManaged(IssuerName, _options.Endpoint);
+
+                result.Add(certificateItem);
             }
 
             return result;
@@ -112,10 +116,12 @@ namespace KeyVault.Acmebot.Functions
         {
             CertificatePolicy certificatePolicy = await _certificateClient.GetCertificatePolicyAsync(certificateName);
 
+            var dnsNames = certificatePolicy.SubjectAlternativeNames.DnsNames.ToArray();
+
             return new CertificatePolicyItem
             {
                 CertificateName = certificateName,
-                DnsNames = certificatePolicy.SubjectAlternativeNames.DnsNames.ToArray(),
+                DnsNames = dnsNames.Length > 0 ? dnsNames : new[] { certificatePolicy.Subject[3..] },
                 KeyType = certificatePolicy.KeyType?.ToString(),
                 KeySize = certificatePolicy.KeySize,
                 KeyCurveName = certificatePolicy.KeyCurveName?.ToString(),

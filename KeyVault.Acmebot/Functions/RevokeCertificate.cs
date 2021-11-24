@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 using Azure.WebJobs.Extensions.HttpApi;
 
@@ -47,7 +48,7 @@ namespace KeyVault.Acmebot.Functions
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
-            return AcceptedAtFunction(nameof(GetInstanceState) + "_" + nameof(GetInstanceState.HttpStart), new { instanceId }, null);
+            return await starter.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromMinutes(1), returnInternalServerErrorOnFailure: true);
         }
     }
 }
