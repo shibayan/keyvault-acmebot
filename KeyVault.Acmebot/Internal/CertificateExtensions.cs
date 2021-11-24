@@ -10,7 +10,7 @@ namespace KeyVault.Acmebot.Internal
 {
     internal static class CertificateExtensions
     {
-        public static bool TagsFilter(this CertificateProperties properties, string issuer, string endpoint)
+        public static bool IsAcmebotManaged(this CertificateProperties properties, string issuer, string endpoint)
         {
             var tags = properties.Tags;
 
