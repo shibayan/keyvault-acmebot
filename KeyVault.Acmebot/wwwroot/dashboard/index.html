@@ -98,23 +98,6 @@
               </tbody>
             </table>
           </div>
-          <div class="column is-half">
-            <h2 class="title is-4">Renew histories</h2>
-            <table class="table is-hoverable is-fullwidth">
-              <thead>
-                <tr>
-                  <th>DateTime</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="history in renewHistories">
-                  <td>{{ history.dateTime }}</td>
-                  <td>{{ history.status }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
         </div>
         <!-- Add certificate model -->
         <div class="modal" :class="{ 'is-active': add.modalActive }">
@@ -437,7 +420,6 @@
       data() {
         return {
           certificates: [],
-          renewHistories: [],
           loading: false,
           add: {
             zones: [],
