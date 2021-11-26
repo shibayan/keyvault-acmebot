@@ -27,7 +27,7 @@ namespace KeyVault.Acmebot.Internal
                     break;
                 }
 
-                collection.Add(new X509Certificate2(rawDataSpan.Slice(0, foundIndex + EndCertificate.Length).ToArray()));
+                collection.Insert(0, new X509Certificate2(rawDataSpan.Slice(0, foundIndex + EndCertificate.Length).ToArray()));
 
                 rawDataSpan = rawDataSpan.Slice(foundIndex + EndCertificate.Length);
             }

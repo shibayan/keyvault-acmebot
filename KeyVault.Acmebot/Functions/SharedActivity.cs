@@ -413,7 +413,7 @@ namespace KeyVault.Acmebot.Functions
 
             var mergeCertificateOptions = new MergeCertificateOptions(
                 certificateName,
-                x509Certificates.Cast<X509Certificate2>().Select(x => x.Export(X509ContentType.Pfx))
+                new[] { x509Certificates.Export(X509ContentType.Pfx) }
             );
 
             return (await _certificateClient.MergeCertificateAsync(mergeCertificateOptions)).Value.ToCertificateItem();
