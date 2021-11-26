@@ -20,6 +20,8 @@ namespace KeyVault.Acmebot.Functions
 
         Task<CertificatePolicyItem> GetCertificatePolicy(string certificateName);
 
+        Task RevokeCertificate(string certificateName);
+
         Task<OrderDetails> Order(IReadOnlyList<string> dnsNames);
 
         Task Dns01Precondition(IReadOnlyList<string> dnsNames);
@@ -37,7 +39,7 @@ namespace KeyVault.Acmebot.Functions
         Task<OrderDetails> FinalizeOrder((CertificatePolicyItem, OrderDetails) input);
 
         [RetryOptions("00:00:05", 12, HandlerType = typeof(ExceptionRetryStrategy<RetriableActivityException>))]
-        Task CheckIsValid(OrderDetails orderDetails);
+        Task<OrderDetails> CheckIsValid(OrderDetails orderDetails);
 
         Task<CertificateItem> MergeCertificate((string, OrderDetails) input);
 

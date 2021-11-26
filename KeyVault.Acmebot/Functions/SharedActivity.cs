@@ -61,7 +61,7 @@ namespace KeyVault.Acmebot.Functions
 
             await foreach (var certificate in certificates)
             {
-                if (!certificate.TagsFilter(IssuerName, _options.Endpoint))
+                if (!certificate.IsAcmebotManaged(IssuerName, _options.Endpoint))
                 {
                     continue;
                 }
@@ -86,7 +86,11 @@ namespace KeyVault.Acmebot.Functions
 
             await foreach (var certificate in certificates)
             {
-                result.Add((await _certificateClient.GetCertificateAsync(certificate.Name)).Value.ToCertificateItem());
+                var certificateItem = (await _certificateClient.GetCertificateAsync(certificate.Name)).Value.ToCertificateItem();
+
+                certificateItem.IsManaged = certificate.IsAcmebotManaged(IssuerName, _options.Endpoint);
+
+                result.Add(certificateItem);
             }
 
             return result;
@@ -112,15 +116,27 @@ namespace KeyVault.Acmebot.Functions
         {
             CertificatePolicy certificatePolicy = await _certificateClient.GetCertificatePolicyAsync(certificateName);
 
+            var dnsNames = certificatePolicy.SubjectAlternativeNames.DnsNames.ToArray();
+
             return new CertificatePolicyItem
             {
                 CertificateName = certificateName,
-                DnsNames = certificatePolicy.SubjectAlternativeNames.DnsNames.ToArray(),
+                DnsNames = dnsNames.Length > 0 ? dnsNames : new[] { certificatePolicy.Subject[3..] },
                 KeyType = certificatePolicy.KeyType?.ToString(),
                 KeySize = certificatePolicy.KeySize,
                 KeyCurveName = certificatePolicy.KeyCurveName?.ToString(),
                 ReuseKey = certificatePolicy.ReuseKey
             };
+        }
+
+        [FunctionName(nameof(RevokeCertificate))]
+        public async Task RevokeCertificate([ActivityTrigger] string certificateName)
+        {
+            var response = await _certificateClient.GetCertificateAsync(certificateName);
+
+            var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
+
+            await acmeProtocolClient.RevokeCertificateAsync(response.Value.Cer);
         }
 
         [FunctionName(nameof(Order))]
@@ -364,7 +380,7 @@ namespace KeyVault.Acmebot.Functions
         }
 
         [FunctionName(nameof(CheckIsValid))]
-        public async Task CheckIsValid([ActivityTrigger] OrderDetails orderDetails)
+        public async Task<OrderDetails> CheckIsValid([ActivityTrigger] OrderDetails orderDetails)
         {
             var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
@@ -381,6 +397,8 @@ namespace KeyVault.Acmebot.Functions
                 // invalid の場合は最初から実行が必要なので失敗させる
                 throw new InvalidOperationException("Finalize request is invalid. Required retry at first.");
             }
+
+            return orderDetails;
         }
 
         [FunctionName(nameof(MergeCertificate))]
@@ -390,14 +408,12 @@ namespace KeyVault.Acmebot.Functions
 
             var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
-            orderDetails = await acmeProtocolClient.GetOrderDetailsAsync(orderDetails.OrderUrl, orderDetails);
-
             // 証明書をダウンロードして Key Vault へ格納
             var x509Certificates = await acmeProtocolClient.GetOrderCertificateAsync(orderDetails, _options.PreferredChain);
 
             var mergeCertificateOptions = new MergeCertificateOptions(
                 certificateName,
-                x509Certificates.Cast<X509Certificate2>().Select(x => x.Export(X509ContentType.Pfx))
+                new[] { x509Certificates.Export(X509ContentType.Pfx) }
             );
 
             return (await _certificateClient.MergeCertificateAsync(mergeCertificateOptions)).Value.ToCertificateItem();

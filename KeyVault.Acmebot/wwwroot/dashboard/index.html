@@ -1,0 +1,640 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard | Key Vault Acmebot</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css" integrity="sha512-IgmDkwzs96t4SrChW29No3NXBIBv8baW490zk5aXvhCD8vuZM3yUSkbyTBcXohkySecyzIrUwiF/qV0cuPcL3Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    @media screen and (min-width: 769px), print {
+      .field-label {
+        flex-grow: 2;
+      }
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js" integrity="sha512-Tn2m0TIpgVyTzzvmxLNuqbSJH3JP8jm+Cy3hvHrW7ndTDcJ1w5mBiksqDBb8GpE2ksktFvDB/ykZ0mDpsZj20w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+  <section class="section">
+    <div class="container">
+      <h1 class="title">
+        Key Vault Acmebot
+      </h1>
+      <div id="app">
+        <h2 class="title is-4">
+          Managed certificates
+          <div class="buttons are-small is-inline-block is-pulled-right">
+            <a class="button" @click="openAdd">
+              <span class="icon">
+                <i class="fas fa-plus"></i>
+              </span>
+              <span>Add</span>
+            </a>
+            <a class="button" @click="refresh" :class="{ 'is-loading': loading }">
+              <span class="icon">
+                <i class="fas fa-sync"></i>
+              </span>
+              <span>Refresh</span>
+            </a>
+          </div>
+        </h2>
+        <table class="table is-hoverable is-fullwidth">
+          <thead>
+            <tr>
+              <th>Certificate name</th>
+              <th>DNS Names</th>
+              <th>Created On</th>
+              <th>Expires On</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="certificate in managedCertificates">
+              <td>{{ certificate.name }}</td>
+              <td>
+                <div class="tags">
+                  <span v-for="dnsName in certificate.dnsNames" class="tag is-light is-medium">
+                    {{ toUnicode(dnsName) }}
+                  </span>
+                </div>
+              </td>
+              <td>{{ formatCreatedOn(certificate.createdOn) }}</td>
+              <td>{{ formatExpiresOn(certificate.expiresOn) }}</td>
+              <td>
+                <div class="buttons are-small">
+                  <button class="button is-info" @click="openDetails(certificate)">Details</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="columns">
+          <div class="column is-half">
+            <h2 class="title is-4">Unmanaged certificates</h2>
+            <table class="table is-hoverable is-fullwidth">
+              <thead>
+                <tr>
+                  <th>Certificate name</th>
+                  <th>DNS Names</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="certificate in unmanagedCertificates">
+                  <td>{{ certificate.name }}</td>
+                  <td>
+                    <div class="tags">
+                      <span v-for="dnsName in certificate.dnsNames" class="tag is-light is-medium">
+                        {{ toUnicode(dnsName) }}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="buttons are-small">
+                      <button class="button is-info" @click="openDetails(certificate)">Details</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Add certificate model -->
+        <div class="modal" :class="{ 'is-active': add.modalActive }">
+          <div class="modal-background"></div>
+          <div class="modal-card">
+            <header class="modal-card-head">
+              <p class="modal-card-title">Add certificate</p>
+            </header>
+            <section class="modal-card-body">
+              <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <label class="label">DNS Zone</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control">
+                      <div class="select" :class="{ 'is-loading': add.loading }">
+                        <select v-model="add.zoneName">
+                          <option disabled value="">Please select one</option>
+                          <option v-for="zone in add.zones" :value="zone">{{ toUnicode(zone) }}</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <label class="label">DNS Names</label>
+                </div>
+                <div class="field-body">
+                  <div class="field has-addons">
+                    <p class="control">
+                      <input v-model="add.recordName" class="input" type="text" placeholder="Record name" :disabled="add.zoneName.length === 0">
+                    </p>
+                    <p class="control">
+                      <a class="button is-static">
+                        .{{ toUnicode(add.zoneName) }}
+                      </a>
+                    </p>
+                    <p class="control">
+                      <button class="button is-info" @click="addDnsName" :disabled="add.zoneName.length === 0">Add</button>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal">
+                <div class="field-label"></div>
+                <div class="field-body">
+                  <div class="content">
+                    <div class="tags">
+                      <span v-for="dnsName in add.dnsNames" class="tag is-light is-medium">
+                        {{ toUnicode(dnsName) }}
+                        <button class="delete is-small" @click="removeDnsName(dnsName)"></button>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal">
+                <div class="field-label">
+                  <label class="label">Use Advanced Options?</label>
+                </div>
+                <div class="field-body">
+                  <div class="field is-narrow">
+                    <div class="control">
+                      <label class="radio">
+                        <input type="radio" v-model="add.useAdvancedOptions" v-bind:value="true">
+                        Yes
+                      </label>
+                      <label class="radio">
+                        <input type="radio" v-model="add.useAdvancedOptions" v-bind:value="false">
+                        No
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal" v-if="add.useAdvancedOptions">
+                <div class="field-label is-normal">
+                  <label class="label">Certificate Name</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <p class="control">
+                      <input v-model="add.certificateName" class="input" type="text" placeholder="Certificate name">
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal" v-if="add.useAdvancedOptions">
+                <div class="field-label">
+                  <label class="label">Key Type</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control">
+                      <label class="radio">
+                        <input type="radio" value="RSA" v-model="add.keyType">
+                        RSA
+                      </label>
+                      <label class="radio">
+                        <input type="radio" value="EC" v-model="add.keyType">
+                        EC
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal" v-if="add.useAdvancedOptions && add.keyType === 'RSA'">
+                <div class="field-label">
+                  <label class="label">Key Size</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control">
+                      <label class="radio">
+                        <input type="radio" value="2048" v-model="add.keySize">
+                        2048
+                      </label>
+                      <label class="radio">
+                        <input type="radio" value="3072" v-model="add.keySize">
+                        3072
+                      </label>
+                      <label class="radio">
+                        <input type="radio" value="4096" v-model="add.keySize">
+                        4096
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal" v-if="add.useAdvancedOptions && add.keyType === 'EC'">
+                <div class="field-label">
+                  <label class="label">Elliptic Curve Name</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control">
+                      <label class="radio">
+                        <input type="radio" value="P-256" v-model="add.keyCurveName">
+                        P-256
+                      </label>
+                      <label class="radio">
+                        <input type="radio" value="P-384" v-model="add.keyCurveName">
+                        P-384
+                      </label>
+                      <label class="radio">
+                        <input type="radio" value="P-521" v-model="add.keyCurveName">
+                        P-521
+                      </label>
+                      <label class="radio">
+                        <input type="radio" value="P-256K" v-model="add.keyCurveName">
+                        P-256K
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal" v-if="add.useAdvancedOptions">
+                <div class="field-label">
+                  <label class="label">Reuse Key on Renewal?</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control">
+                      <label class="radio">
+                        <input type="radio" v-model="add.reuseKey" v-bind:value="true">
+                        Yes
+                      </label>
+                      <label class="radio">
+                        <input type="radio" v-model="add.reuseKey" v-bind:value="false">
+                        No
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <footer class="modal-card-foot is-justify-content-flex-end">
+              <button class="button is-primary" @click="addCertificate" :class="{ 'is-loading': add.sending }">Add</button>
+              <button class="button" @click="add.modalActive = false" :disabled="add.sending">Cancel</button>
+            </footer>
+          </div>
+        </div>
+        <!-- Details certificate modal -->
+        <div class="modal" :class="{ 'is-active': details.modalActive }">
+          <div class="modal-background"></div>
+          <div class="modal-card">
+            <header class="modal-card-head">
+              <p class="modal-card-title">Details certificate</p>
+            </header>
+            <section class="modal-card-body">
+              <div v-if="details.certificate !== ''">
+                <div class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">Certificate Name</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ details.certificate.name }}
+                    </div>
+                  </div>
+                </div>
+                <div class="field is-horizontal">
+                  <div class="field-label is-normal">
+                    <label class="label">DNS Names</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      <div class="tags">
+                        <span v-for="dnsName in details.certificate.dnsNames" class="tag is-light is-medium">
+                          {{ toUnicode(dnsName) }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">Created On</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ formatCreatedOn(details.certificate.createdOn) }}
+                    </div>
+                  </div>
+                </div>
+                <div class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">Expires On</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ formatExpiresOn(details.certificate.expiresOn) }}
+                    </div>
+                  </div>
+                </div>
+                <div class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">X.509 Thumbprint</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ details.certificate.x509Thumbprint }}
+                    </div>
+                  </div>
+                </div>
+                <div class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">Key Type</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ details.certificate.keyType }}
+                    </div>
+                  </div>
+                </div>
+                <div v-if="details.certificate.keyType === 'RSA'" class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">Key Size</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ details.certificate.keySize }} bit
+                    </div>
+                  </div>
+                </div>
+                <div v-if="details.certificate.keyType === 'EC'" class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">Elliptic Curve Name</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ details.certificate.keyCurveName }}
+                    </div>
+                  </div>
+                </div>
+                <div class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">Reuse Key on Renewal?</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ details.certificate.reuseKey }}
+                    </div>
+                  </div>
+                </div>
+                <div class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">Managed by Acmebot?</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ details.certificate.isManaged }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <footer class="modal-card-foot is-justify-content-flex-end">
+              <button class="button is-primary" @click="renewCertificate" :class="{ 'is-loading': details.sending }">Renew</button>
+              <button class="button is-danger" @click="revokeCertificate" :class="{ 'is-loading': details.sending }" v-if="details.certificate.isManaged">Revoke</button>
+              <button class="button" @click="details.modalActive = false" :disabled="details.sending">Close</button>
+            </footer>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.11/vue.global.prod.min.js" integrity="sha512-RiF+Jrmab5nvkymjQZrHxYRi83mZj3cblSwolvamR1phU+rN9gUBPGEU7P+tvaKncRSk8dXvJhyhKb0BpYgj9A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.4/axios.min.js" integrity="sha512-lTLt+W7MrmDfKam+r3D2LURu0F47a3QaW5nF0c6Hl0JDZ57ruei+ovbg7BrZ+0bjVJ5YgzsAWE+RreERbpPE1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/punycode/1.4.1/punycode.min.js" integrity="sha512-YZlXEJ9dOHnIn3LXSS3RpbhAtTQZWw2VOywaMsC8p7/0DyGu0gEf0pFhkQtE/i4pQpgGUDY7cicb401Tf/5sRA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    const delay = (millisecondsDelay) => {
+      return new Promise(resolve => setTimeout(() => resolve(), millisecondsDelay));
+    }
+
+    const app = {
+      data() {
+        return {
+          certificates: [],
+          loading: false,
+          add: {
+            zones: [],
+            zoneName: "",
+            dnsNames: [],
+            recordName: "",
+            useAdvancedOptions: false,
+            certificateName: "",
+            keyType: "RSA",
+            keySize: "2048",
+            keyCurveName: "P-256",
+            reuseKey: false,
+            loading: false,
+            sending: false,
+            modalActive: false
+          },
+          details: {
+            certificate: "",
+            sending: false,
+            modalActive: false
+          }
+        };
+      },
+      computed: {
+        managedCertificates() {
+          return this.certificates.filter(x => x.isManaged);
+        },
+        unmanagedCertificates() {
+          return this.certificates.filter(x => !x.isManaged);
+        }
+      },
+      methods: {
+        async load() {
+          this.loading = true;
+
+          try {
+            const response = await axios.get("/api/certificates");
+
+            if (response.status === 200) {
+              this.certificates = response.data.sort((x, y) => x.expiresOn.localeCompare(y.expiresOn));
+            }
+          } catch (error) {
+            alert(error.response.data.output);
+          }
+
+          this.loading = false;
+        },
+        async refresh() {
+          Object.assign(this.$data, this.$options.data());
+
+          await this.load();
+        },
+        async loadDnsZones() {
+          this.add.loading = true;
+
+          try {
+            const response = await axios.get("/api/dns-zones");
+
+            if (response.status === 200) {
+              this.add.zones = response.data;
+            }
+          } catch (error) {
+            alert(error.response.data.output);
+          }
+
+          this.add.loading = false;
+        },
+        addDnsName() {
+          if (this.add.zoneName === "") {
+            return;
+          }
+
+          const dnsName = this.add.recordName === "" ? this.add.zoneName : punycode.toASCII(this.add.recordName) + "." + this.add.zoneName;
+
+          if (this.add.dnsNames.indexOf(dnsName) === -1) {
+            this.add.dnsNames.push(dnsName);
+          }
+
+          this.add.recordName = "";
+        },
+        removeDnsName(dnsName) {
+          this.add.dnsNames = this.add.dnsNames.filter(x => x !== dnsName);
+        },
+        async addCertificate() {
+          this.add.sending = true;
+
+          const postData = {
+            dnsNames: this.add.dnsNames,
+            certificateName: this.add.certificateName,
+            keyType: this.add.keyType,
+            reuseKey: this.add.reuseKey
+          };
+
+          if (this.add.keyType === "RSA") {
+            postData.keySize = this.add.keySize;
+          } else {
+            postData.keyCurveName = this.add.keyCurveName;
+          }
+
+          try {
+            let response = await axios.post("/api/certificate", postData);
+
+            while (true) {
+              await delay(5000);
+
+              response = await axios.get(response.headers["location"]);
+
+              if (response.status === 200) {
+                alert("The certificate was successfully issued.");
+                break;
+              }
+            }
+          } catch (error) {
+            const problem = error.response.data;
+
+            if (error.response.status === 400) {
+              const errors = [];
+
+              for (let key in problem.errors) {
+                errors.push(problem.errors[key][0]);
+              }
+
+              alert(errors.join("\n"));
+            } else {
+              alert(problem.detail);
+            }
+          }
+
+          this.add.sending = false;
+          this.add.modalActive = false;
+
+          await this.refresh();
+        },
+        async openAdd() {
+          this.add.modalActive = true;
+
+          await this.loadDnsZones();
+        },
+        openDetails(certificate) {
+          this.details.certificate = certificate;
+
+          this.details.modalActive = true;
+        },
+        async renewCertificate() {
+          this.details.sending = true;
+
+          try {
+            let response = await axios.post(`/api/certificate/${this.details.certificate.name}/renew`);
+
+            while (true) {
+              await delay(5000);
+
+              response = await axios.get(response.headers["location"]);
+
+              if (response.status === 200) {
+                alert("The certificate was successfully renewed.");
+                break;
+              }
+            }
+          } catch (error) {
+            const problem = error.response.data;
+
+            if (error.response.status === 400) {
+              const errors = [];
+
+              for (let key in problem.errors) {
+                errors.push(problem.errors[key][0]);
+              }
+
+              alert(errors.join("\n"));
+            } else {
+              alert(problem.detail);
+            }
+          }
+
+          this.details.sending = false;
+          this.details.modalActive = false;
+
+          await this.refresh();
+        },
+        async revokeCertificate() {
+          this.details.sending = true;
+
+          try {
+            const response = await axios.post(`/api/certificate/${this.details.certificate.name}/revoke`);
+
+            if (response.status === 200) {
+              alert("The certificate was successfully revoked.");
+            }
+          } catch (error) {
+            alert(error.response.data.output);
+          }
+
+          this.details.sending = false;
+          this.details.modalActive = false;
+        },
+        toUnicode(value) {
+          return punycode.toUnicode(value);
+        },
+        formatCreatedOn(value) {
+          return new Date(value).toLocaleString();
+        },
+        formatExpiresOn(value) {
+          const date = new Date(value);
+          const remainDays = Math.round((date - Date.now()) / (1000 * 60 * 60 * 24));
+
+          return `${date.toLocaleString()} (Expires in ${remainDays} days)`;
+        }
+      },
+      async beforeMount() {
+        await this.load();
+      }
+    };
+
+    Vue.createApp(app).mount("#app");
+  </script>
+</body>
+</html>

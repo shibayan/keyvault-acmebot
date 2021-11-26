@@ -54,7 +54,7 @@ namespace KeyVault.Acmebot.Functions
             if (orderDetails.Payload.Status != "valid")
             {
                 // Finalize 後のステータスが valid になるまで 60 秒待機
-                await activity.CheckIsValid(orderDetails);
+                orderDetails = await activity.CheckIsValid(orderDetails);
             }
 
             // 証明書をダウンロードし Key Vault に保存

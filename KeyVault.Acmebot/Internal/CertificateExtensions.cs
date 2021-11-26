@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Text;
 
 using Azure.Security.KeyVault.Certificates;
 
@@ -8,7 +10,7 @@ namespace KeyVault.Acmebot.Internal
 {
     internal static class CertificateExtensions
     {
-        public static bool TagsFilter(this CertificateProperties properties, string issuer, string endpoint)
+        public static bool IsAcmebotManaged(this CertificateProperties properties, string issuer, string endpoint)
         {
             var tags = properties.Tags;
 
@@ -39,12 +41,31 @@ namespace KeyVault.Acmebot.Internal
                 Id = certificate.Id,
                 Name = certificate.Name,
                 DnsNames = dnsNames != null && dnsNames.Length > 0 ? dnsNames : new[] { certificate.Policy.Subject[3..] },
+                CreatedOn = certificate.Properties.CreatedOn.Value,
                 ExpiresOn = certificate.Properties.ExpiresOn.Value,
+                X509Thumbprint = ToHexString(certificate.Properties.X509Thumbprint),
                 KeyType = certificate.Policy.KeyType?.ToString(),
                 KeySize = certificate.Policy.KeySize,
                 KeyCurveName = certificate.Policy.KeyCurveName?.ToString(),
                 ReuseKey = certificate.Policy.ReuseKey
             };
+        }
+
+        private static string ToHexString(byte[] bytes)
+        {
+            if (bytes == null)
+            {
+                throw new ArgumentNullException(nameof(bytes));
+            }
+
+            var result = new StringBuilder();
+
+            foreach (var b in bytes)
+            {
+                result.Append(b.ToString("x2"));
+            }
+
+            return result.ToString();
         }
     }
 }

@@ -32,15 +32,7 @@ namespace KeyVault.Acmebot
             // Add Options
             builder.Services.AddOptions<AcmebotOptions>()
                    .Bind(section.Exists() ? section : context.Configuration.GetSection("LetsEncrypt"))
-                   .ValidateDataAnnotations()
-                   .PostConfigure(options =>
-                   {
-                       // Backward compatibility
-                       if (options.Endpoint == "https://acme-v02.api.letsencrypt.org/")
-                       {
-                           options.PreferredChain ??= "DST Root CA X3";
-                       }
-                   });
+                   .ValidateDataAnnotations();
 
             // Add Services
             builder.Services.Replace(ServiceDescriptor.Transient(typeof(IOptionsFactory<>), typeof(OptionsFactory<>)));
@@ -90,9 +82,19 @@ namespace KeyVault.Acmebot
                     return new CloudflareProvider(options.Cloudflare);
                 }
 
+                if (options.CustomDns != null)
+                {
+                    return new CustomDnsProvider(options.CustomDns);
+                }
+
                 if (options.DnsMadeEasy != null)
                 {
                     return new DnsMadeEasyProvider(options.DnsMadeEasy);
+                }
+
+                if (options.Gandi != null)
+                {
+                    return new GandiProvider(options.Gandi);
                 }
 
                 if (options.GoDaddy != null)
@@ -120,12 +122,12 @@ namespace KeyVault.Acmebot
                     return new TransIpProvider(options, options.TransIp, environment);
                 }
 
+                // Backward compatibility
                 if (options.AzureDns != null)
                 {
                     return new AzureDnsProvider(options.AzureDns, environment);
                 }
 
-                // Backward compatibility
                 if (options.SubscriptionId != null)
                 {
                     return new AzureDnsProvider(new AzureDnsOptions { SubscriptionId = options.SubscriptionId }, environment);

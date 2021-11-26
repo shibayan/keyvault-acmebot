@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using DurableTask.TypedProxy;
@@ -27,6 +28,11 @@ namespace KeyVault.Acmebot.Functions
                 return;
             }
 
+            // スロットリング対策として 120 秒以内でジッターを追加する
+            var jitter = (uint)context.NewGuid().GetHashCode() % 120;
+
+            await context.CreateTimer(context.CurrentUtcDateTime.AddSeconds(jitter), CancellationToken.None);
+
             // 証明書の更新を行う
             foreach (var certificate in certificates)
             {
@@ -49,7 +55,7 @@ namespace KeyVault.Acmebot.Functions
         }
 
         [FunctionName(nameof(RenewCertificates) + "_" + nameof(Timer))]
-        public async Task Timer([TimerTrigger("0 0 0 * * 1,5")] TimerInfo timer, [DurableClient] IDurableClient starter, ILogger log)
+        public async Task Timer([TimerTrigger("0 0 0 * * 1,3,5")] TimerInfo timer, [DurableClient] IDurableClient starter, ILogger log)
         {
             // Function input comes from the request content.
             var instanceId = await starter.StartNewAsync(nameof(RenewCertificates) + "_" + nameof(Orchestrator));
@@ -57,7 +63,7 @@ namespace KeyVault.Acmebot.Functions
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
         }
 
-        private readonly RetryOptions _retryOptions = new RetryOptions(TimeSpan.FromHours(12), 2)
+        private readonly RetryOptions _retryOptions = new RetryOptions(TimeSpan.FromHours(3), 2)
         {
             Handle = ex => ex.InnerException?.InnerException is RetriableOrchestratorException
         };

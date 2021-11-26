@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Azure.WebJobs.Extensions.HttpApi;
 
 using DurableTask.TypedProxy;
-
-using KeyVault.Acmebot.Internal;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -17,34 +14,37 @@ using Microsoft.Extensions.Logging;
 
 namespace KeyVault.Acmebot.Functions
 {
-    public class GetDnsZones : HttpFunctionBase
+    public class RevokeCertificate : HttpFunctionBase
     {
-        public GetDnsZones(IHttpContextAccessor httpContextAccessor)
+        public RevokeCertificate(IHttpContextAccessor httpContextAccessor)
             : base(httpContextAccessor)
         {
         }
 
-        [FunctionName(nameof(GetDnsZones) + "_" + nameof(Orchestrator))]
-        public Task<IReadOnlyList<string>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
+        [FunctionName(nameof(RevokeCertificate) + "_" + nameof(Orchestrator))]
+        public async Task Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
         {
+            var certificateName = context.GetInput<string>();
+
             var activity = context.CreateActivityProxy<ISharedActivity>();
 
-            return activity.GetZones();
+            await activity.RevokeCertificate(certificateName);
         }
 
-        [FunctionName(nameof(GetDnsZones) + "_" + nameof(HttpStart))]
+        [FunctionName(nameof(RevokeCertificate) + "_" + nameof(HttpStart))]
         public async Task<IActionResult> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/dns-zones")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/certificate/{certificateName}/revoke")] HttpRequest req,
+            string certificateName,
             [DurableClient] IDurableClient starter,
             ILogger log)
         {
-            if (!User.IsAppAuthorized())
+            if (!User.Identity.IsAuthenticated)
             {
                 return Unauthorized();
             }
 
             // Function input comes from the request content.
-            var instanceId = await starter.StartNewAsync(nameof(GetDnsZones) + "_" + nameof(Orchestrator));
+            var instanceId = await starter.StartNewAsync(nameof(RevokeCertificate) + "_" + nameof(Orchestrator), null, certificateName);
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 

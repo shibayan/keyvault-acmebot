@@ -16,8 +16,14 @@ namespace KeyVault.Acmebot.Models
         [JsonProperty("dnsNames")]
         public IReadOnlyList<string> DnsNames { get; set; }
 
+        [JsonProperty("createdOn")]
+        public DateTimeOffset CreatedOn { get; set; }
+
         [JsonProperty("expiresOn")]
         public DateTimeOffset ExpiresOn { get; set; }
+
+        [JsonProperty("x509Thumbprint")]
+        public string X509Thumbprint { get; set; }
 
         [JsonProperty("keyType")]
         public string KeyType { get; set; }
@@ -30,5 +36,8 @@ namespace KeyVault.Acmebot.Models
 
         [JsonProperty("reuseKey")]
         public bool? ReuseKey { get; set; }
+
+        [JsonProperty("isManaged")]
+        public bool IsManaged { get; set; }
     }
 }

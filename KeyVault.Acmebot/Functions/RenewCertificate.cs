@@ -35,7 +35,7 @@ namespace KeyVault.Acmebot.Functions
 
         [FunctionName(nameof(RenewCertificate) + "_" + nameof(HttpStart))]
         public async Task<IActionResult> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "certificate/{certificateName}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/certificate/{certificateName}/renew")] HttpRequest req,
             string certificateName,
             [DurableClient] IDurableClient starter,
             ILogger log)
