@@ -68,6 +68,7 @@
     "functionAppName": "[concat('func-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
     "appServicePlanName": "[concat('plan-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
     "appInsightsName": "[concat('appi-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
+    "workspaceName": "[concat('log-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
     "storageAccountName": "[concat('st', uniquestring(resourceGroup().id, deployment().name), 'func')]",
     "storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
     "keyVaultName": "[concat('kv-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
@@ -111,6 +112,18 @@
       "properties": {}
     },
     {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "name": "[variables('workspaceName')]",
+      "apiVersion": "2021-06-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "sku": {
+          "name": "PerGB2018"
+        },
+        "retentionInDays": 120
+      }
+    },
+    {
       "type": "Microsoft.Insights/components",
       "name": "[variables('appInsightsName')]",
       "apiVersion": "2020-02-02",
@@ -120,7 +133,8 @@
         "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('functionAppName'))]": "Resource"
       },
       "properties": {
-        "Application_Type": "web"
+        "Application_Type": "web",
+        "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('workspaceName'))]"
       }
     },
     {
