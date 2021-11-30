@@ -411,9 +411,11 @@ namespace KeyVault.Acmebot.Functions
             // 証明書をダウンロードして Key Vault へ格納
             var x509Certificates = await acmeProtocolClient.GetOrderCertificateAsync(orderDetails, _options.PreferredChain);
 
+            var exportedX509Certificates = x509Certificates.Cast<X509Certificate2>().Select(x => x.Export(X509ContentType.Pfx));
+
             var mergeCertificateOptions = new MergeCertificateOptions(
                 certificateName,
-                new[] { x509Certificates.Export(X509ContentType.Pfx) }
+                _options.MitigateChainOrder ? exportedX509Certificates.Reverse() : exportedX509Certificates
             );
 
             return (await _certificateClient.MergeCertificateAsync(mergeCertificateOptions)).Value.ToCertificateItem();
