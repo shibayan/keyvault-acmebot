@@ -24,7 +24,7 @@ namespace KeyVault.Acmebot.Options
 
         public string PreferredChain { get; set; }
 
-        public bool MitigateChainOrder { get; set; }
+        public bool MitigateChainOrder { get; set; } = false;
 
         public ExternalAccountBindingOptions ExternalAccountBinding { get; set; }
 
