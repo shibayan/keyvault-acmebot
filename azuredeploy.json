@@ -169,7 +169,7 @@
             },
             {
               "name": "WEBSITE_RUN_FROM_PACKAGE",
-              "value": "https://shibayan.blob.core.windows.net/azure-keyvault-letsencrypt/v4/latest.zip"
+              "value": "https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v4/latest.zip"
             },
             {
               "name": "FUNCTIONS_EXTENSION_VERSION",
