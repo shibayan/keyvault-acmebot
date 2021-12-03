@@ -1,5 +1,5 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
     "appNamePrefix": {
@@ -49,17 +49,6 @@
         "description": "Specifies whether the key vault is a standard vault or a premium vault."
       }
     },
-    "enableRbacAuthorization": {
-      "type": "bool",
-      "defaultValue": false,
-      "allowedValues": [
-        true,
-        false
-      ],
-      "metadata": {
-        "description": "If you select true, RBAC will be used instead of Key Vault access policy"
-      }
-    },
     "keyVaultBaseUrl": {
       "type": "string",
       "defaultValue": "",
@@ -79,6 +68,7 @@
     "functionAppName": "[concat('func-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
     "appServicePlanName": "[concat('plan-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
     "appInsightsName": "[concat('appi-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
+    "workspaceName": "[concat('log-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
     "storageAccountName": "[concat('st', uniquestring(resourceGroup().id, deployment().name), 'func')]",
     "storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
     "keyVaultName": "[concat('kv-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
@@ -96,7 +86,7 @@
     {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('storageAccountName')]",
-      "apiVersion": "2019-06-01",
+      "apiVersion": "2021-06-01",
       "location": "[resourceGroup().location]",
       "kind": "Storage",
       "sku": {
@@ -111,32 +101,46 @@
     {
       "type": "Microsoft.Web/serverfarms",
       "name": "[variables('appServicePlanName')]",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2021-02-01",
       "location": "[resourceGroup().location]",
       "sku": {
         "name": "Y1",
         "tier": "Dynamic",
         "size": "Y1",
         "family": "Y"
+      },
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "name": "[variables('workspaceName')]",
+      "apiVersion": "2021-06-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "sku": {
+          "name": "PerGB2018"
+        },
+        "retentionInDays": 30
       }
     },
     {
       "type": "Microsoft.Insights/components",
       "name": "[variables('appInsightsName')]",
-      "apiVersion": "2015-05-01",
+      "apiVersion": "2020-02-02",
       "location": "[resourceGroup().location]",
+      "kind": "web",
       "tags": {
         "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('functionAppName'))]": "Resource"
       },
       "properties": {
         "Application_Type": "web",
-        "applicationId": "[variables('appInsightsName')]"
+        "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('workspaceName'))]"
       }
     },
     {
       "type": "Microsoft.Web/sites",
       "name": "[variables('functionAppName')]",
-      "apiVersion": "2020-06-01",
+      "apiVersion": "2021-02-01",
       "location": "[resourceGroup().location]",
       "kind": "functionapp",
       "identity": {
@@ -153,15 +157,15 @@
           "appSettings": [
             {
               "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
-              "value": "[concat('InstrumentationKey=', reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2015-05-01').InstrumentationKey, ';EndpointSuffix=', variables('appInsightsEndpoints')[environment().name])]"
+              "value": "[concat('InstrumentationKey=', reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02').InstrumentationKey, ';EndpointSuffix=', variables('appInsightsEndpoints')[environment().name])]"
             },
             {
               "name": "AzureWebJobsStorage",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'), '2018-11-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]"
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'), '2021-06-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]"
             },
             {
               "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'), '2018-11-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]"
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'), '2021-06-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]"
             },
             {
               "name": "WEBSITE_CONTENTSHARE",
@@ -202,20 +206,7 @@
         },
         "ftpsState": "Disabled",
         "httpsOnly": true
-      },
-      "resources": [
-        {
-          "apiVersion": "2020-06-01",
-          "name": "metadata",
-          "type": "config",
-          "dependsOn": [
-            "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]"
-          ],
-          "properties": {
-            "synctriggersstatus": "[listsyncfunctiontriggerstatus(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2020-06-01').status]"
-          }
-        }
-      ]
+      }
     },
     {
       "type": "Microsoft.KeyVault/vaults",
@@ -232,30 +223,20 @@
           "family": "A",
           "name": "[variables('keyVaultSkuName')]"
         },
-        "accessPolicies": [
-          {
-            "objectId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2020-06-01', 'Full').identity.principalId]",
-            "tenantId": "[subscription().tenantId]",
-            "permissions": {
-              "certificates": [ "get", "list", "create", "update" ]
-            }
-          }
-        ],
-        "enableRbacAuthorization": "[parameters('enableRbacAuthorization')]"
+        "enableRbacAuthorization": true
       }
     },
     {
       "type": "Microsoft.Authorization/roleAssignments",
       "name": "[parameters('roleNameGuid')]",
-      "apiVersion": "2020-04-01-preview",
-      "condition": "[and(parameters('createWithKeyVault'), parameters('enableRbacAuthorization'))]",
+      "apiVersion": "2021-04-01-preview",
       "scope": "[concat('Microsoft.KeyVault/vaults', '/', variables('keyVaultName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
       ],
       "properties": {
         "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions/', 'a4417e6f-fecd-4de8-b567-7b0420556985')]",
-        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2020-06-01', 'Full').identity.principalId]"
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2021-02-01', 'Full').identity.principalId]"
       }
     }
   ],
@@ -266,7 +247,7 @@
     },
     "identity": {
       "type": "object",
-      "value": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2020-06-01', 'Full').identity]"
+      "value": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2021-02-01', 'Full').identity]"
     },
     "keyVaultName": {
       "type": "string",
