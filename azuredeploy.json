@@ -1,6 +1,13 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.4.1008.15138",
+      "templateHash": "9759617950337995778"
+    }
+  },
   "parameters": {
     "appNamePrefix": {
       "type": "string",
@@ -17,12 +24,12 @@
     },
     "acmeEndpoint": {
       "type": "string",
+      "defaultValue": "https://acme-v02.api.letsencrypt.org/",
       "allowedValues": [
         "https://acme-v02.api.letsencrypt.org/",
         "https://api.buypass.com/acme/",
         "https://acme.zerossl.com/v2/DV90/"
       ],
-      "defaultValue": "https://acme-v02.api.letsencrypt.org/",
       "metadata": {
         "description": "Certification authority ACME Endpoint."
       }
@@ -40,10 +47,10 @@
     },
     "keyVaultSkuName": {
       "type": "string",
-      "defaultValue": "Standard",
+      "defaultValue": "standard",
       "allowedValues": [
-        "Standard",
-        "Premium"
+        "standard",
+        "premium"
       ],
       "metadata": {
         "description": "Specifies whether the key vault is a standard vault or a premium vault."
@@ -64,18 +71,14 @@
       }
     }
   },
+  "functions": [],
   "variables": {
-    "functionAppName": "[concat('func-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
-    "appServicePlanName": "[concat('plan-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
-    "appInsightsName": "[concat('appi-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
-    "workspaceName": "[concat('log-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
-    "storageAccountName": "[concat('st', uniquestring(resourceGroup().id, deployment().name), 'func')]",
-    "storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
-    "keyVaultName": "[concat('kv-', parameters('appNamePrefix'), '-', substring(uniquestring(resourceGroup().id, deployment().name), 0, 4))]",
-    "keyVaultSkuName": "[parameters('keyVaultSkuName')]",
-    "mailAddress": "[parameters('mailAddress')]",
-    "acmeEndpoint": "[parameters('acmeEndpoint')]",
-    "vaultBaseUrl": "[parameters('keyVaultBaseUrl')]",
+    "functionAppName": "[format('func-{0}-{1}', parameters('appNamePrefix'), substring(uniqueString(resourceGroup().id, deployment().name), 0, 4))]",
+    "appServicePlanName": "[format('plan-{0}-{1}', parameters('appNamePrefix'), substring(uniqueString(resourceGroup().id, deployment().name), 0, 4))]",
+    "appInsightsName": "[format('appi-{0}-{1}', parameters('appNamePrefix'), substring(uniqueString(resourceGroup().id, deployment().name), 0, 4))]",
+    "workspaceName": "[format('log-{0}-{1}', parameters('appNamePrefix'), substring(uniqueString(resourceGroup().id, deployment().name), 0, 4))]",
+    "storageAccountName": "[format('st{0}func', uniqueString(resourceGroup().id, deployment().name))]",
+    "keyVaultName": "[format('kv-{0}-{1}', parameters('appNamePrefix'), substring(uniqueString(resourceGroup().id, deployment().name), 0, 4))]",
     "appInsightsEndpoints": {
       "AzureCloud": "applicationinsights.azure.com",
       "AzureChinaCloud": "applicationinsights.azure.cn",
@@ -85,8 +88,8 @@
   "resources": [
     {
       "type": "Microsoft.Storage/storageAccounts",
-      "name": "[variables('storageAccountName')]",
       "apiVersion": "2021-06-01",
+      "name": "[variables('storageAccountName')]",
       "location": "[resourceGroup().location]",
       "kind": "Storage",
       "sku": {
@@ -100,8 +103,8 @@
     },
     {
       "type": "Microsoft.Web/serverfarms",
-      "name": "[variables('appServicePlanName')]",
       "apiVersion": "2021-02-01",
+      "name": "[variables('appServicePlanName')]",
       "location": "[resourceGroup().location]",
       "sku": {
         "name": "Y1",
@@ -113,8 +116,8 @@
     },
     {
       "type": "Microsoft.OperationalInsights/workspaces",
-      "name": "[variables('workspaceName')]",
       "apiVersion": "2021-06-01",
+      "name": "[variables('workspaceName')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "sku": {
@@ -125,47 +128,47 @@
     },
     {
       "type": "Microsoft.Insights/components",
-      "name": "[variables('appInsightsName')]",
       "apiVersion": "2020-02-02",
+      "name": "[variables('appInsightsName')]",
       "location": "[resourceGroup().location]",
       "kind": "web",
       "tags": {
-        "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('functionAppName'))]": "Resource"
+        "[format('hidden-link:{0}/providers/Microsoft.Web/sites/{1}', resourceGroup().id, variables('functionAppName'))]": "Resource"
       },
       "properties": {
         "Application_Type": "web",
         "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('workspaceName'))]"
-      }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('workspaceName'))]"
+      ]
     },
     {
       "type": "Microsoft.Web/sites",
-      "name": "[variables('functionAppName')]",
       "apiVersion": "2021-02-01",
+      "name": "[variables('functionAppName')]",
       "location": "[resourceGroup().location]",
       "kind": "functionapp",
       "identity": {
         "type": "SystemAssigned"
       },
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
-        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
-        "[resourceId('Microsoft.Insights/components', variables('appInsightsName'))]"
-      ],
       "properties": {
+        "clientAffinityEnabled": false,
+        "httpsOnly": true,
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
         "siteConfig": {
           "appSettings": [
             {
               "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
-              "value": "[concat('InstrumentationKey=', reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02').InstrumentationKey, ';EndpointSuffix=', variables('appInsightsEndpoints')[environment().name])]"
+              "value": "[format('InstrumentationKey={0};EndpointSuffix={1}', reference(resourceId('Microsoft.Insights/components', variables('appInsightsName'))).InstrumentationKey, variables('appInsightsEndpoints')[environment().name])]"
             },
             {
               "name": "AzureWebJobsStorage",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'), '2021-06-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]"
+              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', variables('storageAccountName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2021-06-01').keys[0].value, environment().suffixes.storage)]"
             },
             {
               "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'), '2021-06-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]"
+              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', variables('storageAccountName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2021-06-01').keys[0].value, environment().suffixes.storage)]"
             },
             {
               "name": "WEBSITE_CONTENTSHARE",
@@ -185,59 +188,61 @@
             },
             {
               "name": "Acmebot:Contacts",
-              "value": "[variables('mailAddress')]"
+              "value": "[parameters('mailAddress')]"
             },
             {
               "name": "Acmebot:Endpoint",
-              "value": "[variables('acmeEndpoint')]"
+              "value": "[parameters('acmeEndpoint')]"
             },
             {
               "name": "Acmebot:VaultBaseUrl",
-              "value": "[if(parameters('createWithKeyVault'), concat('https://', variables('keyVaultName'), environment().suffixes.keyvaultDns), variables('vaultBaseUrl'))]"
+              "value": "[if(parameters('createWithKeyVault'), format('https://{0}{1}', variables('keyVaultName'), environment().suffixes.keyvaultDns), parameters('keyVaultBaseUrl'))]"
             },
             {
               "name": "Acmebot:Environment",
               "value": "[environment().name]"
             }
           ],
-          "clientAffinityEnabled": false,
+          "ftpsState": "Disabled",
           "minTlsVersion": "1.2",
           "scmMinTlsVersion": "1.2"
-        },
-        "ftpsState": "Disabled",
-        "httpsOnly": true
-      }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Insights/components', variables('appInsightsName'))]",
+        "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ]
     },
     {
-      "type": "Microsoft.KeyVault/vaults",
-      "name": "[variables('keyVaultName')]",
-      "apiVersion": "2019-09-01",
-      "location": "[resourceGroup().location]",
       "condition": "[parameters('createWithKeyVault')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]"
-      ],
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2019-09-01",
+      "name": "[variables('keyVaultName')]",
+      "location": "[resourceGroup().location]",
       "properties": {
         "tenantId": "[subscription().tenantId]",
         "sku": {
           "family": "A",
-          "name": "[variables('keyVaultSkuName')]"
+          "name": "[parameters('keyVaultSkuName')]"
         },
         "enableRbacAuthorization": true
       }
     },
     {
+      "condition": "[parameters('createWithKeyVault')]",
       "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-10-01-preview",
+      "scope": "[format('Microsoft.KeyVault/vaults/{0}', variables('keyVaultName'))]",
       "name": "[parameters('roleNameGuid')]",
-      "apiVersion": "2021-04-01-preview",
-      "scope": "[concat('Microsoft.KeyVault/vaults', '/', variables('keyVaultName'))]",
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-      ],
       "properties": {
         "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions/', 'a4417e6f-fecd-4de8-b567-7b0420556985')]",
-        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2021-02-01', 'Full').identity.principalId]"
-      }
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2021-02-01', 'full').identity.principalId]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]",
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ]
     }
   ],
   "outputs": {
@@ -247,12 +252,11 @@
     },
     "identity": {
       "type": "object",
-      "value": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2021-02-01', 'Full').identity]"
+      "value": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2021-02-01', 'full').identity]"
     },
     "keyVaultName": {
       "type": "string",
-      "condition": "[parameters('createWithKeyVault')]",
-      "value": "[variables('keyVaultName')]"
+      "value": "[if(parameters('createWithKeyVault'), variables('keyVaultName'), '')]"
     }
   }
 }
