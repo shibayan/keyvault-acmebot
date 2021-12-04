@@ -173,7 +173,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = if (createWithKeyVaul
   }
 }
 
-resource keyVault_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = if (createWithKeyVault) {
+resource keyVault_roleAssignment 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createWithKeyVault) {
   scope: keyVault
   name: roleNameGuid
   properties: {
