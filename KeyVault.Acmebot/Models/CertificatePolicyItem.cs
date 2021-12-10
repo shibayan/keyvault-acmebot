@@ -16,6 +16,9 @@ namespace KeyVault.Acmebot.Models
         [JsonProperty("dnsNames")]
         public string[] DnsNames { get; set; }
 
+        [JsonProperty("exportable")]
+        public bool? Exportable { get; set; }
+
         [JsonProperty("keyType")]
         [RegularExpression("^(RSA|EC)$")]
         public string KeyType { get; set; }
@@ -41,6 +44,7 @@ namespace KeyVault.Acmebot.Models
 
             var certificatePolicy = new CertificatePolicy(WellKnownIssuerNames.Unknown, subjectAlternativeNames)
             {
+                Exportable = Exportable,
                 KeySize = KeySize,
                 ReuseKey = ReuseKey
             };

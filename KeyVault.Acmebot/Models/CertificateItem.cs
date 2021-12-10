@@ -37,6 +37,9 @@ namespace KeyVault.Acmebot.Models
         [JsonProperty("reuseKey")]
         public bool? ReuseKey { get; set; }
 
+        [JsonProperty("exportable")]
+        public bool? Exportable { get; set; }
+
         [JsonProperty("isManaged")]
         public bool IsManaged { get; set; }
     }

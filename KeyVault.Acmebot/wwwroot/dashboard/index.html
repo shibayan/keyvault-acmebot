@@ -276,6 +276,25 @@
                   </div>
                 </div>
               </div>
+              <div class="field is-horizontal" v-if="add.useAdvancedOptions">
+                <div class="field-label">
+                  <label class="label">Private key is exportable?</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control">
+                      <label class="radio">
+                        <input type="radio" v-model="add.exportable" v-bind:value="true">
+                        Yes
+                      </label>
+                      <label class="radio">
+                        <input type="radio" v-model="add.exportable" v-bind:value="false">
+                        No
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </section>
             <footer class="modal-card-foot is-justify-content-flex-end">
               <button class="button is-primary" @click="addCertificate" :class="{ 'is-loading': add.sending }">Add</button>
@@ -388,6 +407,16 @@
                 </div>
                 <div class="field is-horizontal">
                   <div class="field-label">
+                    <label class="label">Private key is exportable?</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ details.certificate.exportable }}
+                    </div>
+                  </div>
+                </div>
+                <div class="field is-horizontal">
+                  <div class="field-label">
                     <label class="label">Managed by Acmebot?</label>
                   </div>
                   <div class="field-body">
@@ -425,6 +454,7 @@
             zones: [],
             zoneName: "",
             dnsNames: [],
+            exportable: false,
             recordName: "",
             useAdvancedOptions: false,
             certificateName: "",
@@ -509,6 +539,7 @@
           const postData = {
             dnsNames: this.add.dnsNames,
             certificateName: this.add.certificateName,
+            exportable: this.add.exportable,
             keyType: this.add.keyType,
             reuseKey: this.add.reuseKey
           };
