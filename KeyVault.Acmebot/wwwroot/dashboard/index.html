@@ -11,6 +11,9 @@
         flex-grow: 2;
       }
     }
+    td {
+      vertical-align: middle !important;
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js" integrity="sha512-Tn2m0TIpgVyTzzvmxLNuqbSJH3JP8jm+Cy3hvHrW7ndTDcJ1w5mBiksqDBb8GpE2ksktFvDB/ykZ0mDpsZj20w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
@@ -49,7 +52,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="certificate in managedCertificates">
+            <tr v-for="certificate in managedCertificates" :class="{ 'has-background-danger-light': certificate.isExpired }">
               <td>{{ certificate.name }}</td>
               <td>
                 <div class="tags">
@@ -400,7 +403,7 @@
             </section>
             <footer class="modal-card-foot is-justify-content-flex-end">
               <button class="button is-primary" @click="renewCertificate" :class="{ 'is-loading': details.sending }">Renew</button>
-              <button class="button is-danger" @click="revokeCertificate" :class="{ 'is-loading': details.sending }" v-if="details.certificate.isManaged">Revoke</button>
+              <button class="button is-danger" @click="revokeCertificate" :class="{ 'is-loading': details.sending }" v-if="details.certificate.isManaged && !details.certificate.isExpired">Revoke</button>
               <button class="button" @click="details.modalActive = false" :disabled="details.sending">Close</button>
             </footer>
           </div>
@@ -624,9 +627,12 @@
         },
         formatExpiresOn(value) {
           const date = new Date(value);
-          const remainDays = Math.round((date - Date.now()) / (1000 * 60 * 60 * 24));
+          const diff = date - Date.now();
+          const remainDays = Math.round(diff / (1000 * 60 * 60 * 24));
 
-          return `${date.toLocaleString()} (Expires in ${remainDays} days)`;
+          const remainText = diff > 0 ? `Expires in ${remainDays} days` : `EXPIRED`;
+
+          return `${date.toLocaleString()} (${remainText})`;
         }
       },
       async beforeMount() {

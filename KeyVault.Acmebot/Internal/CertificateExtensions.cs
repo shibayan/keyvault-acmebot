@@ -47,7 +47,8 @@ namespace KeyVault.Acmebot.Internal
                 KeyType = certificate.Policy.KeyType?.ToString(),
                 KeySize = certificate.Policy.KeySize,
                 KeyCurveName = certificate.Policy.KeyCurveName?.ToString(),
-                ReuseKey = certificate.Policy.ReuseKey
+                ReuseKey = certificate.Policy.ReuseKey,
+                IsExpired = DateTimeOffset.UtcNow > certificate.Properties.ExpiresOn.Value
             };
         }
 

@@ -39,5 +39,8 @@ namespace KeyVault.Acmebot.Models
 
         [JsonProperty("isManaged")]
         public bool IsManaged { get; set; }
+
+        [JsonProperty("isExpired")]
+        public bool IsExpired { get; set; }
     }
 }
