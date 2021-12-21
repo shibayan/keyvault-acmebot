@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.4.1008.15138",
-      "templateHash": "14145747506233511579"
+      "version": "0.4.1124.51302",
+      "templateHash": "2245426988338687263"
     }
   },
   "parameters": {
@@ -71,7 +71,6 @@
       }
     }
   },
-  "functions": [],
   "variables": {
     "functionAppName": "[format('func-{0}-{1}', parameters('appNamePrefix'), substring(uniqueString(resourceGroup().id, deployment().name), 0, 4))]",
     "appServicePlanName": "[format('plan-{0}-{1}', parameters('appNamePrefix'), substring(uniqueString(resourceGroup().id, deployment().name), 0, 4))]",
