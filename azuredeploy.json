@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.1124.51302",
-      "templateHash": "2245426988338687263"
+      "templateHash": "4584067792494687141"
     }
   },
   "parameters": {
@@ -202,8 +202,8 @@
               "value": "[environment().name]"
             }
           ],
-          "clientAffinityEnabled": false,
           "netFrameworkVersion": "v6.0",
+          "ftpsState": "Disabled",
           "minTlsVersion": "1.2",
           "scmMinTlsVersion": "1.2"
         }
