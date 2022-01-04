@@ -193,3 +193,7 @@ indent_size= 2
 # Html files
 [*.html]
 indent_size= 2
+
+# Bicep files
+[*.bicep]
+indent_size= 2
