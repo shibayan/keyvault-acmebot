@@ -26,16 +26,15 @@ Key Vault Acmebot allows for secure and centralized management of ACME certifica
 
 ## Feature Support
 
-- All Azure App Services (Web Apps / Functions / Containers, regardless of OS)
-- Azure CDN and Front Door
-- Azure Application Gateway v2
-- Issuing certificates for Wildcard and Zone Apex
-- Issuing certificates with SANs (subject alternative names) (one certificate for multiple domains)
+- Issuing certificates for Zone Apex, Wildcard and SANs (multiple domains)
+- Dedicated dashboard for easy certificates management
 - Automated certificate renewal
 - ACME v2 compliants Certification Authorities
   - [Let's Encrypt](https://letsencrypt.org/)
   - [Buypass Go SSL](https://www.buypass.com/ssl/resources/acme-free-ssl)
   - [ZeroSSL](https://zerossl.com/features/acme/) (Requires EAB Credentials)
+- Azure App Services (Web Apps / Functions / Containers, regardless of OS)
+- Azure CDN / Front Door / Application Gateway v2 / etc
 
 ## Deployment
 
