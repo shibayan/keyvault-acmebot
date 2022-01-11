@@ -37,15 +37,6 @@ Key Vault Acmebot allows for secure and centralized management of ACME certifica
   - [Buypass Go SSL](https://www.buypass.com/ssl/resources/acme-free-ssl)
   - [ZeroSSL](https://zerossl.com/features/acme/) (Requires EAB Credentials)
 
-## Requirements
-
-You will need the following:
-
-- Azure Subscription (required to deploy this solution)
-- Azure Key Vault (existing one or new Key Vault can be created at deployment time)
-- DNS provider (required to host your public DNS zone)
-- Email address (required to register with ACME)
-
 ## Deployment
 
 | Azure (Public) | Azure China | Azure Government |
