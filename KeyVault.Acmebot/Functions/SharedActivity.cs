@@ -66,7 +66,7 @@ namespace KeyVault.Acmebot.Functions
                     continue;
                 }
 
-                if ((certificate.ExpiresOn.Value - currentDateTime).TotalDays > 30)
+                if ((certificate.ExpiresOn.Value - currentDateTime).TotalDays > _options.RenewBeforeExpiry)
                 {
                     continue;
                 }
