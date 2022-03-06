@@ -5,6 +5,7 @@ namespace KeyVault.Acmebot.Options
     public class AcmebotOptions
     {
         [Required]
+        [Url]
         public string Endpoint { get; set; } = "https://acme-v02.api.letsencrypt.org/";
 
         [Required]
@@ -22,6 +23,9 @@ namespace KeyVault.Acmebot.Options
         public string PreferredChain { get; set; }
 
         public bool MitigateChainOrder { get; set; } = false;
+
+        [Range(0, 365)]
+        public int RenewBeforeExpiry { get; set; } = 30;
 
         public ExternalAccountBindingOptions ExternalAccountBinding { get; set; }
 
