@@ -1,7 +1,6 @@
-﻿namespace KeyVault.Acmebot.Options
+﻿namespace KeyVault.Acmebot.Options;
+
+public class CloudflareOptions
 {
-    public class CloudflareOptions
-    {
-        public string ApiToken { get; set; }
-    }
+    public string ApiToken { get; set; }
 }

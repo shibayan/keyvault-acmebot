@@ -1,9 +1,8 @@
-﻿namespace KeyVault.Acmebot.Options
-{
-    public class GoDaddyOptions
-    {
-        public string ApiKey { get; set; }
+﻿namespace KeyVault.Acmebot.Options;
 
-        public string ApiSecret { get; set; }
-    }
+public class GoDaddyOptions
+{
+    public string ApiKey { get; set; }
+
+    public string ApiSecret { get; set; }
 }

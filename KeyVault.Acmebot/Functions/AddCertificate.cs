@@ -12,42 +12,41 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
-namespace KeyVault.Acmebot.Functions
+namespace KeyVault.Acmebot.Functions;
+
+public class AddCertificate : HttpFunctionBase
 {
-    public class AddCertificate : HttpFunctionBase
+    public AddCertificate(IHttpContextAccessor httpContextAccessor)
+        : base(httpContextAccessor)
     {
-        public AddCertificate(IHttpContextAccessor httpContextAccessor)
-            : base(httpContextAccessor)
+    }
+
+    [FunctionName(nameof(AddCertificate) + "_" + nameof(HttpStart))]
+    public async Task<IActionResult> HttpStart(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/certificate")] CertificatePolicyItem certificatePolicyItem,
+        [DurableClient] IDurableClient starter,
+        ILogger log)
+    {
+        if (!User.IsAppAuthorized())
         {
+            return Unauthorized();
         }
 
-        [FunctionName(nameof(AddCertificate) + "_" + nameof(HttpStart))]
-        public async Task<IActionResult> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/certificate")] CertificatePolicyItem certificatePolicyItem,
-            [DurableClient] IDurableClient starter,
-            ILogger log)
+        if (!TryValidateModel(certificatePolicyItem))
         {
-            if (!User.IsAppAuthorized())
-            {
-                return Unauthorized();
-            }
-
-            if (!TryValidateModel(certificatePolicyItem))
-            {
-                return ValidationProblem(ModelState);
-            }
-
-            if (string.IsNullOrEmpty(certificatePolicyItem.CertificateName))
-            {
-                certificatePolicyItem.CertificateName = certificatePolicyItem.DnsNames[0].Replace("*", "wildcard").Replace(".", "-");
-            }
-
-            // Function input comes from the request content.
-            var instanceId = await starter.StartNewAsync(nameof(SharedOrchestrator.IssueCertificate), certificatePolicyItem);
-
-            log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
-
-            return AcceptedAtFunction(nameof(GetInstanceState) + "_" + nameof(GetInstanceState.HttpStart), new { instanceId }, null);
+            return ValidationProblem(ModelState);
         }
+
+        if (string.IsNullOrEmpty(certificatePolicyItem.CertificateName))
+        {
+            certificatePolicyItem.CertificateName = certificatePolicyItem.DnsNames[0].Replace("*", "wildcard").Replace(".", "-");
+        }
+
+        // Function input comes from the request content.
+        var instanceId = await starter.StartNewAsync(nameof(SharedOrchestrator.IssueCertificate), certificatePolicyItem);
+
+        log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
+
+        return AcceptedAtFunction(nameof(GetInstanceState) + "_" + nameof(GetInstanceState.HttpStart), new { instanceId }, null);
     }
 }

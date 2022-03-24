@@ -1,9 +1,8 @@
-﻿namespace KeyVault.Acmebot.Options
-{
-    public class DnsMadeEasyOptions
-    {
-        public string ApiKey { get; set; }
+﻿namespace KeyVault.Acmebot.Options;
 
-        public string SecretKey { get; set; }
-    }
+public class DnsMadeEasyOptions
+{
+    public string ApiKey { get; set; }
+
+    public string SecretKey { get; set; }
 }
