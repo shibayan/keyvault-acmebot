@@ -7,54 +7,53 @@ using System.Threading.Tasks;
 using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Options;
 
-namespace KeyVault.Acmebot.Providers
+namespace KeyVault.Acmebot.Providers;
+
+public class CustomDnsProvider : IDnsProvider
 {
-    public class CustomDnsProvider : IDnsProvider
+    public CustomDnsProvider(CustomDnsOptions options)
     {
-        public CustomDnsProvider(CustomDnsOptions options)
+        _httpClient = new HttpClient
         {
-            _httpClient = new HttpClient
-            {
-                BaseAddress = new Uri(options.Endpoint)
-            };
+            BaseAddress = new Uri(options.Endpoint)
+        };
 
-            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation(options.ApiKeyHeaderName, options.ApiKey);
+        _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        _httpClient.DefaultRequestHeaders.TryAddWithoutValidation(options.ApiKeyHeaderName, options.ApiKey);
 
-            PropagationSeconds = options.PropagationSeconds;
-        }
+        PropagationSeconds = options.PropagationSeconds;
+    }
 
-        private readonly HttpClient _httpClient;
+    private readonly HttpClient _httpClient;
 
-        public int PropagationSeconds { get; }
+    public int PropagationSeconds { get; }
 
-        public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
-        {
-            var response = await _httpClient.GetAsync("zones");
+    public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
+    {
+        var response = await _httpClient.GetAsync("zones");
 
-            response.EnsureSuccessStatusCode();
+        response.EnsureSuccessStatusCode();
 
-            var zones = await response.Content.ReadAsAsync<DnsZone[]>();
+        var zones = await response.Content.ReadAsAsync<DnsZone[]>();
 
-            return zones;
-        }
+        return zones;
+    }
 
-        public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
-        {
-            var recordName = $"{relativeRecordName}.{zone.Name}";
+    public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
+    {
+        var recordName = $"{relativeRecordName}.{zone.Name}";
 
-            var response = await _httpClient.PutAsync($"zones/{zone.Id}/records/{recordName}", new { type = "TXT", ttl = 60, values });
+        var response = await _httpClient.PutAsync($"zones/{zone.Id}/records/{recordName}", new { type = "TXT", ttl = 60, values });
 
-            response.EnsureSuccessStatusCode();
-        }
+        response.EnsureSuccessStatusCode();
+    }
 
-        public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
-        {
-            var recordName = $"{relativeRecordName}.{zone.Name}";
+    public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
+    {
+        var recordName = $"{relativeRecordName}.{zone.Name}";
 
-            var response = await _httpClient.DeleteAsync($"zones/{zone.Id}/records/{recordName}");
+        var response = await _httpClient.DeleteAsync($"zones/{zone.Id}/records/{recordName}");
 
-            response.EnsureSuccessStatusCode();
-        }
+        response.EnsureSuccessStatusCode();
     }
 }

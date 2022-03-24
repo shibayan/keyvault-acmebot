@@ -10,28 +10,27 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
-namespace KeyVault.Acmebot.Functions
+namespace KeyVault.Acmebot.Functions;
+
+public class StaticPage : HttpFunctionBase
 {
-    public class StaticPage : HttpFunctionBase
+    public StaticPage(IHttpContextAccessor httpContextAccessor)
+        : base(httpContextAccessor)
     {
-        public StaticPage(IHttpContextAccessor httpContextAccessor)
-            : base(httpContextAccessor)
-        {
-        }
-
-        [FunctionName(nameof(StaticPage) + "_" + nameof(Serve))]
-        public IActionResult Serve(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "{*path}")] HttpRequest req,
-            ILogger log)
-        {
-            if (!IsEasyAuthEnabled || !User.IsAppAuthorized())
-            {
-                return Forbid();
-            }
-
-            return LocalStaticApp();
-        }
-
-        private static bool IsEasyAuthEnabled => bool.TryParse(Environment.GetEnvironmentVariable("WEBSITE_AUTH_ENABLED"), out var result) && result;
     }
+
+    [FunctionName(nameof(StaticPage) + "_" + nameof(Serve))]
+    public IActionResult Serve(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "{*path}")] HttpRequest req,
+        ILogger log)
+    {
+        if (!IsEasyAuthEnabled || !User.IsAppAuthorized())
+        {
+            return Forbid();
+        }
+
+        return LocalStaticApp();
+    }
+
+    private static bool IsEasyAuthEnabled => bool.TryParse(Environment.GetEnvironmentVariable("WEBSITE_AUTH_ENABLED"), out var result) && result;
 }

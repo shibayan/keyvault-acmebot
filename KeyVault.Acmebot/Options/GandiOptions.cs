@@ -1,7 +1,6 @@
-﻿namespace KeyVault.Acmebot.Options
+﻿namespace KeyVault.Acmebot.Options;
+
+public class GandiOptions
 {
-    public class GandiOptions
-    {
-        public string ApiKey { get; set; }
-    }
+    public string ApiKey { get; set; }
 }

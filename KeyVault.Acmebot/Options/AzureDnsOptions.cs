@@ -1,7 +1,6 @@
-﻿namespace KeyVault.Acmebot.Options
+﻿namespace KeyVault.Acmebot.Options;
+
+public class AzureDnsOptions
 {
-    public class AzureDnsOptions
-    {
-        public string SubscriptionId { get; set; }
-    }
+    public string SubscriptionId { get; set; }
 }

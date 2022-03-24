@@ -1,9 +1,8 @@
-﻿namespace KeyVault.Acmebot.Options
+﻿namespace KeyVault.Acmebot.Options;
+
+public class ExternalAccountBindingOptions
 {
-    public class ExternalAccountBindingOptions
-    {
-        public string KeyId { get; set; }
-        public string HmacKey { get; set; }
-        public string Algorithm { get; set; } = "HS256";
-    }
+    public string KeyId { get; set; }
+    public string HmacKey { get; set; }
+    public string Algorithm { get; set; } = "HS256";
 }

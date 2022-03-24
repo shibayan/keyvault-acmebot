@@ -1,7 +1,6 @@
-﻿namespace KeyVault.Acmebot.Options
+﻿namespace KeyVault.Acmebot.Options;
+
+public class GoogleDnsOptions
 {
-    public class GoogleDnsOptions
-    {
-        public string KeyFile64 { get; set; }
-    }
+    public string KeyFile64 { get; set; }
 }
