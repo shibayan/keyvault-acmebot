@@ -31,6 +31,6 @@ jobs:
       run: 7z a -mx=9 latest.zip ./dist/*
 
     - name: Upload to Blob
-      run: az storage blob upload -f latest.zip -c azure-keyvault-letsencrypt -n v3/latest.zip
+      run: az storage blob upload -f latest.zip -c azure-keyvault-letsencrypt -n v3/latest.zip --overwrite
       env:
         AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
