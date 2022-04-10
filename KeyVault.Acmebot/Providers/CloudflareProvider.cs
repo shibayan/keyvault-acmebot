@@ -185,6 +185,7 @@ public class CloudflareProvider : IDnsProvider
         [JsonProperty("content")]
         public string Content { get; set; }
 
+        // ReSharper disable once InconsistentNaming
         [JsonProperty("ttl")]
         public int TTL { get; set; }
     }

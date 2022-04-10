@@ -255,11 +255,11 @@ public class TransIpProvider : IDnsProvider
 
     private class TransIpToken
     {
-        public string CustomerName { get; set; }
+        public string CustomerName { get; init; }
 
-        public string Token { get; set; }
+        public string Token { get; init; }
 
-        public DateTimeOffset Expires { get; set; }
+        public DateTimeOffset Expires { get; init; }
 
         public bool IsValid()
         {

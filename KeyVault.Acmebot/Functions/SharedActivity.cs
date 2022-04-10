@@ -154,7 +154,7 @@ public class SharedActivity : ISharedActivity
         var zones = await _dnsProviders.ListAllZonesAsync();
 
         var foundZones = new HashSet<DnsZone>();
-        var zoneNotFoundDnsNames = new List<string>();
+        var notFoundZoneDnsNames = new List<string>();
 
         foreach (var dnsName in dnsNames)
         {
@@ -165,20 +165,20 @@ public class SharedActivity : ISharedActivity
             // マッチする DNS zone が見つからない場合はエラー
             if (zone == null)
             {
-                zoneNotFoundDnsNames.Add(dnsName);
+                notFoundZoneDnsNames.Add(dnsName);
                 continue;
             }
 
             foundZones.Add(zone);
         }
 
-        if (zoneNotFoundDnsNames.Count > 0)
+        if (notFoundZoneDnsNames.Count > 0)
         {
-            throw new PreconditionException($"DNS zone(s) are not found. DnsNames = {string.Join(",", zoneNotFoundDnsNames)}");
+            throw new PreconditionException($"DNS zone(s) are not found. DnsNames = {string.Join(",", notFoundZoneDnsNames)}");
         }
 
         // DNS zone に移譲されている Name servers が正しいか検証
-        foreach (var zone in foundZones.Where(x => x.NameServers != null && x.NameServers.Count != 0))
+        foreach (var zone in foundZones.Where(x => x.NameServers is { Count: > 0 }))
         {
             // DNS provider が Name servers を返している場合は NS レコードを確認
             var queryResult = await _lookupClient.QueryAsync(zone.Name, QueryType.NS);

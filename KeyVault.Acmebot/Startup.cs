@@ -78,47 +78,47 @@ public class Startup : FunctionsStartup
 
             var dnsProviders = new List<IDnsProvider>();
 
-            if (options.AzureDns != null)
+            if (options.AzureDns is not null)
             {
                 dnsProviders.Add(new AzureDnsProvider(options.AzureDns, environment));
             }
 
-            if (options.Cloudflare != null)
+            if (options.Cloudflare is not null)
             {
                 dnsProviders.Add(new CloudflareProvider(options.Cloudflare));
             }
 
-            if (options.CustomDns != null)
+            if (options.CustomDns is not null)
             {
                 dnsProviders.Add(new CustomDnsProvider(options.CustomDns));
             }
 
-            if (options.DnsMadeEasy != null)
+            if (options.DnsMadeEasy is not null)
             {
                 dnsProviders.Add(new DnsMadeEasyProvider(options.DnsMadeEasy));
             }
 
-            if (options.Gandi != null)
+            if (options.Gandi is not null)
             {
                 dnsProviders.Add(new GandiProvider(options.Gandi));
             }
 
-            if (options.GoDaddy != null)
+            if (options.GoDaddy is not null)
             {
                 dnsProviders.Add(new GoDaddyProvider(options.GoDaddy));
             }
 
-            if (options.GoogleDns != null)
+            if (options.GoogleDns is not null)
             {
                 dnsProviders.Add(new GoogleDnsProvider(options.GoogleDns));
             }
 
-            if (options.Route53 != null)
+            if (options.Route53 is not null)
             {
                 dnsProviders.Add(new Route53Provider(options.Route53));
             }
 
-            if (options.TransIp != null)
+            if (options.TransIp is not null)
             {
                 dnsProviders.Add(new TransIpProvider(options, options.TransIp, environment));
             }

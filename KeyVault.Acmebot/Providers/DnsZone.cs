@@ -13,7 +13,7 @@ public class DnsZone : IEquatable<DnsZone>
 
     private static readonly IdnMapping s_idnMapping = new();
 
-    private string _name;
+    private readonly string _name;
 
     public string Id { get; init; }
 

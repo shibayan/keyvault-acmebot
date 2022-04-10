@@ -128,6 +128,7 @@ public class GoDaddyProvider : IDnsProvider
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        // ReSharper disable once InconsistentNaming
         [JsonProperty("ttl")]
         public int TTL { get; set; }
 

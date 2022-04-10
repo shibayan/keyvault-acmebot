@@ -113,9 +113,12 @@ public class DnsMadeEasyProvider : IDnsProvider
         private sealed class ApiKeyHandler : DelegatingHandler
         {
             private string ApiKey { get; }
+
+            // ReSharper disable once InconsistentNaming
             private HMACSHA1 HMAC { get; }
 
-            public ApiKeyHandler(string apiKey, string secretKey, HttpMessageHandler innerHandler) : base(innerHandler)
+            public ApiKeyHandler(string apiKey, string secretKey, HttpMessageHandler innerHandler)
+                : base(innerHandler)
             {
                 if (apiKey is null)
                 {
