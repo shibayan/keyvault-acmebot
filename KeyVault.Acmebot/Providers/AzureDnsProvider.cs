@@ -35,7 +35,7 @@ public class AzureDnsProvider : IDnsProvider
 
         await foreach (var zone in result)
         {
-            zones.Add(new DnsZone { Id = zone.Id, Name = zone.Name, NameServers = zone.NameServers });
+            zones.Add(new DnsZone(this) { Id = zone.Id, Name = zone.Name, NameServers = zone.NameServers });
         }
 
         return zones;

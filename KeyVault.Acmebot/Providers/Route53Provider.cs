@@ -28,7 +28,7 @@ public class Route53Provider : IDnsProvider
     {
         var zones = await _amazonRoute53Client.ListHostedZonesAsync();
 
-        return zones.HostedZones.Select(x => new DnsZone { Id = x.Id, Name = x.Name.TrimEnd('.') }).ToArray();
+        return zones.HostedZones.Select(x => new DnsZone(this) { Id = x.Id, Name = x.Name.TrimEnd('.') }).ToArray();
     }
 
     public Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)

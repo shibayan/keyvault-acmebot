@@ -42,7 +42,7 @@ public class TransIpProvider : IDnsProvider
     {
         var zones = await _transIpClient.ListZonesAsync();
 
-        return zones.Select(x => new DnsZone { Id = x.Name, Name = x.Name }).ToArray();
+        return zones.Select(x => new DnsZone(this) { Id = x.Name, Name = x.Name }).ToArray();
     }
 
     public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
@@ -255,11 +255,11 @@ public class TransIpProvider : IDnsProvider
 
     private class TransIpToken
     {
-        public string CustomerName { get; set; }
+        public string CustomerName { get; init; }
 
-        public string Token { get; set; }
+        public string Token { get; init; }
 
-        public DateTimeOffset Expires { get; set; }
+        public DateTimeOffset Expires { get; init; }
 
         public bool IsValid()
         {

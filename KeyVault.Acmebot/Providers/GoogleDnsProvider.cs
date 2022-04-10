@@ -36,7 +36,7 @@ public class GoogleDnsProvider : IDnsProvider
         var zones = await _dnsService.ManagedZones.List(_credsParameters.ProjectId).ExecuteAsync();
 
         return zones.ManagedZones
-                    .Select(x => new DnsZone { Id = x.Name, Name = x.DnsName.TrimEnd('.'), NameServers = x.NameServers.ToArray() })
+                    .Select(x => new DnsZone(this) { Id = x.Name, Name = x.DnsName.TrimEnd('.'), NameServers = x.NameServers.ToArray() })
                     .ToArray();
     }
 

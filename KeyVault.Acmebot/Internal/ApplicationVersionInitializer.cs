@@ -14,7 +14,7 @@ internal class ApplicationVersionInitializer<TStartup> : ITelemetryInitializer
                                              ?.InformationalVersion;
     }
 
-    public string ApplicationVersion { get; set; }
+    public string ApplicationVersion { get; }
 
     public void Initialize(ITelemetry telemetry)
     {
