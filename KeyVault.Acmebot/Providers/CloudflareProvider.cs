@@ -28,7 +28,7 @@ public class CloudflareProvider : IDnsProvider
         var zones = await _cloudflareDnsClient.ListAllZonesAsync();
 
         // Zone API は Punycode されていない値を返すのでエンコードが必要
-        return zones.Select(x => new DnsZone { Id = x.Id, Name = x.Name, NameServers = x.NameServers }).ToArray();
+        return zones.Select(x => new DnsZone(this) { Id = x.Id, Name = x.Name, NameServers = x.NameServers }).ToArray();
     }
 
     public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)

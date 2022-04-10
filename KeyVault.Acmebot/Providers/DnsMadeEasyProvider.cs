@@ -31,7 +31,7 @@ public class DnsMadeEasyProvider : IDnsProvider
     {
         var zones = await _client.ListZonesAsync();
 
-        return zones.Select(x => new DnsZone { Id = x.Id, Name = x.Name }).ToArray();
+        return zones.Select(x => new DnsZone(this) { Id = x.Id, Name = x.Name }).ToArray();
     }
 
     public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)

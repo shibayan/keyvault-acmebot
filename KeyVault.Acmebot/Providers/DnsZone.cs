@@ -6,19 +6,26 @@ namespace KeyVault.Acmebot.Providers;
 
 public class DnsZone : IEquatable<DnsZone>
 {
-    private readonly IdnMapping _idnMapping = new IdnMapping();
+    public DnsZone(IDnsProvider dnsProvider)
+    {
+        Provider = dnsProvider;
+    }
+
+    private static readonly IdnMapping s_idnMapping = new();
 
     private string _name;
 
-    public string Id { get; set; }
+    public string Id { get; init; }
 
     public string Name
     {
         get => _name;
-        set => _name = _idnMapping.GetAscii(value);
+        init => _name = s_idnMapping.GetAscii(value);
     }
 
-    public IReadOnlyList<string> NameServers { get; set; }
+    public IReadOnlyList<string> NameServers { get; init; }
+
+    public IDnsProvider Provider { get; }
 
     public bool Equals(DnsZone other)
     {

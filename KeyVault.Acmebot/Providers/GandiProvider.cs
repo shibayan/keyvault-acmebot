@@ -31,7 +31,7 @@ public class GandiProvider : IDnsProvider
         // Do NOT include the PrimaryNameServer element from the DnsZone list for now,
         // the return value from Gandi when returning zones is not the expected value when doing the intersect at the Dns01Precondition method
 
-        return zones.Select(x => new DnsZone { Id = x.Uuid, Name = x.Name }).ToArray();
+        return zones.Select(x => new DnsZone(this) { Id = x.Uuid, Name = x.Name }).ToArray();
     }
 
     public Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)

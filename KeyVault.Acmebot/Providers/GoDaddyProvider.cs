@@ -28,7 +28,7 @@ public class GoDaddyProvider : IDnsProvider
     {
         var zones = await _client.ListZonesAsync();
 
-        return zones.Select(x => new DnsZone { Id = x.DomainId, Name = x.Domain, NameServers = x.NameServers }).ToArray();
+        return zones.Select(x => new DnsZone(this) { Id = x.DomainId, Name = x.Domain, NameServers = x.NameServers }).ToArray();
     }
 
     public Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)

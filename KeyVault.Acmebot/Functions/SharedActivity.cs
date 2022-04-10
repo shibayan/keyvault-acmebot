@@ -30,12 +30,12 @@ namespace KeyVault.Acmebot.Functions;
 public class SharedActivity : ISharedActivity
 {
     public SharedActivity(LookupClient lookupClient, AcmeProtocolClientFactory acmeProtocolClientFactory,
-                          IDnsProvider dnsProvider, CertificateClient certificateClient,
+                          IEnumerable<IDnsProvider> dnsProviders, CertificateClient certificateClient,
                           WebhookInvoker webhookInvoker, IOptions<AcmebotOptions> options, ILogger<SharedActivity> logger)
     {
-        _acmeProtocolClientFactory = acmeProtocolClientFactory;
-        _dnsProvider = dnsProvider;
         _lookupClient = lookupClient;
+        _acmeProtocolClientFactory = acmeProtocolClientFactory;
+        _dnsProviders = dnsProviders;
         _certificateClient = certificateClient;
         _webhookInvoker = webhookInvoker;
         _options = options.Value;
@@ -44,7 +44,7 @@ public class SharedActivity : ISharedActivity
 
     private readonly LookupClient _lookupClient;
     private readonly AcmeProtocolClientFactory _acmeProtocolClientFactory;
-    private readonly IDnsProvider _dnsProvider;
+    private readonly IEnumerable<IDnsProvider> _dnsProviders;
     private readonly CertificateClient _certificateClient;
     private readonly WebhookInvoker _webhookInvoker;
     private readonly AcmebotOptions _options;
@@ -101,7 +101,7 @@ public class SharedActivity : ISharedActivity
     {
         try
         {
-            var zones = await _dnsProvider.ListZonesAsync();
+            var zones = await _dnsProviders.ListAllZonesAsync();
 
             return zones.Select(x => x.Name).ToArray();
         }
@@ -151,7 +151,7 @@ public class SharedActivity : ISharedActivity
     public async Task Dns01Precondition([ActivityTrigger] IReadOnlyList<string> dnsNames)
     {
         // DNS zone が存在するか確認
-        var zones = await _dnsProvider.ListZonesAsync();
+        var zones = await _dnsProviders.ListAllZonesAsync();
 
         var foundZones = new HashSet<DnsZone>();
         var zoneNotFoundDnsNames = new List<string>();
@@ -178,14 +178,8 @@ public class SharedActivity : ISharedActivity
         }
 
         // DNS zone に移譲されている Name servers が正しいか検証
-        foreach (var zone in foundZones)
+        foreach (var zone in foundZones.Where(x => x.NameServers != null && x.NameServers.Count != 0))
         {
-            // DNS provider が Name servers を返していなければスキップ
-            if (zone.NameServers == null || zone.NameServers.Count == 0)
-            {
-                continue;
-            }
-
             // DNS provider が Name servers を返している場合は NS レコードを確認
             var queryResult = await _lookupClient.QueryAsync(zone.Name, QueryType.NS);
 
@@ -234,7 +228,9 @@ public class SharedActivity : ISharedActivity
         }
 
         // DNS zone の一覧を取得する
-        var zones = await _dnsProvider.ListZonesAsync();
+        var zones = await _dnsProviders.ListAllZonesAsync();
+
+        var propagationSeconds = 0;
 
         // DNS-01 の検証レコード名毎に DNS に TXT レコードを作成
         foreach (var lookup in challengeResults.ToLookup(x => x.DnsRecordName))
@@ -248,11 +244,14 @@ public class SharedActivity : ISharedActivity
             // Challenge の詳細から DNS 向けにレコード名を作成
             var acmeDnsRecordName = dnsRecordName.Replace($".{zone.Name}", "", StringComparison.OrdinalIgnoreCase);
 
-            await _dnsProvider.DeleteTxtRecordAsync(zone, acmeDnsRecordName);
-            await _dnsProvider.CreateTxtRecordAsync(zone, acmeDnsRecordName, lookup.Select(x => x.DnsRecordValue));
+            await zone.Provider.DeleteTxtRecordAsync(zone, acmeDnsRecordName);
+            await zone.Provider.CreateTxtRecordAsync(zone, acmeDnsRecordName, lookup.Select(x => x.DnsRecordValue));
+
+            // 一番時間のかかる DNS Provider に合わせる
+            propagationSeconds = Math.Max(propagationSeconds, zone.Provider.PropagationSeconds);
         }
 
-        return (challengeResults, _dnsProvider.PropagationSeconds);
+        return (challengeResults, propagationSeconds);
     }
 
     [FunctionName(nameof(CheckDnsChallenge))]
@@ -411,7 +410,7 @@ public class SharedActivity : ISharedActivity
         // 証明書をダウンロードして Key Vault へ格納
         var x509Certificates = await acmeProtocolClient.GetOrderCertificateAsync(orderDetails, _options.PreferredChain);
 
-        var exportedX509Certificates = x509Certificates.Cast<X509Certificate2>().Select(x => x.Export(X509ContentType.Pfx));
+        var exportedX509Certificates = x509Certificates.Select(x => x.Export(X509ContentType.Pfx));
 
         var mergeCertificateOptions = new MergeCertificateOptions(
             certificateName,
@@ -425,7 +424,7 @@ public class SharedActivity : ISharedActivity
     public async Task CleanupDnsChallenge([ActivityTrigger] IReadOnlyList<AcmeChallengeResult> challengeResults)
     {
         // DNS zone の一覧を取得する
-        var zones = await _dnsProvider.ListZonesAsync();
+        var zones = await _dnsProviders.ListAllZonesAsync();
 
         // DNS-01 の検証レコード名毎に DNS から TXT レコードを削除
         foreach (var lookup in challengeResults.ToLookup(x => x.DnsRecordName))
@@ -439,7 +438,7 @@ public class SharedActivity : ISharedActivity
             // Challenge の詳細から DNS 向けにレコード名を作成
             var acmeDnsRecordName = dnsRecordName.Replace($".{zone.Name}", "", StringComparison.OrdinalIgnoreCase);
 
-            await _dnsProvider.DeleteTxtRecordAsync(zone, acmeDnsRecordName);
+            await zone.Provider.DeleteTxtRecordAsync(zone, acmeDnsRecordName);
         }
     }
 

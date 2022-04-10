@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using Azure.Identity;
 using Azure.Security.KeyVault.Certificates;
@@ -69,57 +70,65 @@ public class Startup : FunctionsStartup
         builder.Services.AddSingleton<WebhookInvoker>();
         builder.Services.AddSingleton<ILifeCycleNotificationHelper, WebhookLifeCycleNotification>();
 
-        builder.Services.AddSingleton<IDnsProvider>(provider =>
+        // Add DNS Providers
+        builder.Services.AddSingleton<IEnumerable<IDnsProvider>>(provider =>
         {
             var options = provider.GetRequiredService<IOptions<AcmebotOptions>>().Value;
             var environment = provider.GetRequiredService<AzureEnvironment>();
 
+            var dnsProviders = new List<IDnsProvider>();
+
             if (options.AzureDns != null)
             {
-                return new AzureDnsProvider(options.AzureDns, environment);
+                dnsProviders.Add(new AzureDnsProvider(options.AzureDns, environment));
             }
 
             if (options.Cloudflare != null)
             {
-                return new CloudflareProvider(options.Cloudflare);
+                dnsProviders.Add(new CloudflareProvider(options.Cloudflare));
             }
 
             if (options.CustomDns != null)
             {
-                return new CustomDnsProvider(options.CustomDns);
+                dnsProviders.Add(new CustomDnsProvider(options.CustomDns));
             }
 
             if (options.DnsMadeEasy != null)
             {
-                return new DnsMadeEasyProvider(options.DnsMadeEasy);
+                dnsProviders.Add(new DnsMadeEasyProvider(options.DnsMadeEasy));
             }
 
             if (options.Gandi != null)
             {
-                return new GandiProvider(options.Gandi);
+                dnsProviders.Add(new GandiProvider(options.Gandi));
             }
 
             if (options.GoDaddy != null)
             {
-                return new GoDaddyProvider(options.GoDaddy);
+                dnsProviders.Add(new GoDaddyProvider(options.GoDaddy));
             }
 
             if (options.GoogleDns != null)
             {
-                return new GoogleDnsProvider(options.GoogleDns);
+                dnsProviders.Add(new GoogleDnsProvider(options.GoogleDns));
             }
 
             if (options.Route53 != null)
             {
-                return new Route53Provider(options.Route53);
+                dnsProviders.Add(new Route53Provider(options.Route53));
             }
 
             if (options.TransIp != null)
             {
-                return new TransIpProvider(options, options.TransIp, environment);
+                dnsProviders.Add(new TransIpProvider(options, options.TransIp, environment));
             }
 
-            throw new NotSupportedException("DNS Provider is not configured. Please check the documentation and configure it.");
+            if (dnsProviders.Count == 0)
+            {
+                throw new NotSupportedException("DNS Provider is not configured. Please check the documentation and configure it.");
+            }
+
+            return dnsProviders;
         });
     }
 }
