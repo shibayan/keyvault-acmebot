@@ -4,7 +4,7 @@
     "applicationInsights": {
       "samplingSettings": {
         "isEnabled": true,
-        "excludedTypes": "Request"
+        "excludedTypes": "Request;Exception"
       }
     },
     "logLevel": {
@@ -13,7 +13,6 @@
   },
   "extensions": {
     "durableTask": {
-      "hubName": "DurableFunctionsHub",
       "extendedSessionsEnabled": true,
       "extendedSessionIdleTimeoutInSeconds": 120
     },
