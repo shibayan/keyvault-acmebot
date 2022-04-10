@@ -21,7 +21,7 @@ public class RevokeCertificate : HttpFunctionBase
     {
     }
 
-    [FunctionName(nameof(RevokeCertificate) + "_" + nameof(Orchestrator))]
+    [FunctionName($"{nameof(RevokeCertificate)}_{nameof(Orchestrator)}")]
     public async Task Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
     {
         var certificateName = context.GetInput<string>();
@@ -31,7 +31,7 @@ public class RevokeCertificate : HttpFunctionBase
         await activity.RevokeCertificate(certificateName);
     }
 
-    [FunctionName(nameof(RevokeCertificate) + "_" + nameof(HttpStart))]
+    [FunctionName($"{nameof(RevokeCertificate)}_{nameof(HttpStart)}")]
     public async Task<IActionResult> HttpStart(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/certificate/{certificateName}/revoke")] HttpRequest req,
         string certificateName,
@@ -44,7 +44,7 @@ public class RevokeCertificate : HttpFunctionBase
         }
 
         // Function input comes from the request content.
-        var instanceId = await starter.StartNewAsync(nameof(RevokeCertificate) + "_" + nameof(Orchestrator), null, certificateName);
+        var instanceId = await starter.StartNewAsync($"{nameof(RevokeCertificate)}_{nameof(Orchestrator)}", null, certificateName);
 
         log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 

@@ -21,7 +21,7 @@ public class AddCertificate : HttpFunctionBase
     {
     }
 
-    [FunctionName(nameof(AddCertificate) + "_" + nameof(HttpStart))]
+    [FunctionName($"{nameof(AddCertificate)}_{nameof(HttpStart)}")]
     public async Task<IActionResult> HttpStart(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/certificate")] CertificatePolicyItem certificatePolicyItem,
         [DurableClient] IDurableClient starter,
@@ -47,6 +47,6 @@ public class AddCertificate : HttpFunctionBase
 
         log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
-        return AcceptedAtFunction(nameof(GetInstanceState) + "_" + nameof(GetInstanceState.HttpStart), new { instanceId }, null);
+        return AcceptedAtFunction($"{nameof(GetInstanceState)}_{nameof(GetInstanceState.HttpStart)}", new { instanceId }, null);
     }
 }

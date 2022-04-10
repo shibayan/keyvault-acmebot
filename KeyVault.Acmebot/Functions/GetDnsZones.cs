@@ -24,7 +24,7 @@ public class GetDnsZones : HttpFunctionBase
     {
     }
 
-    [FunctionName(nameof(GetDnsZones) + "_" + nameof(Orchestrator))]
+    [FunctionName($"{nameof(GetDnsZones)}_{nameof(Orchestrator)}")]
     public Task<IReadOnlyList<string>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
     {
         var activity = context.CreateActivityProxy<ISharedActivity>();
@@ -32,7 +32,7 @@ public class GetDnsZones : HttpFunctionBase
         return activity.GetZones();
     }
 
-    [FunctionName(nameof(GetDnsZones) + "_" + nameof(HttpStart))]
+    [FunctionName($"{nameof(GetDnsZones)}_{nameof(HttpStart)}")]
     public async Task<IActionResult> HttpStart(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/dns-zones")] HttpRequest req,
         [DurableClient] IDurableClient starter,
@@ -44,7 +44,7 @@ public class GetDnsZones : HttpFunctionBase
         }
 
         // Function input comes from the request content.
-        var instanceId = await starter.StartNewAsync(nameof(GetDnsZones) + "_" + nameof(Orchestrator));
+        var instanceId = await starter.StartNewAsync($"{nameof(GetDnsZones)}_{nameof(Orchestrator)}");
 
         log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 

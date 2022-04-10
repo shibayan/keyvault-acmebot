@@ -25,7 +25,7 @@ public class GetCertificates : HttpFunctionBase
     {
     }
 
-    [FunctionName(nameof(GetCertificates) + "_" + nameof(Orchestrator))]
+    [FunctionName($"{nameof(GetCertificates)}_{nameof(Orchestrator)}")]
     public Task<IReadOnlyList<CertificateItem>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
     {
         var activity = context.CreateActivityProxy<ISharedActivity>();
@@ -33,7 +33,7 @@ public class GetCertificates : HttpFunctionBase
         return activity.GetAllCertificates();
     }
 
-    [FunctionName(nameof(GetCertificates) + "_" + nameof(HttpStart))]
+    [FunctionName($"{nameof(GetCertificates)}_{nameof(HttpStart)}")]
     public async Task<IActionResult> HttpStart(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/certificates")] HttpRequest req,
         [DurableClient] IDurableClient starter,
@@ -45,7 +45,7 @@ public class GetCertificates : HttpFunctionBase
         }
 
         // Function input comes from the request content.
-        var instanceId = await starter.StartNewAsync(nameof(GetCertificates) + "_" + nameof(Orchestrator));
+        var instanceId = await starter.StartNewAsync($"{nameof(GetCertificates)}_{nameof(Orchestrator)}");
 
         log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 

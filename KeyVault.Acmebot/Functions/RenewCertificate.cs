@@ -20,7 +20,7 @@ public class RenewCertificate : HttpFunctionBase
     {
     }
 
-    [FunctionName(nameof(RenewCertificate) + "_" + nameof(Orchestrator))]
+    [FunctionName($"{nameof(RenewCertificate)}_{nameof(Orchestrator)}")]
     public async Task Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
     {
         var certificateName = context.GetInput<string>();
@@ -33,7 +33,7 @@ public class RenewCertificate : HttpFunctionBase
         await context.CallSubOrchestratorAsync(nameof(SharedOrchestrator.IssueCertificate), certificatePolicyItem);
     }
 
-    [FunctionName(nameof(RenewCertificate) + "_" + nameof(HttpStart))]
+    [FunctionName($"{nameof(RenewCertificate)}_{nameof(HttpStart)}")]
     public async Task<IActionResult> HttpStart(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/certificate/{certificateName}/renew")] HttpRequest req,
         string certificateName,
@@ -46,10 +46,10 @@ public class RenewCertificate : HttpFunctionBase
         }
 
         // Function input comes from the request content.
-        var instanceId = await starter.StartNewAsync(nameof(RenewCertificate) + "_" + nameof(Orchestrator), null, certificateName);
+        var instanceId = await starter.StartNewAsync($"{nameof(RenewCertificate)}_{nameof(Orchestrator)}", null, certificateName);
 
         log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
-        return AcceptedAtFunction(nameof(GetInstanceState) + "_" + nameof(GetInstanceState.HttpStart), new { instanceId }, null);
+        return AcceptedAtFunction($"{nameof(GetInstanceState)}_{nameof(GetInstanceState.HttpStart)}", new { instanceId }, null);
     }
 }

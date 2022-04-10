@@ -19,7 +19,7 @@ public class GetInstanceState : HttpFunctionBase
     {
     }
 
-    [FunctionName(nameof(GetInstanceState) + "_" + nameof(HttpStart))]
+    [FunctionName($"{nameof(GetInstanceState)}_{nameof(HttpStart)}")]
     public async Task<IActionResult> HttpStart(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/state/{instanceId}")] HttpRequest req,
         string instanceId,
@@ -46,7 +46,7 @@ public class GetInstanceState : HttpFunctionBase
             status.RuntimeStatus == OrchestrationRuntimeStatus.Pending ||
             status.RuntimeStatus == OrchestrationRuntimeStatus.ContinuedAsNew)
         {
-            return AcceptedAtFunction(nameof(GetInstanceState) + "_" + nameof(HttpStart), new { instanceId }, null);
+            return AcceptedAtFunction($"{nameof(GetInstanceState)}_{nameof(HttpStart)}", new { instanceId }, null);
         }
 
         return Ok();

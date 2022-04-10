@@ -12,7 +12,7 @@ namespace KeyVault.Acmebot.Functions;
 
 public class RenewCertificates
 {
-    [FunctionName(nameof(RenewCertificates) + "_" + nameof(Orchestrator))]
+    [FunctionName($"{nameof(RenewCertificates)}_{nameof(Orchestrator)}")]
     public async Task Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
     {
         var activity = context.CreateActivityProxy<ISharedActivity>();
@@ -54,11 +54,11 @@ public class RenewCertificates
         }
     }
 
-    [FunctionName(nameof(RenewCertificates) + "_" + nameof(Timer))]
+    [FunctionName($"{nameof(RenewCertificates)}_{nameof(Timer)}")]
     public async Task Timer([TimerTrigger("0 0 0 * * *")] TimerInfo timer, [DurableClient] IDurableClient starter, ILogger log)
     {
         // Function input comes from the request content.
-        var instanceId = await starter.StartNewAsync(nameof(RenewCertificates) + "_" + nameof(Orchestrator));
+        var instanceId = await starter.StartNewAsync($"{nameof(RenewCertificates)}_{nameof(Orchestrator)}");
 
         log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
     }
