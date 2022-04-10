@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.4.1318.3566",
-      "templateHash": "11928300539936880983"
+      "version": "0.5.6.12127",
+      "templateHash": "10580117103524331081"
     }
   },
   "parameters": {
@@ -175,11 +175,11 @@
             },
             {
               "name": "WEBSITE_RUN_FROM_PACKAGE",
-              "value": "https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v4/latest.zip"
+              "value": "https://shibayan.blob.core.windows.net/azure-keyvault-letsencrypt/v3/latest.zip"
             },
             {
               "name": "FUNCTIONS_EXTENSION_VERSION",
-              "value": "~4"
+              "value": "~3"
             },
             {
               "name": "FUNCTIONS_WORKER_RUNTIME",
@@ -202,7 +202,6 @@
               "value": "[environment().name]"
             }
           ],
-          "netFrameworkVersion": "v6.0",
           "ftpsState": "Disabled",
           "minTlsVersion": "1.2",
           "scmMinTlsVersion": "1.2"
