@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import punycode from 'punycode'
+import { Certificate } from './types'
+import { toUnicode, formatCreatedOn, formatExpiresOn } from './utils'
+
 import AddCertificate from './components/AddCertificate.vue'
 import ShowCertificate from './components/ShowCertificate.vue'
 
 const loading = ref(false)
-const managedCertificates = ref([])
-const unmanagedCertificates = ref([])
+const managedCertificates = ref([] as Certificate[])
+const unmanagedCertificates = ref([] as Certificate[])
 
 const openAdd = (): void => {
 }
@@ -14,25 +16,7 @@ const openAdd = (): void => {
 const refresh = (): void => {
 }
 
-const openDetails = (certificate: any): void => {
-}
-
-const toUnicode = (value: string): string => {
-  return punycode.toUnicode(value);
-}
-
-const formatCreatedOn = (value: string): string => {
-  return new Date(value).toLocaleString();
-}
-
-const formatExpiresOn = (value: string): string => {
-  const date = Date.parse(value);
-  const diff = date - Date.now();
-  const remainDays = Math.round(diff / (1000 * 60 * 60 * 24));
-
-  const remainText = diff > 0 ? `Expires in ${remainDays} days` : `EXPIRED`;
-
-  return `${date.toLocaleString()} (${remainText})`;
+const openDetails = (certificate: Certificate): void => {
 }
 </script>
 
@@ -120,4 +104,6 @@ const formatExpiresOn = (value: string): string => {
       </table>
     </div>
   </div>
+  <AddCertificate />
+  <ShowCertificate />
 </template>

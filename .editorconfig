@@ -188,7 +188,7 @@ end_of_line = lf
 end_of_line = crlf
 
 # JavaScript files
-[*.{js,json}]
+[*.{js,json,ts,vue}]
 indent_size= 2
 
 # Html files
