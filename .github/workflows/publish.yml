@@ -30,11 +30,13 @@ jobs:
     - name: Zip Functions
       run: 7z a -mx=9 latest.zip ./dist/*
 
-    - name: Upload artifact
+    - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:
         name: dist
-        path: latest.zip
+        path: |
+          latest.zip
+          azuredeploy.bicep
 
   deploy:
     runs-on: ubuntu-latest
@@ -42,11 +44,11 @@ jobs:
     environment:
       name: production
     steps:
-    - name: Download artifact
+    - name: Download artifacts
       uses: actions/download-artifact@v2
       with:
         name: dist
-        path: latest.zip
+        path: artifacts
 
     - name: Azure Login
       uses: azure/login@v1
@@ -56,4 +58,7 @@ jobs:
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     - name: Upload to Blob
-      run: az storage blob upload -f latest.zip --account-name shibayan -c azure-keyvault-letsencrypt -n v3/latest.zip --overwrite
+      run: az storage blob upload -f artifacts/latest.zip --account-name shibayan -c azure-keyvault-letsencrypt -n v3/latest.zip --overwrite
+
+    - name: Push to Registry
+      run: az bicep publish --file artifacts/azuredeploy.bicep --target br:cracmebotprod.azurecr.io/bicep/modules/keyvault-acmebot:v3
