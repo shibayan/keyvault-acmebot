@@ -6,10 +6,13 @@ on:
 
 env:
   DOTNET_VERSION: 3.1.x
+  BICEP_VERSION: 0.5.6
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.setup_version.outputs.version }}
     steps:
     - uses: actions/checkout@v2
       with:
@@ -22,10 +25,10 @@ jobs:
 
     - name: Setup Version
       id: setup_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
+      run: echo ::set-output name=version::${GITHUB_REF/refs\/tags\/v/}
 
     - name: Publish Functions
-      run: dotnet publish -c Release -r win-x86 --self-contained false -o ./dist -p:Version=${{ steps.setup_version.outputs.VERSION }} KeyVault.Acmebot
+      run: dotnet publish -c Release -r win-x86 --self-contained false -o ./dist -p:Version=${{ steps.setup_version.outputs.version }} KeyVault.Acmebot
 
     - name: Zip Functions
       run: 7z a -mx=9 latest.zip ./dist/*
@@ -39,17 +42,13 @@ jobs:
           azuredeploy.bicep
 
   deploy:
-    runs-on: ubuntu-latest
+    environment: production
     needs: publish
-    environment:
-      name: production
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
     steps:
-    - name: Download artifacts
-      uses: actions/download-artifact@v2
-      with:
-        name: dist
-        path: artifacts
-
     - name: Azure Login
       uses: azure/login@v1
       with:
@@ -57,8 +56,20 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: Upload to Blob
-      run: az storage blob upload -f artifacts/latest.zip --account-name shibayan -c azure-keyvault-letsencrypt -n v3/latest.zip --overwrite
+    - name: Use Bicep ${{ env.BICEP_VERSION }}
+      run: az bicep install --version v${{ env.BICEP_VERSION }}
 
-    - name: Push to Registry
-      run: az bicep publish --file artifacts/azuredeploy.bicep --target br:cracmebotprod.azurecr.io/bicep/modules/keyvault-acmebot:v3
+    - name: Download artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: dist
+
+    - name: Upload to Blob
+      run: |
+        az storage blob upload --auth-mode login -f latest.zip --account-name shibayan -c azure-keyvault-letsencrypt -n v3/latest.zip --overwrite
+        az storage blob upload --auth-mode login -f latest.zip --account-name shibayan -c azure-keyvault-letsencrypt -n v3/${{ needs.publish.outputs.version }}.zip --overwrite
+
+    - name: Publish to Private Registry
+      run: |
+        az bicep publish --file azuredeploy.bicep --target br:cracmebotprod.azurecr.io/bicep/modules/keyvault-acmebot:v3
+        az bicep publish --file azuredeploy.bicep --target br:cracmebotprod.azurecr.io/bicep/modules/keyvault-acmebot:v${{ needs.publish.outputs.version }}
