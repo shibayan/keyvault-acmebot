@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.5.6.12127",
-      "templateHash": "10580117103524331081"
+      "version": "0.6.11.53198",
+      "templateHash": "10387065309624445884"
     }
   },
   "parameters": {
@@ -14,6 +14,13 @@
       "maxLength": 14,
       "metadata": {
         "description": "The name of the function app that you wish to create."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "The location of the function app that you wish to create."
       }
     },
     "mailAddress": {
@@ -89,7 +96,7 @@
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2021-06-01",
       "name": "[variables('storageAccountName')]",
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('location')]",
       "kind": "Storage",
       "sku": {
         "name": "Standard_LRS"
@@ -104,7 +111,7 @@
       "type": "Microsoft.Web/serverfarms",
       "apiVersion": "2021-02-01",
       "name": "[variables('appServicePlanName')]",
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('location')]",
       "sku": {
         "name": "Y1",
         "tier": "Dynamic",
@@ -117,7 +124,7 @@
       "type": "Microsoft.OperationalInsights/workspaces",
       "apiVersion": "2021-06-01",
       "name": "[variables('workspaceName')]",
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('location')]",
       "properties": {
         "sku": {
           "name": "PerGB2018"
@@ -129,7 +136,7 @@
       "type": "Microsoft.Insights/components",
       "apiVersion": "2020-02-02",
       "name": "[variables('appInsightsName')]",
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('location')]",
       "kind": "web",
       "tags": {
         "[format('hidden-link:{0}/providers/Microsoft.Web/sites/{1}', resourceGroup().id, variables('functionAppName'))]": "Resource"
@@ -146,7 +153,7 @@
       "type": "Microsoft.Web/sites",
       "apiVersion": "2021-02-01",
       "name": "[variables('functionAppName')]",
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('location')]",
       "kind": "functionapp",
       "identity": {
         "type": "SystemAssigned"
@@ -218,7 +225,7 @@
       "type": "Microsoft.KeyVault/vaults",
       "apiVersion": "2019-09-01",
       "name": "[variables('keyVaultName')]",
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('location')]",
       "properties": {
         "tenantId": "[subscription().tenantId]",
         "sku": {
@@ -249,9 +256,13 @@
       "type": "string",
       "value": "[variables('functionAppName')]"
     },
-    "identity": {
-      "type": "object",
-      "value": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2021-02-01', 'full').identity]"
+    "principalId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2021-02-01', 'full').identity.principalId]"
+    },
+    "tenantId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2021-02-01', 'full').identity.tenantId]"
     },
     "keyVaultName": {
       "type": "string",

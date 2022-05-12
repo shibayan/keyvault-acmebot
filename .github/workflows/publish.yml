@@ -6,10 +6,13 @@ on:
 
 env:
   DOTNET_VERSION: 6.0.x
+  BICEP_VERSION: 0.6.11
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.setup_version.outputs.version }}
     steps:
     - uses: actions/checkout@v2
       with:
@@ -22,15 +25,51 @@ jobs:
 
     - name: Setup Version
       id: setup_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
+      run: echo ::set-output name=version::${GITHUB_REF/refs\/tags\/v/}
 
     - name: Publish Functions
-      run: dotnet publish -c Release -r win-x86 --self-contained false -o ./dist -p:Version=${{ steps.setup_version.outputs.VERSION }} KeyVault.Acmebot
+      run: dotnet publish -c Release -r win-x86 --self-contained false -o ./dist -p:Version=${{ steps.setup_version.outputs.version }} KeyVault.Acmebot
 
     - name: Zip Functions
       run: 7z a -mx=9 latest.zip ./dist/*
 
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: dist
+        path: |
+          latest.zip
+          azuredeploy.bicep
+
+  deploy:
+    environment: production
+    needs: publish
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Use Bicep ${{ env.BICEP_VERSION }}
+      run: az bicep install --version v${{ env.BICEP_VERSION }}
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: dist
+
     - name: Upload to Blob
-      run: az storage blob upload -f latest.zip -c keyvault-acmebot -n v4/latest.zip --overwrite
-      env:
-        AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+      run: |
+        az storage blob upload --auth-mode login -f latest.zip --account-name stacmebotprod -c keyvault-acmebot -n v4/latest.zip --overwrite
+        az storage blob upload --auth-mode login -f latest.zip --account-name stacmebotprod -c keyvault-acmebot -n v4/${{ needs.publish.outputs.version }}.zip --overwrite
+
+    - name: Publish to Private Registry
+      run: |
+        az bicep publish --file azuredeploy.bicep --target br:cracmebotprod.azurecr.io/bicep/modules/keyvault-acmebot:v4
+        az bicep publish --file azuredeploy.bicep --target br:cracmebotprod.azurecr.io/bicep/modules/keyvault-acmebot:v${{ needs.publish.outputs.version }}
