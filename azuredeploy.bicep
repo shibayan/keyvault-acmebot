@@ -33,9 +33,6 @@ param keyVaultSkuName string = 'standard'
 @description('Enter the base URL of an existing Key Vault. (ex. https://example.vault.azure.net)')
 param keyVaultBaseUrl string = ''
 
-@description('A new GUID used to identify the role assignment')
-param roleNameGuid string = newGuid()
-
 var functionAppName = 'func-${appNamePrefix}-${substring(uniqueString(resourceGroup().id, deployment().name), 0, 4)}'
 var appServicePlanName = 'plan-${appNamePrefix}-${substring(uniqueString(resourceGroup().id, deployment().name), 0, 4)}'
 var appInsightsName = 'appi-${appNamePrefix}-${substring(uniqueString(resourceGroup().id, deployment().name), 0, 4)}'
@@ -47,8 +44,9 @@ var appInsightsEndpoints = {
   AzureChinaCloud: 'applicationinsights.azure.cn'
   AzureUSGovernment: 'applicationinsights.us'
 }
+var roleDefinitionId = resourceId('Microsoft.Authorization/roleDefinitions/', 'a4417e6f-fecd-4de8-b567-7b0420556985')
 
-resource storageAccount 'Microsoft.Storage/storageAccounts@2021-06-01' = {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
   name: storageAccountName
   location: location
   kind: 'Storage'
@@ -62,7 +60,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-06-01' = {
   }
 }
 
-resource appServicePlan 'Microsoft.Web/serverfarms@2021-02-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2021-03-01' = {
   name: appServicePlanName
   location: location
   sku: {
@@ -98,7 +96,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource functionApp 'Microsoft.Web/sites@2021-02-01' = {
+resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
   name: functionAppName
   location: location
   kind: 'functionapp'
@@ -163,7 +161,7 @@ resource functionApp 'Microsoft.Web/sites@2021-02-01' = {
   }
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = if (createWithKeyVault) {
+resource keyVault 'Microsoft.KeyVault/vaults@2021-10-01' = if (createWithKeyVault) {
   name: keyVaultName
   location: location
   properties: {
@@ -176,12 +174,13 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = if (createWithKeyVaul
   }
 }
 
-resource keyVault_roleAssignment 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = if (createWithKeyVault) {
+resource keyVault_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (createWithKeyVault) {
   scope: keyVault
-  name: roleNameGuid
+  name: guid(keyVault.id, functionAppName, roleDefinitionId)
   properties: {
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions/', 'a4417e6f-fecd-4de8-b567-7b0420556985')
+    roleDefinitionId: roleDefinitionId
     principalId: functionApp.identity.principalId
+    principalType: 'ServicePrincipal'
   }
 }
 

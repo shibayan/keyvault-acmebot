@@ -16,40 +16,39 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
-namespace KeyVault.Acmebot.Functions
+namespace KeyVault.Acmebot.Functions;
+
+public class GetCertificates : HttpFunctionBase
 {
-    public class GetCertificates : HttpFunctionBase
+    public GetCertificates(IHttpContextAccessor httpContextAccessor)
+        : base(httpContextAccessor)
     {
-        public GetCertificates(IHttpContextAccessor httpContextAccessor)
-            : base(httpContextAccessor)
+    }
+
+    [FunctionName($"{nameof(GetCertificates)}_{nameof(Orchestrator)}")]
+    public Task<IReadOnlyList<CertificateItem>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
+    {
+        var activity = context.CreateActivityProxy<ISharedActivity>();
+
+        return activity.GetAllCertificates();
+    }
+
+    [FunctionName($"{nameof(GetCertificates)}_{nameof(HttpStart)}")]
+    public async Task<IActionResult> HttpStart(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/certificates")] HttpRequest req,
+        [DurableClient] IDurableClient starter,
+        ILogger log)
+    {
+        if (!User.IsAppAuthorized())
         {
+            return Unauthorized();
         }
 
-        [FunctionName(nameof(GetCertificates) + "_" + nameof(Orchestrator))]
-        public Task<IReadOnlyList<CertificateItem>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
-        {
-            var activity = context.CreateActivityProxy<ISharedActivity>();
+        // Function input comes from the request content.
+        var instanceId = await starter.StartNewAsync($"{nameof(GetCertificates)}_{nameof(Orchestrator)}");
 
-            return activity.GetAllCertificates();
-        }
+        log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
-        [FunctionName(nameof(GetCertificates) + "_" + nameof(HttpStart))]
-        public async Task<IActionResult> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/certificates")] HttpRequest req,
-            [DurableClient] IDurableClient starter,
-            ILogger log)
-        {
-            if (!User.IsAppAuthorized())
-            {
-                return Unauthorized();
-            }
-
-            // Function input comes from the request content.
-            var instanceId = await starter.StartNewAsync(nameof(GetCertificates) + "_" + nameof(Orchestrator));
-
-            log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
-
-            return await starter.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromMinutes(1), returnInternalServerErrorOnFailure: true);
-        }
+        return await starter.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromMinutes(1), returnInternalServerErrorOnFailure: true);
     }
 }

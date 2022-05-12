@@ -5,8 +5,8 @@ on:
     tags: [ v* ]
 
 env:
-  DOTNET_VERSION: 3.1.x
-  BICEP_VERSION: 0.5.6
+  DOTNET_VERSION: 6.0.x
+  BICEP_VERSION: 0.6.11
 
 jobs:
   publish:
@@ -66,10 +66,10 @@ jobs:
 
     - name: Upload to Blob
       run: |
-        az storage blob upload --auth-mode login -f latest.zip --account-name shibayan -c azure-keyvault-letsencrypt -n v3/latest.zip --overwrite
-        az storage blob upload --auth-mode login -f latest.zip --account-name shibayan -c azure-keyvault-letsencrypt -n v3/${{ needs.publish.outputs.version }}.zip --overwrite
+        az storage blob upload --auth-mode login -f latest.zip --account-name stacmebotprod -c keyvault-acmebot -n v4/latest.zip --overwrite
+        az storage blob upload --auth-mode login -f latest.zip --account-name stacmebotprod -c keyvault-acmebot -n v4/${{ needs.publish.outputs.version }}.zip --overwrite
 
     - name: Publish to Private Registry
       run: |
-        az bicep publish --file azuredeploy.bicep --target br:cracmebotprod.azurecr.io/bicep/modules/keyvault-acmebot:v3
+        az bicep publish --file azuredeploy.bicep --target br:cracmebotprod.azurecr.io/bicep/modules/keyvault-acmebot:v4
         az bicep publish --file azuredeploy.bicep --target br:cracmebotprod.azurecr.io/bicep/modules/keyvault-acmebot:v${{ needs.publish.outputs.version }}

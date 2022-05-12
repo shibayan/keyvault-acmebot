@@ -15,40 +15,39 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
-namespace KeyVault.Acmebot.Functions
+namespace KeyVault.Acmebot.Functions;
+
+public class GetDnsZones : HttpFunctionBase
 {
-    public class GetDnsZones : HttpFunctionBase
+    public GetDnsZones(IHttpContextAccessor httpContextAccessor)
+        : base(httpContextAccessor)
     {
-        public GetDnsZones(IHttpContextAccessor httpContextAccessor)
-            : base(httpContextAccessor)
+    }
+
+    [FunctionName($"{nameof(GetDnsZones)}_{nameof(Orchestrator)}")]
+    public Task<IReadOnlyList<string>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
+    {
+        var activity = context.CreateActivityProxy<ISharedActivity>();
+
+        return activity.GetZones();
+    }
+
+    [FunctionName($"{nameof(GetDnsZones)}_{nameof(HttpStart)}")]
+    public async Task<IActionResult> HttpStart(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/dns-zones")] HttpRequest req,
+        [DurableClient] IDurableClient starter,
+        ILogger log)
+    {
+        if (!User.IsAppAuthorized())
         {
+            return Unauthorized();
         }
 
-        [FunctionName(nameof(GetDnsZones) + "_" + nameof(Orchestrator))]
-        public Task<IReadOnlyList<string>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
-        {
-            var activity = context.CreateActivityProxy<ISharedActivity>();
+        // Function input comes from the request content.
+        var instanceId = await starter.StartNewAsync($"{nameof(GetDnsZones)}_{nameof(Orchestrator)}");
 
-            return activity.GetZones();
-        }
+        log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
-        [FunctionName(nameof(GetDnsZones) + "_" + nameof(HttpStart))]
-        public async Task<IActionResult> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/dns-zones")] HttpRequest req,
-            [DurableClient] IDurableClient starter,
-            ILogger log)
-        {
-            if (!User.IsAppAuthorized())
-            {
-                return Unauthorized();
-            }
-
-            // Function input comes from the request content.
-            var instanceId = await starter.StartNewAsync(nameof(GetDnsZones) + "_" + nameof(Orchestrator));
-
-            log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
-
-            return await starter.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromMinutes(1), returnInternalServerErrorOnFailure: true);
-        }
+        return await starter.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromMinutes(1), returnInternalServerErrorOnFailure: true);
     }
 }

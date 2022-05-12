@@ -3,22 +3,21 @@
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
 
-namespace KeyVault.Acmebot.Internal
+namespace KeyVault.Acmebot.Internal;
+
+internal class ApplicationVersionInitializer<TStartup> : ITelemetryInitializer
 {
-    internal class ApplicationVersionInitializer<TStartup> : ITelemetryInitializer
+    public ApplicationVersionInitializer()
     {
-        public ApplicationVersionInitializer()
-        {
-            ApplicationVersion = typeof(TStartup).Assembly
-                                                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                                                 ?.InformationalVersion;
-        }
+        ApplicationVersion = typeof(TStartup).Assembly
+                                             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                                             ?.InformationalVersion;
+    }
 
-        public string ApplicationVersion { get; set; }
+    public string ApplicationVersion { get; }
 
-        public void Initialize(ITelemetry telemetry)
-        {
-            telemetry.Context.Component.Version = ApplicationVersion;
-        }
+    public void Initialize(ITelemetry telemetry)
+    {
+        telemetry.Context.Component.Version = ApplicationVersion;
     }
 }

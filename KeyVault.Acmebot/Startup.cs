@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using Azure.Identity;
 using Azure.Security.KeyVault.Certificates;
@@ -12,129 +13,122 @@ using KeyVault.Acmebot.Providers;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
 [assembly: FunctionsStartup(typeof(KeyVault.Acmebot.Startup))]
 
-namespace KeyVault.Acmebot
+namespace KeyVault.Acmebot;
+
+public class Startup : FunctionsStartup
 {
-    public class Startup : FunctionsStartup
+    public override void Configure(IFunctionsHostBuilder builder)
     {
-        public override void Configure(IFunctionsHostBuilder builder)
+        var context = builder.GetContext();
+
+        // Add Options
+        builder.Services.AddOptions<AcmebotOptions>()
+               .Bind(context.Configuration.GetSection("Acmebot"))
+               .ValidateDataAnnotations();
+
+        // Add Services
+        builder.Services.Replace(ServiceDescriptor.Transient(typeof(IOptionsFactory<>), typeof(OptionsFactory<>)));
+
+        builder.Services.AddHttpClient();
+
+        builder.Services.AddSingleton<ITelemetryInitializer, ApplicationVersionInitializer<Startup>>();
+
+        builder.Services.AddSingleton(new LookupClient(new LookupClientOptions(NameServer.GooglePublicDns, NameServer.GooglePublicDns2)
         {
-            var context = builder.GetContext();
+            UseCache = false,
+            UseRandomNameServer = true
+        }));
 
-            var section = context.Configuration.GetSection("Acmebot");
+        builder.Services.AddSingleton(provider =>
+        {
+            var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
 
-            // Add Options
-            builder.Services.AddOptions<AcmebotOptions>()
-                   .Bind(section.Exists() ? section : context.Configuration.GetSection("LetsEncrypt"))
-                   .ValidateDataAnnotations();
+            return AzureEnvironment.Get(options.Value.Environment);
+        });
 
-            // Add Services
-            builder.Services.Replace(ServiceDescriptor.Transient(typeof(IOptionsFactory<>), typeof(OptionsFactory<>)));
+        builder.Services.AddSingleton(provider =>
+        {
+            var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
+            var environment = provider.GetRequiredService<AzureEnvironment>();
 
-            builder.Services.AddHttpClient();
-
-            builder.Services.AddSingleton<ITelemetryInitializer, ApplicationVersionInitializer<Startup>>();
-
-            builder.Services.AddSingleton(new LookupClient(new LookupClientOptions(NameServer.GooglePublicDns, NameServer.GooglePublicDns2)
+            var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
             {
-                UseCache = false,
-                UseRandomNameServer = true
-            }));
-
-            builder.Services.AddSingleton(provider =>
-            {
-                var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
-
-                return AzureEnvironment.Get(options.Value.Environment);
+                AuthorityHost = environment.ActiveDirectory
             });
 
-            builder.Services.AddSingleton(provider =>
+            return new CertificateClient(new Uri(options.Value.VaultBaseUrl), credential);
+        });
+
+        builder.Services.AddSingleton<AcmeProtocolClientFactory>();
+
+        builder.Services.AddSingleton<WebhookInvoker>();
+        builder.Services.AddSingleton<ILifeCycleNotificationHelper, WebhookLifeCycleNotification>();
+
+        // Add DNS Providers
+        builder.Services.AddSingleton<IEnumerable<IDnsProvider>>(provider =>
+        {
+            var options = provider.GetRequiredService<IOptions<AcmebotOptions>>().Value;
+            var environment = provider.GetRequiredService<AzureEnvironment>();
+
+            var dnsProviders = new List<IDnsProvider>();
+
+            if (options.AzureDns is not null)
             {
-                var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
-                var environment = provider.GetRequiredService<AzureEnvironment>();
+                dnsProviders.Add(new AzureDnsProvider(options.AzureDns, environment));
+            }
 
-                var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
-                {
-                    AuthorityHost = environment.ActiveDirectory
-                });
-
-                return new CertificateClient(new Uri(options.Value.VaultBaseUrl), credential);
-            });
-
-            builder.Services.AddSingleton<AcmeProtocolClientFactory>();
-
-            builder.Services.AddSingleton<WebhookInvoker>();
-            builder.Services.AddSingleton<ILifeCycleNotificationHelper, WebhookLifeCycleNotification>();
-
-            builder.Services.AddSingleton<IDnsProvider>(provider =>
+            if (options.Cloudflare is not null)
             {
-                var options = provider.GetRequiredService<IOptions<AcmebotOptions>>().Value;
-                var environment = provider.GetRequiredService<AzureEnvironment>();
+                dnsProviders.Add(new CloudflareProvider(options.Cloudflare));
+            }
 
-                if (options.Cloudflare != null)
-                {
-                    return new CloudflareProvider(options.Cloudflare);
-                }
+            if (options.CustomDns is not null)
+            {
+                dnsProviders.Add(new CustomDnsProvider(options.CustomDns));
+            }
 
-                if (options.CustomDns != null)
-                {
-                    return new CustomDnsProvider(options.CustomDns);
-                }
+            if (options.DnsMadeEasy is not null)
+            {
+                dnsProviders.Add(new DnsMadeEasyProvider(options.DnsMadeEasy));
+            }
 
-                if (options.DnsMadeEasy != null)
-                {
-                    return new DnsMadeEasyProvider(options.DnsMadeEasy);
-                }
+            if (options.Gandi is not null)
+            {
+                dnsProviders.Add(new GandiProvider(options.Gandi));
+            }
 
-                if (options.Gandi != null)
-                {
-                    return new GandiProvider(options.Gandi);
-                }
+            if (options.GoDaddy is not null)
+            {
+                dnsProviders.Add(new GoDaddyProvider(options.GoDaddy));
+            }
 
-                if (options.GoDaddy != null)
-                {
-                    return new GoDaddyProvider(options.GoDaddy);
-                }
+            if (options.GoogleDns is not null)
+            {
+                dnsProviders.Add(new GoogleDnsProvider(options.GoogleDns));
+            }
 
-                if (options.GoogleDns != null || options.Google != null)
-                {
-                    return new GoogleDnsProvider(options.GoogleDns ?? options.Google);
-                }
+            if (options.Route53 is not null)
+            {
+                dnsProviders.Add(new Route53Provider(options.Route53));
+            }
 
-                if (options.GratisDns != null)
-                {
-                    return new GratisDnsProvider(options.GratisDns);
-                }
+            if (options.TransIp is not null)
+            {
+                dnsProviders.Add(new TransIpProvider(options, options.TransIp, environment));
+            }
 
-                if (options.Route53 != null)
-                {
-                    return new Route53Provider(options.Route53);
-                }
-
-                if (options.TransIp != null)
-                {
-                    return new TransIpProvider(options, options.TransIp, environment);
-                }
-
-                // Backward compatibility
-                if (options.AzureDns != null)
-                {
-                    return new AzureDnsProvider(options.AzureDns, environment);
-                }
-
-                if (options.SubscriptionId != null)
-                {
-                    return new AzureDnsProvider(new AzureDnsOptions { SubscriptionId = options.SubscriptionId }, environment);
-                }
-
+            if (dnsProviders.Count == 0)
+            {
                 throw new NotSupportedException("DNS Provider is not configured. Please check the documentation and configure it.");
-            });
-        }
+            }
+
+            return dnsProviders;
+        });
     }
 }

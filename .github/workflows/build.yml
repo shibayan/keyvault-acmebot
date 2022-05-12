@@ -7,8 +7,8 @@ on:
     branches: [ master ]
 
 env:
-  DOTNET_VERSION: 3.1.x
-  BICEP_VERSION: 0.5.6
+  DOTNET_VERSION: 6.0.x
+  BICEP_VERSION: 0.6.11
 
 jobs:
   build:
@@ -26,14 +26,11 @@ jobs:
     - name: Use Bicep ${{ env.BICEP_VERSION }}
       run: az bicep install --version v${{ env.BICEP_VERSION }}
 
-    - name: Install .NET Core format tool
-      run: dotnet tool update -g dotnet-format
-
     - name: Build project
       run: dotnet build -c Release
 
     - name: Lint C# code
-      run: dotnet format --check --exclude ACMESharpCore --verbosity detailed
+      run: dotnet format --verify-no-changes --exclude ACMESharpCore --verbosity detailed --no-restore
 
     - name: Lint Bicep template
       run: az bicep build -f azuredeploy.bicep && git diff --exit-code --quiet
