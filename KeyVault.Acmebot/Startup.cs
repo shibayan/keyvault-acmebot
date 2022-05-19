@@ -78,50 +78,15 @@ public class Startup : FunctionsStartup
 
             var dnsProviders = new List<IDnsProvider>();
 
-            if (options.AzureDns is not null)
-            {
-                dnsProviders.Add(new AzureDnsProvider(options.AzureDns, environment));
-            }
-
-            if (options.Cloudflare is not null)
-            {
-                dnsProviders.Add(new CloudflareProvider(options.Cloudflare));
-            }
-
-            if (options.CustomDns is not null)
-            {
-                dnsProviders.Add(new CustomDnsProvider(options.CustomDns));
-            }
-
-            if (options.DnsMadeEasy is not null)
-            {
-                dnsProviders.Add(new DnsMadeEasyProvider(options.DnsMadeEasy));
-            }
-
-            if (options.Gandi is not null)
-            {
-                dnsProviders.Add(new GandiProvider(options.Gandi));
-            }
-
-            if (options.GoDaddy is not null)
-            {
-                dnsProviders.Add(new GoDaddyProvider(options.GoDaddy));
-            }
-
-            if (options.GoogleDns is not null)
-            {
-                dnsProviders.Add(new GoogleDnsProvider(options.GoogleDns));
-            }
-
-            if (options.Route53 is not null)
-            {
-                dnsProviders.Add(new Route53Provider(options.Route53));
-            }
-
-            if (options.TransIp is not null)
-            {
-                dnsProviders.Add(new TransIpProvider(options, options.TransIp, environment));
-            }
+            dnsProviders.TryAdd(options.AzureDns, () => new AzureDnsProvider(options.AzureDns, environment));
+            dnsProviders.TryAdd(options.Cloudflare, () => new CloudflareProvider(options.Cloudflare));
+            dnsProviders.TryAdd(options.CustomDns, () => new CustomDnsProvider(options.CustomDns));
+            dnsProviders.TryAdd(options.DnsMadeEasy, () => new DnsMadeEasyProvider(options.DnsMadeEasy));
+            dnsProviders.TryAdd(options.Gandi, () => new GandiProvider(options.Gandi));
+            dnsProviders.TryAdd(options.GoDaddy, () => new GoDaddyProvider(options.GoDaddy));
+            dnsProviders.TryAdd(options.GoogleDns, () => new GoogleDnsProvider(options.GoogleDns));
+            dnsProviders.TryAdd(options.Route53, () => new Route53Provider(options.Route53));
+            dnsProviders.TryAdd(options.TransIp, () => new TransIpProvider(options, options.TransIp, environment));
 
             if (dnsProviders.Count == 0)
             {

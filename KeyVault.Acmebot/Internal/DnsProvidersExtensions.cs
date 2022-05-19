@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,5 +14,13 @@ internal static class DnsProvidersExtensions
         var zones = await Task.WhenAll(dnsProviders.Select(x => x.ListZonesAsync()));
 
         return zones.SelectMany(x => x).ToArray();
+    }
+
+    public static void TryAdd(this IList<IDnsProvider> dnsProviders, object options, Func<IDnsProvider> factory)
+    {
+        if (options is not null)
+        {
+            dnsProviders.Add(factory());
+        }
     }
 }
