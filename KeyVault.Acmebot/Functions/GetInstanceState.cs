@@ -42,9 +42,7 @@ public class GetInstanceState : HttpFunctionBase
             return Problem(status.Output.ToString());
         }
 
-        if (status.RuntimeStatus == OrchestrationRuntimeStatus.Running ||
-            status.RuntimeStatus == OrchestrationRuntimeStatus.Pending ||
-            status.RuntimeStatus == OrchestrationRuntimeStatus.ContinuedAsNew)
+        if (status.RuntimeStatus is OrchestrationRuntimeStatus.Running or OrchestrationRuntimeStatus.Pending or OrchestrationRuntimeStatus.ContinuedAsNew)
         {
             return AcceptedAtFunction($"{nameof(GetInstanceState)}_{nameof(HttpStart)}", new { instanceId }, null);
         }

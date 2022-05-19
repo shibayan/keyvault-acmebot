@@ -123,8 +123,6 @@ public class AcmeProtocolClientFactory
     {
         var fullPath = ResolveStateFullPath(path);
 
-        string json;
-
         if (!File.Exists(fullPath))
         {
             // Fallback legacy state
@@ -135,16 +133,20 @@ public class AcmeProtocolClientFactory
                 return default;
             }
 
-            json = File.ReadAllText(legacyFullPath);
+            var json = File.ReadAllText(legacyFullPath);
 
-            File.WriteAllText(fullPath, json);
+            var state = JsonConvert.DeserializeObject<TState>(json);
+
+            SaveState(state, path);
+
+            return state;
         }
         else
         {
-            json = File.ReadAllText(fullPath);
-        }
+            var json = File.ReadAllText(fullPath);
 
-        return JsonConvert.DeserializeObject<TState>(json);
+            return JsonConvert.DeserializeObject<TState>(json);
+        }
     }
 
     private void SaveState<TState>(TState value, string path)
