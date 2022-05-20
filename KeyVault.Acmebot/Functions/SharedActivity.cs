@@ -159,8 +159,7 @@ public class SharedActivity : ISharedActivity
         foreach (var dnsName in dnsNames)
         {
             var zone = zones.Where(x => string.Equals(dnsName, x.Name, StringComparison.OrdinalIgnoreCase) || dnsName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase))
-                            .OrderByDescending(x => x.Name.Length)
-                            .FirstOrDefault();
+                            .MaxBy(x => x.Name.Length);
 
             // マッチする DNS zone が見つからない場合はエラー
             if (zone == null)
