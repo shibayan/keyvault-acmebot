@@ -16,11 +16,11 @@ internal static class DnsProvidersExtensions
         return zones.SelectMany(x => x).ToArray();
     }
 
-    public static void TryAdd(this IList<IDnsProvider> dnsProviders, object options, Func<IDnsProvider> factory)
+    public static void TryAdd<TOption>(this IList<IDnsProvider> dnsProviders, TOption options, Func<TOption, IDnsProvider> factory)
     {
         if (options is not null)
         {
-            dnsProviders.Add(factory());
+            dnsProviders.Add(factory(options));
         }
     }
 }
