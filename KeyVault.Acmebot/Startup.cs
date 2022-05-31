@@ -78,15 +78,15 @@ public class Startup : FunctionsStartup
 
             var dnsProviders = new List<IDnsProvider>();
 
-            dnsProviders.TryAdd(options.AzureDns, () => new AzureDnsProvider(options.AzureDns, environment));
-            dnsProviders.TryAdd(options.Cloudflare, () => new CloudflareProvider(options.Cloudflare));
-            dnsProviders.TryAdd(options.CustomDns, () => new CustomDnsProvider(options.CustomDns));
-            dnsProviders.TryAdd(options.DnsMadeEasy, () => new DnsMadeEasyProvider(options.DnsMadeEasy));
-            dnsProviders.TryAdd(options.Gandi, () => new GandiProvider(options.Gandi));
-            dnsProviders.TryAdd(options.GoDaddy, () => new GoDaddyProvider(options.GoDaddy));
-            dnsProviders.TryAdd(options.GoogleDns, () => new GoogleDnsProvider(options.GoogleDns));
-            dnsProviders.TryAdd(options.Route53, () => new Route53Provider(options.Route53));
-            dnsProviders.TryAdd(options.TransIp, () => new TransIpProvider(options, options.TransIp, environment));
+            dnsProviders.TryAdd(options.AzureDns, o => new AzureDnsProvider(o, environment));
+            dnsProviders.TryAdd(options.Cloudflare, o => new CloudflareProvider(o));
+            dnsProviders.TryAdd(options.CustomDns, o => new CustomDnsProvider(o));
+            dnsProviders.TryAdd(options.DnsMadeEasy, o => new DnsMadeEasyProvider(o));
+            dnsProviders.TryAdd(options.Gandi, o => new GandiProvider(o));
+            dnsProviders.TryAdd(options.GoDaddy, o => new GoDaddyProvider(o));
+            dnsProviders.TryAdd(options.GoogleDns, o => new GoogleDnsProvider(o));
+            dnsProviders.TryAdd(options.Route53, o => new Route53Provider(o));
+            dnsProviders.TryAdd(options.TransIp, o => new TransIpProvider(options, o, environment));
 
             if (dnsProviders.Count == 0)
             {
