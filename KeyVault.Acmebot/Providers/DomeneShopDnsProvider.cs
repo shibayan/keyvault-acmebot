@@ -61,9 +61,7 @@ public class DomeneShopDnsProvider : IDnsProvider
 
     public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
     {
-        var recordName = $"{relativeRecordName}.{zone.Name}";
-
-        var response = await _httpClient.PostAsync($"domains/{zone.Id}/dns", new { host = recordName, type = "TXT", ttl = 60, data = string.Join(",", values) });
+        var response = await _httpClient.PostAsync($"domains/{zone.Id}/dns", new { host = relativeRecordName, type = "TXT", ttl = 60, data = string.Join(",", values) });
 
         response.EnsureSuccessStatusCode();
     }
