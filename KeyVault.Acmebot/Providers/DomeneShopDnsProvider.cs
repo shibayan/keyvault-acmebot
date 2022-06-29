@@ -33,7 +33,7 @@ public class DomeneShopDnsProvider : IDnsProvider
     {
         if (string.IsNullOrWhiteSpace(options.ApiKeyUser)) { throw new ArgumentNullException(nameof(options.ApiKeyUser)); }
         if (string.IsNullOrWhiteSpace(options.ApiKeyPassword)) { throw new ArgumentNullException(nameof(options.ApiKeyPassword)); }
-        return Convert.ToBase64String(Encoding.UTF8.GetBytes($"{options.ApiKeyUser}:{options.ApiKeyPassword}"));
+        return "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{options.ApiKeyUser}:{options.ApiKeyPassword}"));
     }
 
     private readonly HttpClient _httpClient;
