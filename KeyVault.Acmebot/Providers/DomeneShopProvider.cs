@@ -80,9 +80,8 @@ public class DomeneShopProvider : IDnsProvider
 
     private async Task<DomeneShopDomainRecord> FindRecordAsync(DnsZone zone, string relativeRecordName)
     {
-        var recordName = $"{relativeRecordName}.{zone.Name}";
         IEnumerable<DomeneShopDomainRecord> records = await ListRecordsAsync(zone);
-        return records.Where(r => r.Host == recordName).FirstOrDefault();
+        return records.Where(r => r.Host == relativeRecordName).FirstOrDefault();
     }
 
     private async Task<IEnumerable<DomeneShopDomainRecord>> ListRecordsAsync(DnsZone zone)
