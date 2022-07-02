@@ -1,0 +1,62 @@
+[
+    {
+        "domain": "example1.com",
+        "expiry_date": "2023-03-11",
+        "id": 100,
+        "nameservers": [
+            "ns1.hyp.net",
+            "ns2.hyp.net",
+            "ns3.hyp.net"
+        ],
+        "registered_date": "2019-03-11",
+        "registrant": "Sample Organization",
+        "renew": true,
+        "services": {
+            "dns": true,
+            "email": true,
+            "registrar": true,
+            "webhotel": "none"
+        },
+        "status": "active"
+    },
+    {
+        "domain": "example2.com",
+        "expiry_date": "2023-07-28",
+        "id": 212,
+        "nameservers": [
+            "ns1.hyp.net",
+            "ns2.hyp.net",
+            "ns3.hyp.net"
+        ],
+        "registered_date": "2020-07-28",
+        "registrant": "Sample Organization",
+        "renew": true,
+        "services": {
+            "dns": true,
+            "email": false,
+            "registrar": true,
+            "webhotel": "none"
+        },
+        "status": "active"
+    },
+    {
+        "domain": "example3.com",
+        "expiry_date": "2023-03-14",
+        "id": 223,
+        "nameservers": [
+            "ns1.hyp.net",
+            "ns2.hyp.net",
+            "ns3.hyp.net"
+        ],
+        "registered_date": "2021-03-14",
+        "registrant": "Sample Organization",
+        "renew": true,
+        "services": {
+            "dns": true,
+            "email": false,
+            "registrar": true,
+            "webhotel": "none"
+        },
+        "status": "active"
+    }
+]

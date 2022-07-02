@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeyVault.Acmebot", "KeyVaul
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ACMESharp", "ACMESharpCore\src\ACMESharp\ACMESharp.csproj", "{D3EF8B70-76B6-457F-89BE-37835D078425}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeyVault.Acmebot.Tests", "KeyVault.Acmebot.Tests\KeyVault.Acmebot.Tests.csproj", "{B660C02A-8905-41CE-8DD4-E6136391762D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{D3EF8B70-76B6-457F-89BE-37835D078425}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3EF8B70-76B6-457F-89BE-37835D078425}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D3EF8B70-76B6-457F-89BE-37835D078425}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B660C02A-8905-41CE-8DD4-E6136391762D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B660C02A-8905-41CE-8DD4-E6136391762D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B660C02A-8905-41CE-8DD4-E6136391762D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B660C02A-8905-41CE-8DD4-E6136391762D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

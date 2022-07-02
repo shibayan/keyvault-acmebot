@@ -16,13 +16,10 @@ public class DomeneShopProvider : IDnsProvider
     private const string Endpoint = @"https://api.domeneshop.no/v0/";
     private const string AuthorizationHeader = @"Authorization";
 
-    public DomeneShopProvider(DomeneShopOptions options)
+    public DomeneShopDnsProvider(DomeneShopDnsOptions options, HttpClient httpClient)
     {
-        _httpClient = new HttpClient
-        {
-            BaseAddress = new Uri(Endpoint)
-        };
-
+        _httpClient = httpClient;
+        _httpClient.BaseAddress = new Uri(Endpoint);
         _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         _httpClient.DefaultRequestHeaders.TryAddWithoutValidation(AuthorizationHeader, CreateAuthorizationHeader(options));
 
