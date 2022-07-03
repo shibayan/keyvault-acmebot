@@ -11,12 +11,12 @@ using KeyVault.Acmebot.Options;
 
 namespace KeyVault.Acmebot.Providers;
 
-public class DomeneShopDnsProvider : IDnsProvider
+public class DomeneShopProvider : IDnsProvider
 {
     private const string Endpoint = @"https://api.domeneshop.no/v0/";
     private const string AuthorizationHeader = @"Authorization";
 
-    public DomeneShopDnsProvider(DomeneShopDnsOptions options)
+    public DomeneShopProvider(DomeneShopOptions options)
     {
         _httpClient = new HttpClient
         {
@@ -29,7 +29,7 @@ public class DomeneShopDnsProvider : IDnsProvider
         PropagationSeconds = options.PropagationSeconds;
     }
 
-    private string CreateAuthorizationHeader(DomeneShopDnsOptions options)
+    private string CreateAuthorizationHeader(DomeneShopOptions options)
     {
         if (string.IsNullOrWhiteSpace(options.ApiKeyUser)) { throw new ArgumentNullException(nameof(options.ApiKeyUser)); }
         if (string.IsNullOrWhiteSpace(options.ApiKeyPassword)) { throw new ArgumentNullException(nameof(options.ApiKeyPassword)); }

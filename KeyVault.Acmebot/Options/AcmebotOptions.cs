@@ -36,7 +36,7 @@ public class AcmebotOptions
 
     public CustomDnsOptions CustomDns { get; set; }
 
-    public DomeneShopDnsOptions DomeneShop { get; set; }
+    public DomeneShopOptions DomeneShop { get; set; }
 
     public DnsMadeEasyOptions DnsMadeEasy { get; set; }
 

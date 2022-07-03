@@ -81,7 +81,7 @@ public class Startup : FunctionsStartup
             dnsProviders.TryAdd(options.AzureDns, o => new AzureDnsProvider(o, environment));
             dnsProviders.TryAdd(options.Cloudflare, o => new CloudflareProvider(o));
             dnsProviders.TryAdd(options.CustomDns, o => new CustomDnsProvider(o));
-            dnsProviders.TryAdd(options.DomeneShop, o => new DomeneShopDnsProvider(o));
+            dnsProviders.TryAdd(options.DomeneShop, o => new DomeneShopProvider(o));
             dnsProviders.TryAdd(options.DnsMadeEasy, o => new DnsMadeEasyProvider(o));
             dnsProviders.TryAdd(options.Gandi, o => new GandiProvider(o));
             dnsProviders.TryAdd(options.GoDaddy, o => new GoDaddyProvider(o));
