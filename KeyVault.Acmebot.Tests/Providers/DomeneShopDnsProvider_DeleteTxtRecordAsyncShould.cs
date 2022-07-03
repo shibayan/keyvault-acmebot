@@ -19,12 +19,12 @@ using Xunit;
 namespace KeyVault.Acmebot.Tests.Providers;
 public class DomeneShopDnsProvider_DeleteTxtRecordAsyncShould
 {
-    private DomeneShopDnsProvider _provider;
+    private DomeneShopProvider _provider;
     private readonly Mock<HttpMessageHandler> _mockHttpMessageHandler;
 
     public DomeneShopDnsProvider_DeleteTxtRecordAsyncShould()
     {
-        var options = new DomeneShopDnsOptions
+        var options = new DomeneShopOptions
         {
             ApiKeyUser = "test",
             ApiKeyPassword = "test",
@@ -32,7 +32,7 @@ public class DomeneShopDnsProvider_DeleteTxtRecordAsyncShould
         };
         _mockHttpMessageHandler = new Mock<HttpMessageHandler>();
         var httpClient = new HttpClient(_mockHttpMessageHandler.Object);
-        _provider = new DomeneShopDnsProvider(options, httpClient);
+        _provider = new DomeneShopProvider(options, httpClient);
     }
 
     [Theory]
@@ -45,7 +45,7 @@ public class DomeneShopDnsProvider_DeleteTxtRecordAsyncShould
         string domeneShopListDnsRecordsResponseJson = TestData.ReadResourceAsString(TestData.DomeneShopDnsRecordsResponse_example1_com_sample1);
         GetDnsRecordBody[] dnsRecords = JsonConvert.DeserializeObject<GetDnsRecordBody[]>(domeneShopListDnsRecordsResponseJson);
         string domeneShopDomainsJson = TestData.ReadResourceAsString(TestData.DomeneShopDomainsResponse_sample1);
-        DomeneShopDnsProvider.DomeneShopDomain[] domeneShopDomains = JsonConvert.DeserializeObject<DomeneShopDnsProvider.DomeneShopDomain[]>(domeneShopDomainsJson);
+        DomeneShopProvider.DomeneShopDomain[] domeneShopDomains = JsonConvert.DeserializeObject<DomeneShopProvider.DomeneShopDomain[]>(domeneShopDomainsJson);
         DnsZone dnsZone = domeneShopDomains
             .Where(d => string.Equals(d.Domain, "example1.com", StringComparison.InvariantCultureIgnoreCase))
             .Select(d => d.ToDnsZone(_provider)).FirstOrDefault();

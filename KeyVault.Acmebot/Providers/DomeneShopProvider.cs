@@ -16,7 +16,7 @@ public class DomeneShopProvider : IDnsProvider
     private const string Endpoint = @"https://api.domeneshop.no/v0/";
     private const string AuthorizationHeader = @"Authorization";
 
-    public DomeneShopDnsProvider(DomeneShopDnsOptions options, HttpClient httpClient)
+    public DomeneShopProvider(DomeneShopOptions options, HttpClient httpClient)
     {
         _httpClient = httpClient;
         _httpClient.BaseAddress = new Uri(Endpoint);

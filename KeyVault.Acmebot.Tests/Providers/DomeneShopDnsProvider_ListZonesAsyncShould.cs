@@ -20,12 +20,12 @@ namespace KeyVault.Acmebot.Tests.Providers
 {
     public class DomeneShopDnsProvider_ListZonesAsyncShould
     {
-        private DomeneShopDnsProvider _provider;
+        private DomeneShopProvider _provider;
         private readonly Mock<HttpMessageHandler> _mockHttpMessageHandler;
 
         public DomeneShopDnsProvider_ListZonesAsyncShould()
         {
-            var options = new DomeneShopDnsOptions
+            var options = new DomeneShopOptions
             {
                 ApiKeyUser = "test",
                 ApiKeyPassword = "test",
@@ -33,7 +33,7 @@ namespace KeyVault.Acmebot.Tests.Providers
             };
             _mockHttpMessageHandler = new Mock<HttpMessageHandler>();
             var httpClient = new HttpClient(_mockHttpMessageHandler.Object);
-            _provider = new DomeneShopDnsProvider(options, httpClient);
+            _provider = new DomeneShopProvider(options, httpClient);
         }
 
         [Fact]

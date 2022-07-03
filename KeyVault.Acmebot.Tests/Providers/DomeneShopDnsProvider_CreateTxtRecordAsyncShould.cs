@@ -19,12 +19,12 @@ using Xunit;
 namespace KeyVault.Acmebot.Tests.Providers;
 public class DomeneShopDnsProvider_CreateTxtRecordAsyncShould
 {
-    private DomeneShopDnsProvider _provider;
+    private DomeneShopProvider _provider;
     private readonly Mock<HttpMessageHandler> _mockHttpMessageHandler;
 
     public DomeneShopDnsProvider_CreateTxtRecordAsyncShould()
     {
-        var options = new DomeneShopDnsOptions
+        var options = new DomeneShopOptions
         {
             ApiKeyUser = "test",
             ApiKeyPassword = "test",
@@ -32,7 +32,7 @@ public class DomeneShopDnsProvider_CreateTxtRecordAsyncShould
         };
         _mockHttpMessageHandler = new Mock<HttpMessageHandler>();
         var httpClient = new HttpClient(_mockHttpMessageHandler.Object);
-        _provider = new DomeneShopDnsProvider(options, httpClient);
+        _provider = new DomeneShopProvider(options, httpClient);
     }
 
     [Theory]
@@ -42,7 +42,7 @@ public class DomeneShopDnsProvider_CreateTxtRecordAsyncShould
     {
         // Arrange
         string domeneShopDomainsJson = TestData.ReadResourceAsString(TestData.DomeneShopDomainsResponse_sample1);
-        DomeneShopDnsProvider.DomeneShopDomain[] domeneShopDomains = JsonConvert.DeserializeObject<DomeneShopDnsProvider.DomeneShopDomain[]>(domeneShopDomainsJson);
+        DomeneShopProvider.DomeneShopDomain[] domeneShopDomains = JsonConvert.DeserializeObject<DomeneShopProvider.DomeneShopDomain[]>(domeneShopDomainsJson);
         DnsZone dnsZone = domeneShopDomains
             .Where(d => string.Equals(d.Domain, domain, StringComparison.InvariantCultureIgnoreCase))
             .Select(d => d.ToDnsZone(_provider)).FirstOrDefault();
