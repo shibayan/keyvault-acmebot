@@ -1,0 +1,123 @@
+[
+    {
+        "data": "50.130.24.193",
+        "host": "@",
+        "id": 225083,
+        "ttl": 3600,
+        "type": "A"
+    },
+    {
+        "data": "www.example1.com",
+        "host": "@",
+        "id": 225084,
+        "ttl": 3600,
+        "type": "TXT"
+    },
+    {
+        "data": "example1.azurewebsites.net.",
+        "host": "www",
+        "id": 225106,
+        "ttl": 3600,
+        "type": "CNAME"
+    },
+    {
+        "data": "login-example1.azurewebsites.net.",
+        "host": "login",
+        "id": 225528,
+        "ttl": 3600,
+        "type": "CNAME"
+    },
+    {
+        "data": "\"v=spf1 include:_spf.domeneshop.no ~all\"",
+        "host": "@",
+        "id": 237665,
+        "ttl": 3600,
+        "type": "TXT"
+    },
+    {
+        "data": "u117528.wl9.sendgrid.net.",
+        "host": "em4",
+        "id": 237743,
+        "ttl": 3600,
+        "type": "CNAME"
+    },
+    {
+        "data": "OTRlOWZhODYtNGU0NC00MDZiLWFjZWItODUxNGJmMjY1ZDRm",
+        "host": "_acme-challenge.www",
+        "id": 27905,
+        "ttl": 3600,
+        "type": "TXT"
+    },
+    {
+        "data": "N2Y1M2U5YWItMDM3Zi00M2MzLWI3YWYtNzc1Mzk1NDdjZWU4",
+        "host": "_acme-challenge",
+        "id": 279610,
+        "ttl": 3600,
+        "type": "TXT"
+    },
+    {
+        "data": "MmExNzhmZjMtM2I2ZS00OTA0LTliNDYtN2FlYzAxODc4Yjdl",
+        "host": "_acme-challenge.login",
+        "id": 2794180,
+        "ttl": 3600,
+        "type": "TXT"
+    },
+    {
+        "data": "autoconfig.domeneshop.no.",
+        "host": "_autodiscover._tcp",
+        "id": 321263,
+        "port": "443",
+        "priority": "0",
+        "ttl": 3600,
+        "type": "SRV",
+        "weight": "0"
+    },
+    {
+        "data": "caldav.domeneshop.no.",
+        "host": "_caldavs._tcp",
+        "id": 321264,
+        "port": "443",
+        "priority": "0",
+        "ttl": 3600,
+        "type": "SRV",
+        "weight": "0"
+    },
+    {
+        "data": "carddav.domeneshop.no.",
+        "host": "_carddavs._tcp",
+        "id": 321265,
+        "port": "443",
+        "priority": "0",
+        "ttl": 3600,
+        "type": "SRV",
+        "weight": "0"
+    },
+    {
+        "data": "\"path=/\"",
+        "host": "_caldavs._tcp",
+        "id": 321266,
+        "ttl": 3600,
+        "type": "TXT"
+    },
+    {
+        "data": "\"path=/\"",
+        "host": "_carddavs._tcp",
+        "id": 321267,
+        "ttl": 3600,
+        "type": "TXT"
+    },
+    {
+        "data": "\"v=DMARC1; p=none\"",
+        "host": "_dmarc",
+        "id": 413425,
+        "ttl": 3600,
+        "type": "TXT"
+    },
+    {
+        "data": "MS=ms81739287",
+        "host": "@",
+        "id": 481357,
+        "ttl": 3600,
+        "type": "TXT"
+    }
+]

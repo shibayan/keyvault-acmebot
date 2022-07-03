@@ -63,6 +63,16 @@ namespace KeyVault.Acmebot.Tests.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] DomeneShopDnsRecordsResponse_example1_com_sample1 {
+            get {
+                object obj = ResourceManager.GetObject("DomeneShopDnsRecordsResponse_example1_com_sample1", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] DomeneShopDomainsResponse_sample1 {
             get {
                 object obj = ResourceManager.GetObject("DomeneShopDomainsResponse_sample1", resourceCulture);
