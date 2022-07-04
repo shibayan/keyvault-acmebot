@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
 
 using Azure.Identity;
 using Azure.Security.KeyVault.Certificates;
@@ -85,6 +86,7 @@ public class Startup : FunctionsStartup
             dnsProviders.TryAdd(options.Gandi, o => new GandiProvider(o));
             dnsProviders.TryAdd(options.GoDaddy, o => new GoDaddyProvider(o));
             dnsProviders.TryAdd(options.GoogleDns, o => new GoogleDnsProvider(o));
+            dnsProviders.TryAdd(options.Namecheap, o => new NamecheapProvider(o, HttpClientFactory.Create(), HttpClientFactory.Create()));
             dnsProviders.TryAdd(options.Route53, o => new Route53Provider(o));
             dnsProviders.TryAdd(options.TransIp, o => new TransIpProvider(options, o, environment));
 
