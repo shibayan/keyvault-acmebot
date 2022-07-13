@@ -310,12 +310,6 @@ public class SharedActivity : ISharedActivity
 
         orderDetails = await acmeProtocolClient.GetOrderDetailsAsync(orderDetails.OrderUrl, orderDetails);
 
-        if (orderDetails.Payload.Status == "pending" || orderDetails.Payload.Status == "processing")
-        {
-            // pending か processing の場合はリトライする
-            throw new RetriableActivityException($"ACME validation status is {orderDetails.Payload.Status}. It will retry automatically.");
-        }
-
         if (orderDetails.Payload.Status == "invalid")
         {
             var problems = new List<Problem>();
@@ -342,6 +336,12 @@ public class SharedActivity : ISharedActivity
 
             // invalid の場合は最初から実行が必要なので失敗させる
             throw new InvalidOperationException($"ACME validation status is invalid. Required retry at first.\nLastError = {JsonConvert.SerializeObject(problems.Last())}");
+        }
+
+        if (orderDetails.Payload.Status != "ready")
+        {
+            // ready 以外の場合はリトライする
+            throw new RetriableActivityException($"ACME validation status is {orderDetails.Payload.Status}. It will retry automatically.");
         }
     }
 
@@ -384,16 +384,16 @@ public class SharedActivity : ISharedActivity
 
         orderDetails = await acmeProtocolClient.GetOrderDetailsAsync(orderDetails.OrderUrl, orderDetails);
 
-        if (orderDetails.Payload.Status == "pending" || orderDetails.Payload.Status == "processing")
-        {
-            // pending か processing の場合はリトライする
-            throw new RetriableActivityException($"Finalize request is {orderDetails.Payload.Status}. It will retry automatically.");
-        }
-
         if (orderDetails.Payload.Status == "invalid")
         {
             // invalid の場合は最初から実行が必要なので失敗させる
             throw new InvalidOperationException("Finalize request is invalid. Required retry at first.");
+        }
+
+        if (orderDetails.Payload.Status != "valid")
+        {
+            // valid 以外の場合はリトライする
+            throw new RetriableActivityException($"Finalize request is {orderDetails.Payload.Status}. It will retry automatically.");
         }
 
         return orderDetails;
