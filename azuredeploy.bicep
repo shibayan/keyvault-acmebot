@@ -127,11 +127,11 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
         }
         {
           name: 'WEBSITE_RUN_FROM_PACKAGE'
-          value: 'https://shibayan.blob.core.windows.net/azure-keyvault-letsencrypt/v3/latest.zip'
+          value: 'https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v4/latest.zip'
         }
         {
           name: 'FUNCTIONS_EXTENSION_VERSION'
-          value: '~3'
+          value: '~4'
         }
         {
           name: 'FUNCTIONS_WORKER_RUNTIME'
@@ -154,6 +154,7 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
           value: environment().name
         }
       ]
+      netFrameworkVersion: 'v6.0'
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
       scmMinTlsVersion: '1.2'
