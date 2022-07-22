@@ -28,7 +28,7 @@ public class CloudflareProvider : IDnsProvider
         var zones = await _cloudflareDnsClient.ListAllZonesAsync();
 
         // Zone API は Punycode されていない値を返すのでエンコードが必要
-        return zones.Select(x => new DnsZone(this) { Id = x.Id, Name = x.Name, NameServers = x.NameServers }).ToArray();
+        return zones.Select(x => new DnsZone(this) { Id = x.Id, Name = x.Name, NameServers = x.ActualNameServers }).ToArray();
     }
 
     public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
@@ -172,6 +172,12 @@ public class CloudflareProvider : IDnsProvider
 
         [JsonProperty("name_servers")]
         public string[] NameServers { get; set; }
+
+        [JsonProperty("vanity_name_servers")]
+        public string[] VanityNameServers { get; set; }
+
+        [JsonIgnore]
+        public string[] ActualNameServers => VanityNameServers is { Length: > 0 } ? VanityNameServers : NameServers;
     }
 
     private class DnsRecordResult
