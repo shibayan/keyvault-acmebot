@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 
 using Azure;
@@ -69,8 +70,15 @@ public class AzureDnsProvider : IDnsProvider
     {
         var dnsZoneResource = _armClient.GetDnsZoneResource(new ResourceIdentifier(zone.Id));
 
-        var recordSets = await dnsZoneResource.GetRecordSetTxtAsync(relativeRecordName);
+        try
+        {
+            var recordSets = await dnsZoneResource.GetRecordSetTxtAsync(relativeRecordName);
 
-        await recordSets.Value.DeleteAsync(WaitUntil.Completed);
+            await recordSets.Value.DeleteAsync(WaitUntil.Completed);
+        }
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
+        {
+            // ignored
+        }
     }
 }
