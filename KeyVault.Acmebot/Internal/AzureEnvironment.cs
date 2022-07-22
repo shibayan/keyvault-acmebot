@@ -8,7 +8,7 @@ namespace KeyVault.Acmebot.Internal;
 public class AzureEnvironment
 {
     public Uri ActiveDirectory { get; private init; }
-    public ArmEnvironment ResourceManager { get; init; }
+    public ArmEnvironment ResourceManager { get; private init; }
 
     public static AzureEnvironment Get(string name) => s_environments[name];
 
