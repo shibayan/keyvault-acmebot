@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using Azure.ResourceManager;
+
 namespace KeyVault.Acmebot.Internal;
 
 public class AzureEnvironment
 {
     public Uri ActiveDirectory { get; private init; }
-    public Uri ResourceManager { get; private init; }
+    public ArmEnvironment ResourceManager { get; init; }
 
     public static AzureEnvironment Get(string name) => s_environments[name];
 
@@ -17,7 +19,7 @@ public class AzureEnvironment
             new AzureEnvironment
             {
                 ActiveDirectory = new Uri("https://login.microsoftonline.com"),
-                ResourceManager = new Uri("https://management.azure.com")
+                ResourceManager = ArmEnvironment.AzurePublicCloud
             }
         },
         {
@@ -25,7 +27,7 @@ public class AzureEnvironment
             new AzureEnvironment
             {
                 ActiveDirectory = new Uri("https://login.chinacloudapi.cn"),
-                ResourceManager = new Uri("https://management.chinacloudapi.cn")
+                ResourceManager = ArmEnvironment.AzureChina
             }
         },
         {
@@ -33,7 +35,7 @@ public class AzureEnvironment
             new AzureEnvironment
             {
                 ActiveDirectory = new Uri("https://login.microsoftonline.us"),
-                ResourceManager = new Uri("https://management.usgovcloudapi.net")
+                ResourceManager = ArmEnvironment.AzureGovernment
             }
         }
     };

@@ -1,8 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Azure;
+using Azure.Core;
 using Azure.Identity;
+using Azure.ResourceManager;
 using Azure.ResourceManager.Dns;
 using Azure.ResourceManager.Dns.Models;
 
@@ -20,10 +22,10 @@ public class AzureDnsProvider : IDnsProvider
             AuthorityHost = environment.ActiveDirectory
         });
 
-        _dnsManagementClient = new DnsManagementClient(options.SubscriptionId, environment.ResourceManager, credential);
+        _armClient = new ArmClient(credential, options.SubscriptionId, new ArmClientOptions { Environment = environment.ResourceManager });
     }
 
-    private readonly DnsManagementClient _dnsManagementClient;
+    private readonly ArmClient _armClient;
 
     public int PropagationSeconds => 10;
 
@@ -31,11 +33,13 @@ public class AzureDnsProvider : IDnsProvider
     {
         var zones = new List<DnsZone>();
 
-        var result = _dnsManagementClient.Zones.ListAsync();
+        var subscription = await _armClient.GetDefaultSubscriptionAsync();
+
+        var result = subscription.GetDnsZonesByDnszoneAsync();
 
         await foreach (var zone in result)
         {
-            zones.Add(new DnsZone(this) { Id = zone.Id, Name = zone.Name, NameServers = zone.NameServers });
+            zones.Add(new DnsZone(this) { Id = zone.Id, Name = zone.Data.Name, NameServers = zone.Data.NameServers });
         }
 
         return zones;
@@ -43,10 +47,8 @@ public class AzureDnsProvider : IDnsProvider
 
     public Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
     {
-        var resourceGroup = ExtractResourceGroup(zone.Id);
-
         // TXT レコードに TTL と値をセットする
-        var recordSet = new RecordSet
+        var recordSet = new TxtRecordSetData
         {
             TTL = 60
         };
@@ -56,20 +58,19 @@ public class AzureDnsProvider : IDnsProvider
             recordSet.TxtRecords.Add(new TxtRecord { Value = { value } });
         }
 
-        return _dnsManagementClient.RecordSets.CreateOrUpdateAsync(resourceGroup, zone.Name, relativeRecordName, RecordType.TXT, recordSet);
+        var dnsZoneResource = _armClient.GetDnsZoneResource(new ResourceIdentifier(zone.Id));
+
+        var recordSets = dnsZoneResource.GetRecordSetTxts();
+
+        return recordSets.CreateOrUpdateAsync(WaitUntil.Completed, relativeRecordName, recordSet);
     }
 
-    public Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
+    public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
     {
-        var resourceGroup = ExtractResourceGroup(zone.Id);
+        var dnsZoneResource = _armClient.GetDnsZoneResource(new ResourceIdentifier(zone.Id));
 
-        return _dnsManagementClient.RecordSets.DeleteAsync(resourceGroup, zone.Name, relativeRecordName, RecordType.TXT);
-    }
+        var recordSets = await dnsZoneResource.GetRecordSetTxtAsync(relativeRecordName);
 
-    private static string ExtractResourceGroup(string resourceId)
-    {
-        var values = resourceId.Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-        return values[3];
+        await recordSets.Value.DeleteAsync(WaitUntil.Completed);
     }
 }
