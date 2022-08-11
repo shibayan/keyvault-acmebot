@@ -27,7 +27,11 @@ internal static class AcmeProtocolClientExtensions
                 return defaultX509Certificates;
             }
 
-            linkHeaders = resp.Headers.GetValues("Link");
+            // Link ヘッダーが存在しない場合は即返す
+            if (!resp.Headers.TryGetValues("Link", out linkHeaders))
+            {
+                return defaultX509Certificates;
+            }
         }
 
         foreach (var linkHeader in linkHeaders)
