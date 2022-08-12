@@ -94,6 +94,7 @@ public class GandiProvider : IDnsProvider
             response.EnsureSuccessStatusCode();
         }
     }
+
     public class Zone
     {
         [JsonProperty("uuid")]

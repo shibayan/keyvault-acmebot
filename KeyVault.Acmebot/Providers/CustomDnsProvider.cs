@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Options;
+
+using Newtonsoft.Json;
 
 namespace KeyVault.Acmebot.Providers;
 
@@ -34,9 +37,9 @@ public class CustomDnsProvider : IDnsProvider
 
         response.EnsureSuccessStatusCode();
 
-        var zones = await response.Content.ReadAsAsync<DnsZone[]>();
+        var zones = await response.Content.ReadAsAsync<Zone[]>();
 
-        return zones;
+        return zones.Select(x => new DnsZone(this) { Id = x.Id, Name = x.Name, NameServers = x.NameServers }).ToArray();
     }
 
     public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
@@ -55,5 +58,17 @@ public class CustomDnsProvider : IDnsProvider
         var response = await _httpClient.DeleteAsync($"zones/{zone.Id}/records/{recordName}");
 
         response.EnsureSuccessStatusCode();
+    }
+
+    public class Zone
+    {
+        [JsonProperty("id")]
+        public string Id { get; set; }
+
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        [JsonProperty("nameServers")]
+        public string[] NameServers { get; set; }
     }
 }
