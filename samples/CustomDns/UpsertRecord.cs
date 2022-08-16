@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 
 using Azure;
-using Azure.Core;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Dns;
 using Azure.ResourceManager.Dns.Models;
@@ -41,11 +40,11 @@ public class UpsertRecord
             recordSet.TxtRecords.Add(new TxtRecord { Value = { value } });
         }
 
-        var dnsZoneResource = _armClient.GetDnsZoneResource(new ResourceIdentifier(zoneId));
+        DnsZoneResource dnsZoneResource = await _armClient.GetDnsZoneResource(ZoneIdConvert.FromZoneId(zoneId)).GetAsync();
 
         var collection = dnsZoneResource.GetRecordSetTxts();
 
-        await collection.CreateOrUpdateAsync(WaitUntil.Completed, recordName, recordSet);
+        await collection.CreateOrUpdateAsync(WaitUntil.Completed, recordName.Replace($".{dnsZoneResource.Data.Name}", ""), recordSet);
 
         return new OkResult();
     }

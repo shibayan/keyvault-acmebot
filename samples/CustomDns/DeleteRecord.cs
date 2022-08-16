@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 
 using Azure;
-using Azure.Core;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Dns;
 
@@ -30,11 +29,11 @@ public class DeleteRecord
         string recordName,
         ILogger log)
     {
-        var dnsZoneResource = _armClient.GetDnsZoneResource(new ResourceIdentifier(zoneId));
+        DnsZoneResource dnsZoneResource = await _armClient.GetDnsZoneResource(ZoneIdConvert.FromZoneId(zoneId)).GetAsync();
 
         try
         {
-            RecordSetTxtResource recordSet = await dnsZoneResource.GetRecordSetTxtAsync(recordName);
+            RecordSetTxtResource recordSet = await dnsZoneResource.GetRecordSetTxtAsync(recordName.Replace($".{dnsZoneResource.Data.Name}", ""));
 
             await recordSet.DeleteAsync(WaitUntil.Completed);
         }
