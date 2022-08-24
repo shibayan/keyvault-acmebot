@@ -60,14 +60,12 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
   }
 }
 
-resource appServicePlan 'Microsoft.Web/serverfarms@2021-03-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: appServicePlanName
   location: location
   sku: {
     name: 'Y1'
     tier: 'Dynamic'
-    size: 'Y1'
-    family: 'Y'
   }
   properties: {}
 }
@@ -96,7 +94,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
+resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
   name: functionAppName
   location: location
   kind: 'functionapp'
@@ -162,7 +160,7 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
   }
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2021-10-01' = if (createWithKeyVault) {
+resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = if (createWithKeyVault) {
   name: keyVaultName
   location: location
   properties: {
@@ -175,7 +173,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-10-01' = if (createWithKeyVaul
   }
 }
 
-resource keyVault_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = if (createWithKeyVault) {
+resource keyVault_roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (createWithKeyVault) {
   scope: keyVault
   name: guid(keyVault.id, functionAppName, roleDefinitionId)
   properties: {
