@@ -79,6 +79,7 @@ public class Startup : FunctionsStartup
             var dnsProviders = new List<IDnsProvider>();
 
             dnsProviders.TryAdd(options.AzureDns, o => new AzureDnsProvider(o, environment));
+            dnsProviders.TryAdd(options.AzurePrivateDns, o => new AzurePrivateDnsProvider(o, environment));
             dnsProviders.TryAdd(options.Cloudflare, o => new CloudflareProvider(o));
             dnsProviders.TryAdd(options.CustomDns, o => new CustomDnsProvider(o));
             dnsProviders.TryAdd(options.DnsMadeEasy, o => new DnsMadeEasyProvider(o));
