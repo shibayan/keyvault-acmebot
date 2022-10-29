@@ -11,6 +11,7 @@
         flex-grow: 2;
       }
     }
+
     td {
       vertical-align: middle !important;
     }
@@ -465,7 +466,7 @@
               this.certificates = response.data.sort((x, y) => x.expiresOn.localeCompare(y.expiresOn));
             }
           } catch (error) {
-            alert(error.response.data.output);
+            this.handleHttpError(error);
           }
 
           this.loading = false;
@@ -485,7 +486,7 @@
               this.add.zones = response.data;
             }
           } catch (error) {
-            alert(error.response.data.output);
+            this.handleHttpError(error);
           }
 
           this.add.loading = false;
@@ -536,19 +537,7 @@
               }
             }
           } catch (error) {
-            const problem = error.response.data;
-
-            if (error.response.status === 400) {
-              const errors = [];
-
-              for (let key in problem.errors) {
-                errors.push(problem.errors[key][0]);
-              }
-
-              alert(errors.join("\n"));
-            } else {
-              alert(problem.detail);
-            }
+            this.handleHttpError(error);
           }
 
           this.add.sending = false;
@@ -583,19 +572,7 @@
               }
             }
           } catch (error) {
-            const problem = error.response.data;
-
-            if (error.response.status === 400) {
-              const errors = [];
-
-              for (let key in problem.errors) {
-                errors.push(problem.errors[key][0]);
-              }
-
-              alert(errors.join("\n"));
-            } else {
-              alert(problem.detail);
-            }
+            this.handleHttpError(error);
           }
 
           this.details.sending = false;
@@ -613,7 +590,7 @@
               alert("The certificate was successfully revoked.");
             }
           } catch (error) {
-            alert(error.response.data.output);
+            this.handleHttpError(error);
           }
 
           this.details.sending = false;
@@ -633,6 +610,26 @@
           const remainText = diff > 0 ? `Expires in ${remainDays} days` : `EXPIRED`;
 
           return `${date.toLocaleString()} (${remainText})`;
+        },
+        handleHttpError(error) {
+          const problem = error.response.data;
+
+          if (error.response.status === 400) {
+            const errors = [];
+
+            for (let key in problem.errors) {
+              errors.push(problem.errors[key][0]);
+            }
+
+            alert(errors.join("\n"));
+          } else {
+            const message = problem.detail ?? problem.output;
+            if (message) {
+              alert(message);
+            } else {
+              alert(`HTTP Response ${error.response.status} Error`);
+            }
+          }
         }
       },
       async beforeMount() {
