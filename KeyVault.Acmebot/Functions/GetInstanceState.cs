@@ -2,8 +2,6 @@
 
 using Azure.WebJobs.Extensions.HttpApi;
 
-using KeyVault.Acmebot.Internal;
-
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -25,7 +23,7 @@ public class GetInstanceState : HttpFunctionBase
         string instanceId,
         [DurableClient] IDurableClient starter)
     {
-        if (!User.IsAppAuthorized())
+        if (!User.Identity.IsAuthenticated)
         {
             return Unauthorized();
         }

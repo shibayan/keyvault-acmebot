@@ -27,7 +27,7 @@ public class AddCertificate : HttpFunctionBase
         [DurableClient] IDurableClient starter,
         ILogger log)
     {
-        if (!User.IsAppAuthorized())
+        if (!User.Identity.IsAuthenticated || !User.HasIssueCertificateRole())
         {
             return Unauthorized();
         }

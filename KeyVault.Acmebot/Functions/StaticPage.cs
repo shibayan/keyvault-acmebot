@@ -2,8 +2,6 @@
 
 using Azure.WebJobs.Extensions.HttpApi;
 
-using KeyVault.Acmebot.Internal;
-
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -24,7 +22,7 @@ public class StaticPage : HttpFunctionBase
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "{*path}")] HttpRequest req,
         ILogger log)
     {
-        if (!IsEasyAuthEnabled || !User.IsAppAuthorized())
+        if (!IsEasyAuthEnabled || !User.Identity.IsAuthenticated)
         {
             return Forbid();
         }

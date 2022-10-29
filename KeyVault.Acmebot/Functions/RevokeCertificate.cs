@@ -5,6 +5,8 @@ using Azure.WebJobs.Extensions.HttpApi;
 
 using DurableTask.TypedProxy;
 
+using KeyVault.Acmebot.Internal;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -38,7 +40,7 @@ public class RevokeCertificate : HttpFunctionBase
         [DurableClient] IDurableClient starter,
         ILogger log)
     {
-        if (!User.Identity.IsAuthenticated)
+        if (!User.Identity.IsAuthenticated || !User.HasRevokeCertificateRole())
         {
             return Unauthorized();
         }
