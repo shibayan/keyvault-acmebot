@@ -40,9 +40,14 @@ public class RevokeCertificate : HttpFunctionBase
         [DurableClient] IDurableClient starter,
         ILogger log)
     {
-        if (!User.Identity.IsAuthenticated || !User.HasRevokeCertificateRole())
+        if (!User.Identity.IsAuthenticated)
         {
             return Unauthorized();
+        }
+
+        if (!User.HasRevokeCertificateRole())
+        {
+            return Forbid();
         }
 
         // Function input comes from the request content.
