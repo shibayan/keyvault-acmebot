@@ -10,11 +10,11 @@
 <p align="center">
   <a href="https://github.com/shibayan/keyvault-acmebot/actions/workflows/build.yml" rel="nofollow"><img src="https://github.com/shibayan/keyvault-acmebot/workflows/Build/badge.svg" alt="Build" style="max-width: 100%;"></a>
   <a href="https://github.com/shibayan/keyvault-acmebot/releases/latest" rel="nofollow"><img src="https://badgen.net/github/release/shibayan/keyvault-acmebot" alt="Release" style="max-width: 100%;"></a>
-  <a href="https://registry.terraform.io/modules/shibayan/keyvault-acmebot/azurerm/latest" rel="nofollow"><img src="https://badgen.net/badge/terraform/registry/5c4ee5" alt="Terraform" style="max-width: 100%;"></a>
   <a href="https://github.com/shibayan/keyvault-acmebot/blob/master/LICENSE"><img src="https://badgen.net/github/license/shibayan/keyvault-acmebot" alt="License" style="max-width: 100%;"></a>
+  <a href="https://registry.terraform.io/modules/shibayan/keyvault-acmebot/azurerm/latest" rel="nofollow"><img src="https://badgen.net/badge/terraform/registry/5c4ee5" alt="Terraform" style="max-width: 100%;"></a>
 </p>
 
-# Motivation
+## Motivation
 
 We have started to address the following requirements:
 
@@ -26,7 +26,7 @@ We have started to address the following requirements:
 
 Key Vault Acmebot allows for secure and centralized management of ACME certificates.
 
-# Feature Support
+## Feature Support
 
 - Issuing certificates for Zone Apex, Wildcard and SANs (multiple domains)
 - Dedicated dashboard for easy certificates management
@@ -38,7 +38,7 @@ Key Vault Acmebot allows for secure and centralized management of ACME certifica
 - Azure App Services (Web Apps / Functions / Containers, regardless of OS)
 - Azure CDN / Front Door / Application Gateway v2 / etc
 
-# Deployment
+## Deployment
 
 | Azure (Public) | Azure China | Azure Government |
 | :---: | :---: | :---: |
@@ -46,18 +46,18 @@ Key Vault Acmebot allows for secure and centralized management of ACME certifica
 
 Learn more at https://github.com/shibayan/keyvault-acmebot/wiki/Getting-Started
 
-# Sponsors
+## Sponsors
 
 [![ZEN Architects](docs/images/zenarchitects.png)](https://zenarchitects.co.jp)
 
 Thank you for supporting our development. Are you interested in special support? [Become a Sponsor](https://github.com/sponsors/shibayan)
 
-# Thanks
+## Thanks
 
 - [ACMESharp Core](https://github.com/PKISharp/ACMESharpCore) by @ebekker
 - [Durable Functions](https://github.com/Azure/azure-functions-durable-extension) by @cgillum and contributors
 - [DnsClient.NET](https://github.com/MichaCo/DnsClient.NET) by @MichaCo
 
-# License
+## License
 
 This project is licensed under the [Apache License 2.0](https://github.com/shibayan/keyvault-acmebot/blob/master/LICENSE)
