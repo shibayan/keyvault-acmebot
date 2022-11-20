@@ -6,8 +6,6 @@ using Azure.WebJobs.Extensions.HttpApi;
 
 using DurableTask.TypedProxy;
 
-using KeyVault.Acmebot.Internal;
-
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -38,7 +36,7 @@ public class GetDnsZones : HttpFunctionBase
         [DurableClient] IDurableClient starter,
         ILogger log)
     {
-        if (!User.IsAppAuthorized())
+        if (!User.Identity.IsAuthenticated)
         {
             return Unauthorized();
         }

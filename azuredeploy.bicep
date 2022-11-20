@@ -46,7 +46,7 @@ var appInsightsEndpoints = {
 }
 var roleDefinitionId = resourceId('Microsoft.Authorization/roleDefinitions/', 'a4417e6f-fecd-4de8-b567-7b0420556985')
 
-resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2022-05-01' = {
   name: storageAccountName
   location: location
   kind: 'Storage'
@@ -70,7 +70,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   properties: {}
 }
 
-resource workspace 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
+resource workspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: workspaceName
   location: location
   properties: {

@@ -4,6 +4,8 @@ using Azure.WebJobs.Extensions.HttpApi;
 
 using DurableTask.TypedProxy;
 
+using KeyVault.Acmebot.Internal;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -43,6 +45,11 @@ public class RenewCertificate : HttpFunctionBase
         if (!User.Identity.IsAuthenticated)
         {
             return Unauthorized();
+        }
+
+        if (!User.HasIssueCertificateRole())
+        {
+            return Forbid();
         }
 
         // Function input comes from the request content.
