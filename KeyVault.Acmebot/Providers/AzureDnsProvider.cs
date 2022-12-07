@@ -36,7 +36,7 @@ public class AzureDnsProvider : IDnsProvider
 
         var subscription = await _armClient.GetDefaultSubscriptionAsync();
 
-        var result = subscription.GetDnsZonesByDnszoneAsync();
+        var result = subscription.GetDnsZonesAsync();
 
         await foreach (var zone in result)
         {
@@ -49,19 +49,19 @@ public class AzureDnsProvider : IDnsProvider
     public Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
     {
         // TXT レコードに TTL と値をセットする
-        var recordSet = new TxtRecordData
+        var recordSet = new DnsTxtRecordData
         {
             TtlInSeconds = 60
         };
 
         foreach (var value in values)
         {
-            recordSet.TxtRecords.Add(new TxtRecordInfo { Values = { value } });
+            recordSet.DnsTxtRecords.Add(new DnsTxtRecordInfo { Values = { value } });
         }
 
         var dnsZoneResource = _armClient.GetDnsZoneResource(new ResourceIdentifier(zone.Id));
 
-        var recordSets = dnsZoneResource.GetTxtRecords();
+        var recordSets = dnsZoneResource.GetDnsTxtRecords();
 
         return recordSets.CreateOrUpdateAsync(WaitUntil.Completed, relativeRecordName, recordSet);
     }
@@ -72,7 +72,7 @@ public class AzureDnsProvider : IDnsProvider
 
         try
         {
-            var recordSets = await dnsZoneResource.GetTxtRecordAsync(relativeRecordName);
+            var recordSets = await dnsZoneResource.GetDnsTxtRecordAsync(relativeRecordName);
 
             await recordSets.Value.DeleteAsync(WaitUntil.Completed);
         }
