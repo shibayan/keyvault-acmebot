@@ -36,7 +36,7 @@ internal class AzurePrivateDnsProvider : IDnsProvider
 
         var subscription = await _armClient.GetDefaultSubscriptionAsync();
 
-        var result = subscription.GetPrivateZonesAsync();
+        var result = subscription.GetPrivateDnsZonesAsync();
 
         await foreach (var zone in result)
         {
@@ -49,29 +49,29 @@ internal class AzurePrivateDnsProvider : IDnsProvider
     public Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
     {
         // TXT レコードに値をセットする
-        var recordSet = new RecordSetData();
+        var txtRecordData = new PrivateDnsTxtRecordData();
 
         foreach (var value in values)
         {
-            recordSet.TxtRecords.Add(new TxtRecord { Value = { value } });
+            txtRecordData.PrivateDnsTxtRecords.Add(new PrivateDnsTxtRecordInfo { Values = { value } });
         }
 
-        var dnsZoneResource = _armClient.GetPrivateZoneResource(new ResourceIdentifier(zone.Id));
+        var dnsZoneResource = _armClient.GetPrivateDnsZoneResource(new ResourceIdentifier(zone.Id));
 
-        var recordSets = dnsZoneResource.GetRecordSets();
+        var dnsTxtRecords = dnsZoneResource.GetPrivateDnsTxtRecords();
 
-        return recordSets.CreateOrUpdateAsync(WaitUntil.Completed, relativeRecordName, recordSet);
+        return dnsTxtRecords.CreateOrUpdateAsync(WaitUntil.Completed, relativeRecordName, txtRecordData);
     }
 
     public async Task DeleteTxtRecordAsync(DnsZone zone, string relativeRecordName)
     {
-        var dnsZoneResource = _armClient.GetPrivateZoneResource(new ResourceIdentifier(zone.Id));
+        var dnsZoneResource = _armClient.GetPrivateDnsZoneResource(new ResourceIdentifier(zone.Id));
 
         try
         {
-            var recordSet = await dnsZoneResource.GetRecordSets().GetAsync(relativeRecordName);
+            PrivateDnsTxtRecordResource dnsTxtRecordResource = await dnsZoneResource.GetPrivateDnsTxtRecordAsync(relativeRecordName);
 
-            await recordSet.Value.DeleteAsync(WaitUntil.Completed);
+            await dnsTxtRecordResource.DeleteAsync(WaitUntil.Completed);
         }
         catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
         {
