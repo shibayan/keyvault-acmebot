@@ -32,6 +32,8 @@ public class AcmebotOptions
     // Properties should be in alphabetical order
     public AzureDnsOptions AzureDns { get; set; }
 
+    public AzurePrivateDnsOptions AzurePrivateDns { get; set; }
+
     public CloudflareOptions Cloudflare { get; set; }
 
     public CustomDnsOptions CustomDns { get; set; }
