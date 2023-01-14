@@ -8,7 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-using Azure.Identity;
+using Azure.Core;
 using Azure.Security.KeyVault.Keys.Cryptography;
 
 using KeyVault.Acmebot.Internal;
@@ -21,13 +21,8 @@ namespace KeyVault.Acmebot.Providers;
 
 public class TransIpProvider : IDnsProvider
 {
-    public TransIpProvider(AcmebotOptions acmeOptions, TransIpOptions options, AzureEnvironment environment)
+    public TransIpProvider(AcmebotOptions acmeOptions, TransIpOptions options, TokenCredential credential)
     {
-        var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
-        {
-            AuthorityHost = environment.ActiveDirectory
-        });
-
         var keyUri = new Uri(new Uri(acmeOptions.VaultBaseUrl), $"/keys/{options.PrivateKeyName}");
         var cryptoClient = new CryptographyClient(keyUri, credential);
 
@@ -186,7 +181,7 @@ public class TransIpProvider : IDnsProvider
                 Nonce = Convert.ToBase64String(nonce)
             };
 
-            (string signature, string body) = await SignRequestAsync(request);
+            var (signature, body) = await SignRequestAsync(request);
 
             var response = await new HttpClient().SendAsync(
                 new HttpRequestMessage(HttpMethod.Post, new Uri(_httpClient.BaseAddress, "auth"))

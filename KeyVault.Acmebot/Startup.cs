@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using Azure.Core;
 using Azure.Identity;
 using Azure.Security.KeyVault.Certificates;
 
@@ -52,15 +53,20 @@ public class Startup : FunctionsStartup
             return AzureEnvironment.Get(options.Value.Environment);
         });
 
+        builder.Services.AddSingleton<TokenCredential>(provider =>
+        {
+            var environment = provider.GetRequiredService<AzureEnvironment>();
+
+            return new DefaultAzureCredential(new DefaultAzureCredentialOptions
+            {
+                AuthorityHost = environment.AuthorityHost
+            });
+        });
+
         builder.Services.AddSingleton(provider =>
         {
             var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
-            var environment = provider.GetRequiredService<AzureEnvironment>();
-
-            var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
-            {
-                AuthorityHost = environment.ActiveDirectory
-            });
+            var credential = provider.GetRequiredService<TokenCredential>();
 
             return new CertificateClient(new Uri(options.Value.VaultBaseUrl), credential);
         });
@@ -75,11 +81,12 @@ public class Startup : FunctionsStartup
         {
             var options = provider.GetRequiredService<IOptions<AcmebotOptions>>().Value;
             var environment = provider.GetRequiredService<AzureEnvironment>();
+            var credential = provider.GetRequiredService<TokenCredential>();
 
             var dnsProviders = new List<IDnsProvider>();
 
-            dnsProviders.TryAdd(options.AzureDns, o => new AzureDnsProvider(o, environment));
-            dnsProviders.TryAdd(options.AzurePrivateDns, o => new AzurePrivateDnsProvider(o, environment));
+            dnsProviders.TryAdd(options.AzureDns, o => new AzureDnsProvider(o, environment, credential));
+            dnsProviders.TryAdd(options.AzurePrivateDns, o => new AzurePrivateDnsProvider(o, environment, credential));
             dnsProviders.TryAdd(options.Cloudflare, o => new CloudflareProvider(o));
             dnsProviders.TryAdd(options.CustomDns, o => new CustomDnsProvider(o));
             dnsProviders.TryAdd(options.DnsMadeEasy, o => new DnsMadeEasyProvider(o));
@@ -87,7 +94,7 @@ public class Startup : FunctionsStartup
             dnsProviders.TryAdd(options.GoDaddy, o => new GoDaddyProvider(o));
             dnsProviders.TryAdd(options.GoogleDns, o => new GoogleDnsProvider(o));
             dnsProviders.TryAdd(options.Route53, o => new Route53Provider(o));
-            dnsProviders.TryAdd(options.TransIp, o => new TransIpProvider(options, o, environment));
+            dnsProviders.TryAdd(options.TransIp, o => new TransIpProvider(options, o, credential));
 
             if (dnsProviders.Count == 0)
             {
