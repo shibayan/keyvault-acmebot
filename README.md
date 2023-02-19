@@ -19,22 +19,22 @@
 
 ## Motivation
 
-We have started to address the following requirements:
+We have begun to address the following requirements:
 
-- Use the Azure Key Vault to store SSL/TLS certificates securely
-- Centralize management of a large number of certificates using a single Key Vault
+- Securely store SSL/TLS certificates with Azure Key Vault
+- Centralize management of large numbers of certificates with a single Key Vault
 - Easy to deploy and configure solution
 - Highly reliable implementation
-- Ease of Monitoring (Application Insights, Webhook)
+- Easy to monitor (Application Insights, Webhook)
 
-Key Vault Acmebot allows for secure and centralized management of ACME certificates.
+Key Vault Acmebot provides secure and centralized management of ACME certificates.
 
 ## Feature Support
 
-- Issuing certificates for Zone Apex, Wildcard and SANs (multiple domains)
-- Dedicated dashboard for easy certificates management
+- Issue certificates for Zone Apex, Wildcard and SANs (multiple domains)
+- Dedicated dashboard for easy certificate management
 - Automated certificate renewal
-- ACME v2 compliants Certification Authorities
+- Support for ACME v2 compliant Certification Authorities
   - [Let's Encrypt](https://letsencrypt.org/)
   - [Buypass Go SSL](https://www.buypass.com/ssl/resources/acme-free-ssl)
   - [ZeroSSL](https://zerossl.com/features/acme/) (Requires EAB Credentials)
@@ -53,7 +53,7 @@ Learn more at https://github.com/shibayan/keyvault-acmebot/wiki/Getting-Started
 
 [![ZEN Architects](docs/images/zenarchitects.png)](https://zenarchitects.co.jp)
 
-Thank you for supporting our development. Are you interested in special support? [Become a Sponsor](https://github.com/sponsors/shibayan)
+Thank you for your support of our development. Interested in special support? [Become a Sponsor](https://github.com/sponsors/shibayan)
 
 ## Thanks
 
