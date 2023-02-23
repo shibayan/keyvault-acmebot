@@ -23,4 +23,18 @@ internal static class DnsProvidersExtensions
             dnsProviders.Add(factory(options));
         }
     }
+
+    public static void TryAdd<TOption>(this IList<IDnsProvider> dnsProviders, TOption[] options, Func<TOption, IDnsProvider> factory)
+    {
+        if (options is not null)
+        {
+            foreach (var option in options)
+            {
+                if (option is not null)
+                {
+                    dnsProviders.Add(factory(option));
+                }
+            }
+        }
+    }
 }
