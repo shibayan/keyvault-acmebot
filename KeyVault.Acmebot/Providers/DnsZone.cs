@@ -29,7 +29,7 @@ public class DnsZone : IEquatable<DnsZone>
 
     public bool Equals(DnsZone other)
     {
-        if (other == null)
+        if (other is null)
         {
             return false;
         }

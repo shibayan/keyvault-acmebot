@@ -162,7 +162,7 @@ public class SharedActivity : ISharedActivity
                             .MaxBy(x => x.Name.Length);
 
             // マッチする DNS zone が見つからない場合はエラー
-            if (zone == null)
+            if (zone is null)
             {
                 notFoundZoneDnsNames.Add(dnsName);
                 continue;
@@ -213,7 +213,12 @@ public class SharedActivity : ISharedActivity
             var authorization = await acmeProtocolClient.GetAuthorizationDetailsAsync(authorizationUrl);
 
             // DNS-01 Challenge の情報を拾う
-            var challenge = authorization.Challenges.First(x => x.Type == "dns-01");
+            var challenge = authorization.Challenges.FirstOrDefault(x => x.Type == "dns-01");
+
+            if (challenge is null)
+            {
+                throw new PreconditionException("DNS-01 cannot be used for domains for which a certificate has already been issued using HTTP-01.");
+            }
 
             var challengeValidationDetails = AuthorizationDecoder.ResolveChallengeForDns01(authorization, challenge, acmeProtocolClient.Signer);
 
@@ -237,8 +242,12 @@ public class SharedActivity : ISharedActivity
             var dnsRecordName = lookup.Key;
 
             var zone = zones.Where(x => dnsRecordName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase))
-                            .OrderByDescending(x => x.Name.Length)
-                            .First();
+                            .MaxBy(x => x.Name.Length);
+
+            if (zone is null)
+            {
+                throw new PreconditionException($"DNS zone is not found. DnsRecordName = {dnsRecordName}");
+            }
 
             // Challenge の詳細から DNS 向けにレコード名を作成
             var acmeDnsRecordName = dnsRecordName.Replace($".{zone.Name}", "", StringComparison.OrdinalIgnoreCase);
@@ -318,7 +327,7 @@ public class SharedActivity : ISharedActivity
             {
                 var challenge = await acmeProtocolClient.GetChallengeDetailsAsync(challengeResult.Url);
 
-                if (challenge.Status != "invalid" || challenge.Error == null)
+                if (challenge.Status != "invalid" || challenge.Error is null)
                 {
                     continue;
                 }
