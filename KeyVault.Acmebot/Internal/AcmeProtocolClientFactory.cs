@@ -35,7 +35,7 @@ public class AcmeProtocolClientFactory
 
         var acmeProtocolClient = new AcmeProtocolClient(_baseUri, directory, account, accountKey?.GenerateSigner(), usePostAsGet: true);
 
-        if (directory == null)
+        if (directory is null)
         {
             try
             {
@@ -55,7 +55,7 @@ public class AcmeProtocolClientFactory
 
         await acmeProtocolClient.GetNonceAsync();
 
-        if (acmeProtocolClient.Account == null)
+        if (acmeProtocolClient.Account is null)
         {
             var externalAccountBinding = directory.Meta.ExternalAccountRequired ?? false ? CreateExternalAccountBinding(acmeProtocolClient) : null;
 
