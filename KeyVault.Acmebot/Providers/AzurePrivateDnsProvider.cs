@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 
 using Azure;
 using Azure.Core;
-using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.ResourceManager.PrivateDns;
 using Azure.ResourceManager.PrivateDns.Models;
@@ -16,13 +15,8 @@ namespace KeyVault.Acmebot.Providers;
 
 internal class AzurePrivateDnsProvider : IDnsProvider
 {
-    public AzurePrivateDnsProvider(AzurePrivateDnsOptions options, AzureEnvironment environment)
+    public AzurePrivateDnsProvider(AzurePrivateDnsOptions options, AzureEnvironment environment, TokenCredential credential)
     {
-        var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
-        {
-            AuthorityHost = environment.ActiveDirectory
-        });
-
         _armClient = new ArmClient(credential, options.SubscriptionId, new ArmClientOptions { Environment = environment.ResourceManager });
     }
 

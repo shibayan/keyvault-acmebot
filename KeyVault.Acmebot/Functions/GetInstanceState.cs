@@ -30,7 +30,7 @@ public class GetInstanceState : HttpFunctionBase
 
         var status = await starter.GetStatusAsync(instanceId);
 
-        if (status == null)
+        if (status is null)
         {
             return BadRequest();
         }

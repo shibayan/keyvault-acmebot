@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 
 using Azure;
 using Azure.Core;
-using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Dns;
 using Azure.ResourceManager.Dns.Models;
@@ -16,13 +15,8 @@ namespace KeyVault.Acmebot.Providers;
 
 public class AzureDnsProvider : IDnsProvider
 {
-    public AzureDnsProvider(AzureDnsOptions options, AzureEnvironment environment)
+    public AzureDnsProvider(AzureDnsOptions options, AzureEnvironment environment, TokenCredential credential)
     {
-        var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
-        {
-            AuthorityHost = environment.ActiveDirectory
-        });
-
         _armClient = new ArmClient(credential, options.SubscriptionId, new ArmClientOptions { Environment = environment.ResourceManager });
     }
 

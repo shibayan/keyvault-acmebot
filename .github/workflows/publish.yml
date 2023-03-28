@@ -6,7 +6,7 @@ on:
 
 env:
   DOTNET_VERSION: 6.0.x
-  BICEP_VERSION: 0.13.1
+  BICEP_VERSION: 0.15.31
 
 jobs:
   publish:
@@ -57,7 +57,9 @@ jobs:
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     - name: Use Bicep ${{ env.BICEP_VERSION }}
-      run: az bicep install --version v${{ env.BICEP_VERSION }}
+      run: |
+        az config set bicep.use_binary_from_path=false
+        az bicep install --version v${{ env.BICEP_VERSION }}
 
     - name: Download artifacts
       uses: actions/download-artifact@v3

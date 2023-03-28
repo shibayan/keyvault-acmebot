@@ -14,7 +14,7 @@ internal static class CertificateExtensions
     {
         var tags = properties.Tags;
 
-        if (tags == null)
+        if (tags is null)
         {
             return false;
         }
@@ -54,7 +54,7 @@ internal static class CertificateExtensions
 
     private static string ToHexString(byte[] bytes)
     {
-        if (bytes == null)
+        if (bytes is null)
         {
             throw new ArgumentNullException(nameof(bytes));
         }
