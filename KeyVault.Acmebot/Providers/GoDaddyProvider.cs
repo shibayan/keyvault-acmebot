@@ -81,7 +81,8 @@ public class GoDaddyProvider : IDnsProvider
 
         public async Task<IReadOnlyList<ZoneDomain>> ListZonesAsync()
         {
-            var limit = 100;
+            const int limit = 100;
+
             var marker = "";
             var allActiveDomains = new List<ZoneDomain>();
 
