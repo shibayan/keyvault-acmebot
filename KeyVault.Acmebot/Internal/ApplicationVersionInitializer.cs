@@ -16,8 +16,5 @@ internal class ApplicationVersionInitializer<TStartup> : ITelemetryInitializer
 
     public string ApplicationVersion { get; }
 
-    public void Initialize(ITelemetry telemetry)
-    {
-        telemetry.Context.Component.Version = ApplicationVersion;
-    }
+    public void Initialize(ITelemetry telemetry) => telemetry.Context.Component.Version = ApplicationVersion;
 }

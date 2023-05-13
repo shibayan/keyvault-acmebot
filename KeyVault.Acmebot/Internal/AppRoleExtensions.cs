@@ -11,12 +11,7 @@ internal static class AppRoleExtensions
 
     private static bool IsAppRoleRequired => bool.TryParse(Environment.GetEnvironmentVariable("Acmebot:AppRoleRequired"), out var result) && result;
 
-    private static bool IsInAppRole(this ClaimsPrincipal claimsPrincipal, string role)
-    {
-        var roles = claimsPrincipal.Claims.Where(x => x.Type == "roles").Select(x => x.Value);
-
-        return roles.Contains(role);
-    }
+    private static bool IsInAppRole(this ClaimsPrincipal claimsPrincipal, string role) => claimsPrincipal.Claims.Where(x => x.Type == "roles").Select(x => x.Value).Contains(role);
 
     public static bool HasIssueCertificateRole(this ClaimsPrincipal claimsPrincipal) => !IsAppRoleRequired || claimsPrincipal.IsInAppRole(IssueCertificateAppRole);
 
