@@ -12,10 +12,6 @@
     }
   },
   "extensions": {
-    "durableTask": {
-      "extendedSessionsEnabled": true,
-      "extendedSessionIdleTimeoutInSeconds": 120
-    },
     "http": {
       "routePrefix": "",
       "customHeaders": {

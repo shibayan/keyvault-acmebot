@@ -24,14 +24,6 @@ public class GetCertificates : HttpFunctionBase
     {
     }
 
-    [FunctionName($"{nameof(GetCertificates)}_{nameof(Orchestrator)}")]
-    public Task<IReadOnlyList<CertificateItem>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
-    {
-        var activity = context.CreateActivityProxy<ISharedActivity>();
-
-        return activity.GetAllCertificates();
-    }
-
     [FunctionName($"{nameof(GetCertificates)}_{nameof(HttpStart)}")]
     public async Task<IActionResult> HttpStart(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/certificates")] HttpRequest req,
@@ -49,5 +41,13 @@ public class GetCertificates : HttpFunctionBase
         log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
         return await starter.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromMinutes(1), returnInternalServerErrorOnFailure: true);
+    }
+
+    [FunctionName($"{nameof(GetCertificates)}_{nameof(Orchestrator)}")]
+    public Task<IReadOnlyList<CertificateItem>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
+    {
+        var activity = context.CreateActivityProxy<ISharedActivity>();
+
+        return activity.GetAllCertificates();
     }
 }

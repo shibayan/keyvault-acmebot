@@ -19,7 +19,9 @@ public class PurgeInstanceHistory
             new[]
             {
                 OrchestrationStatus.Completed,
-                OrchestrationStatus.Failed
+                OrchestrationStatus.Failed,
+                OrchestrationStatus.Canceled,
+                OrchestrationStatus.Terminated
             });
     }
 }
