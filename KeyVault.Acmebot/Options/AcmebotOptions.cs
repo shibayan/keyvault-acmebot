@@ -27,6 +27,8 @@ public class AcmebotOptions
     [Range(0, 365)]
     public int RenewBeforeExpiry { get; set; } = 30;
 
+    public bool UseSystemNameServer { get; set; } = false;
+
     public ExternalAccountBindingOptions ExternalAccountBinding { get; set; }
 
     // Properties should be in alphabetical order

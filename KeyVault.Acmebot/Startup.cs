@@ -40,11 +40,17 @@ public class Startup : FunctionsStartup
 
         builder.Services.AddSingleton<ITelemetryInitializer, ApplicationVersionInitializer<Startup>>();
 
-        builder.Services.AddSingleton(new LookupClient(new LookupClientOptions(NameServer.GooglePublicDns, NameServer.GooglePublicDns2)
+        builder.Services.AddSingleton(provider =>
         {
-            UseCache = false,
-            UseRandomNameServer = true
-        }));
+            var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
+
+            var lookupClientOptions = options.Value.UseSystemNameServer ? new LookupClientOptions() : new LookupClientOptions(NameServer.GooglePublicDns, NameServer.GooglePublicDns2);
+
+            lookupClientOptions.UseCache = false;
+            lookupClientOptions.UseRandomNameServer = true;
+
+            return new LookupClient(lookupClientOptions);
+        });
 
         builder.Services.AddSingleton(provider =>
         {

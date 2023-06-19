@@ -81,13 +81,30 @@ public class GoDaddyProvider : IDnsProvider
 
         public async Task<IReadOnlyList<ZoneDomain>> ListZonesAsync()
         {
-            var response = await _httpClient.GetAsync("v1/domains?statuses=ACTIVE&includes=nameServers");
+            const int limit = 100;
 
-            response.EnsureSuccessStatusCode();
+            var marker = "";
+            var allActiveDomains = new List<ZoneDomain>();
 
-            var domains = await response.Content.ReadAsAsync<ZoneDomain[]>();
+            while (true)
+            {
+                var response = await _httpClient.GetAsync($"v1/domains?statuses=ACTIVE&includes=nameServers&limit={limit}{marker}");
 
-            return domains;
+                response.EnsureSuccessStatusCode();
+
+                var domains = await response.Content.ReadAsAsync<ZoneDomain[]>();
+
+                if (domains.Length == 0)
+                {
+                    break;
+                }
+
+                allActiveDomains.AddRange(domains);
+
+                marker = $"&marker={domains[^1].Domain}";
+            }
+
+            return allActiveDomains;
         }
 
         public async Task DeleteRecordAsync(string domain, string type, string name)
