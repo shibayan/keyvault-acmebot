@@ -48,6 +48,52 @@ var appInsightsEndpoints = {
   AzureUSGovernment: 'applicationinsights.us'
 }
 var roleDefinitionId = resourceId('Microsoft.Authorization/roleDefinitions/', 'a4417e6f-fecd-4de8-b567-7b0420556985')
+var acmebotAppSettings = [
+  {
+    name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+    value: 'InstrumentationKey=${appInsights.properties.InstrumentationKey};EndpointSuffix=${appInsightsEndpoints[environment().name]}'
+  }
+  {
+    name: 'AzureWebJobsStorage'
+    value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
+  }
+  {
+    name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING'
+    value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
+  }
+  {
+    name: 'WEBSITE_CONTENTSHARE'
+    value: toLower(functionAppName)
+  }
+  {
+    name: 'WEBSITE_RUN_FROM_PACKAGE'
+    value: 'https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v4/latest.zip'
+  }
+  {
+    name: 'FUNCTIONS_EXTENSION_VERSION'
+    value: '~4'
+  }
+  {
+    name: 'FUNCTIONS_WORKER_RUNTIME'
+    value: 'dotnet'
+  }
+  {
+    name: 'Acmebot:Contacts'
+    value: mailAddress
+  }
+  {
+    name: 'Acmebot:Endpoint'
+    value: acmeEndpoint
+  }
+  {
+    name: 'Acmebot:VaultBaseUrl'
+    value: (createWithKeyVault ? 'https://${keyVaultName}${environment().suffixes.keyvaultDns}' : keyVaultBaseUrl)
+  }
+  {
+    name: 'Acmebot:Environment'
+    value: environment().name
+  }
+]
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   name: storageAccountName
@@ -109,52 +155,7 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
     httpsOnly: true
     serverFarmId: appServicePlan.id
     siteConfig: {
-      appSettings: concat([
-          {
-            name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-            value: 'InstrumentationKey=${appInsights.properties.InstrumentationKey};EndpointSuffix=${appInsightsEndpoints[environment().name]}'
-          }
-          {
-            name: 'AzureWebJobsStorage'
-            value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
-          }
-          {
-            name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING'
-            value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
-          }
-          {
-            name: 'WEBSITE_CONTENTSHARE'
-            value: toLower(functionAppName)
-          }
-          {
-            name: 'WEBSITE_RUN_FROM_PACKAGE'
-            value: 'https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v4/latest.zip'
-          }
-          {
-            name: 'FUNCTIONS_EXTENSION_VERSION'
-            value: '~4'
-          }
-          {
-            name: 'FUNCTIONS_WORKER_RUNTIME'
-            value: 'dotnet'
-          }
-          {
-            name: 'Acmebot:Contacts'
-            value: mailAddress
-          }
-          {
-            name: 'Acmebot:Endpoint'
-            value: acmeEndpoint
-          }
-          {
-            name: 'Acmebot:VaultBaseUrl'
-            value: (createWithKeyVault ? 'https://${keyVaultName}${environment().suffixes.keyvaultDns}' : keyVaultBaseUrl)
-          }
-          {
-            name: 'Acmebot:Environment'
-            value: environment().name
-          }
-        ], additionalAppSettings)
+      appSettings: concat(acmebotAppSettings, additionalAppSettings)
       netFrameworkVersion: 'v6.0'
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
