@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.15.31.15270",
-      "templateHash": "14960254846091710630"
+      "version": "0.18.4.5664",
+      "templateHash": "6843255573517711123"
     }
   },
   "parameters": {
@@ -68,6 +68,13 @@
       "defaultValue": "",
       "metadata": {
         "description": "Enter the base URL of an existing Key Vault. (ex. https://example.vault.azure.net)"
+      }
+    },
+    "additionalAppSettings": {
+      "type": "array",
+      "defaultValue": [],
+      "metadata": {
+        "description": "Specifies additional name/value pairs to be appended to the functionap app appsettings."
       }
     }
   },
@@ -155,52 +162,7 @@
         "httpsOnly": true,
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
         "siteConfig": {
-          "appSettings": [
-            {
-              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
-              "value": "[format('InstrumentationKey={0};EndpointSuffix={1}', reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02').InstrumentationKey, variables('appInsightsEndpoints')[environment().name])]"
-            },
-            {
-              "name": "AzureWebJobsStorage",
-              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', variables('storageAccountName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').keys[0].value, environment().suffixes.storage)]"
-            },
-            {
-              "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', variables('storageAccountName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').keys[0].value, environment().suffixes.storage)]"
-            },
-            {
-              "name": "WEBSITE_CONTENTSHARE",
-              "value": "[toLower(variables('functionAppName'))]"
-            },
-            {
-              "name": "WEBSITE_RUN_FROM_PACKAGE",
-              "value": "https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v4/latest.zip"
-            },
-            {
-              "name": "FUNCTIONS_EXTENSION_VERSION",
-              "value": "~4"
-            },
-            {
-              "name": "FUNCTIONS_WORKER_RUNTIME",
-              "value": "dotnet"
-            },
-            {
-              "name": "Acmebot:Contacts",
-              "value": "[parameters('mailAddress')]"
-            },
-            {
-              "name": "Acmebot:Endpoint",
-              "value": "[parameters('acmeEndpoint')]"
-            },
-            {
-              "name": "Acmebot:VaultBaseUrl",
-              "value": "[if(parameters('createWithKeyVault'), format('https://{0}{1}', variables('keyVaultName'), environment().suffixes.keyvaultDns), parameters('keyVaultBaseUrl'))]"
-            },
-            {
-              "name": "Acmebot:Environment",
-              "value": "[environment().name]"
-            }
-          ],
+          "appSettings": "[concat(createArray(createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'value', format('InstrumentationKey={0};EndpointSuffix={1}', reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02').InstrumentationKey, variables('appInsightsEndpoints')[environment().name])), createObject('name', 'AzureWebJobsStorage', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', variables('storageAccountName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').keys[0].value, environment().suffixes.storage)), createObject('name', 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', variables('storageAccountName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').keys[0].value, environment().suffixes.storage)), createObject('name', 'WEBSITE_CONTENTSHARE', 'value', toLower(variables('functionAppName'))), createObject('name', 'WEBSITE_RUN_FROM_PACKAGE', 'value', 'https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v4/latest.zip'), createObject('name', 'FUNCTIONS_EXTENSION_VERSION', 'value', '~4'), createObject('name', 'FUNCTIONS_WORKER_RUNTIME', 'value', 'dotnet'), createObject('name', 'Acmebot:Contacts', 'value', parameters('mailAddress')), createObject('name', 'Acmebot:Endpoint', 'value', parameters('acmeEndpoint')), createObject('name', 'Acmebot:VaultBaseUrl', 'value', if(parameters('createWithKeyVault'), format('https://{0}{1}', variables('keyVaultName'), environment().suffixes.keyvaultDns), parameters('keyVaultBaseUrl'))), createObject('name', 'Acmebot:Environment', 'value', environment().name)), parameters('additionalAppSettings'))]",
           "netFrameworkVersion": "v6.0",
           "ftpsState": "Disabled",
           "minTlsVersion": "1.2",
