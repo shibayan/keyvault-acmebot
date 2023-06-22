@@ -12,6 +12,9 @@
     }
   },
   "extensions": {
+    "durableTask": {
+      "useGracefulShutdown": true
+    },
     "http": {
       "routePrefix": "",
       "customHeaders": {
