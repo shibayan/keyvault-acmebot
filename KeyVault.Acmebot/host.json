@@ -13,8 +13,7 @@
   },
   "extensions": {
     "durableTask": {
-      "extendedSessionsEnabled": true,
-      "extendedSessionIdleTimeoutInSeconds": 120
+      "useGracefulShutdown": true
     },
     "http": {
       "routePrefix": "",
