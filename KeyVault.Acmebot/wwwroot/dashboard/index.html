@@ -581,6 +581,10 @@
           await this.refresh();
         },
         async revokeCertificate() {
+          if (!confirm(`${this.details.certificate.name} revoke your certificate. Are you sure?`)) {
+            return;
+          }
+
           this.details.sending = true;
 
           try {
