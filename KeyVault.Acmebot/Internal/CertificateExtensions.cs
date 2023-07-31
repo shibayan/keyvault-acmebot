@@ -39,6 +39,7 @@ internal static class CertificateExtensions
         return new CertificateItem
         {
             Id = certificate.Id,
+            SecretId = certificate.SecretId,
             Name = certificate.Name,
             DnsNames = dnsNames is { Length: > 0 } ? dnsNames : new[] { certificate.Policy.Subject[3..] },
             CreatedOn = certificate.Properties.CreatedOn.Value,

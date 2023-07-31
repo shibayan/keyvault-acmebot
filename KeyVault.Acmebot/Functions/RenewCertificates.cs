@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 
 using DurableTask.TypedProxy;
 
+using KeyVault.Acmebot.Models;
+
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
@@ -12,6 +14,15 @@ namespace KeyVault.Acmebot.Functions;
 
 public class RenewCertificates
 {
+    [FunctionName($"{nameof(RenewCertificates)}_{nameof(Timer)}")]
+    public async Task Timer([TimerTrigger("0 0 0 * * *")] TimerInfo timer, [DurableClient] IDurableClient starter, ILogger log)
+    {
+        // Function input comes from the request content.
+        var instanceId = await starter.StartNewAsync($"{nameof(RenewCertificates)}_{nameof(Orchestrator)}");
+
+        log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
+    }
+
     [FunctionName($"{nameof(RenewCertificates)}_{nameof(Orchestrator)}")]
     public async Task Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
     {
@@ -43,7 +54,7 @@ public class RenewCertificates
                 // 証明書の更新処理を開始
                 var certificatePolicyItem = await activity.GetCertificatePolicy(certificate.Name);
 
-                await context.CallSubOrchestratorWithRetryAsync(nameof(SharedOrchestrator.IssueCertificate), _retryOptions, certificatePolicyItem);
+                await context.CallSubOrchestratorWithRetryAsync<CertificateItem>(nameof(SharedOrchestrator.IssueCertificate), _retryOptions, certificatePolicyItem);
             }
             catch (Exception ex)
             {
@@ -52,15 +63,6 @@ public class RenewCertificates
                 log.LogError(ex.Message);
             }
         }
-    }
-
-    [FunctionName($"{nameof(RenewCertificates)}_{nameof(Timer)}")]
-    public async Task Timer([TimerTrigger("0 0 0 * * *")] TimerInfo timer, [DurableClient] IDurableClient starter, ILogger log)
-    {
-        // Function input comes from the request content.
-        var instanceId = await starter.StartNewAsync($"{nameof(RenewCertificates)}_{nameof(Orchestrator)}");
-
-        log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
     }
 
     private readonly RetryOptions _retryOptions = new(TimeSpan.FromHours(3), 2)

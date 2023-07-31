@@ -5,6 +5,7 @@ using Azure.WebJobs.Extensions.HttpApi;
 using DurableTask.TypedProxy;
 
 using KeyVault.Acmebot.Internal;
+using KeyVault.Acmebot.Models;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,19 +21,6 @@ public class RenewCertificate : HttpFunctionBase
     public RenewCertificate(IHttpContextAccessor httpContextAccessor)
         : base(httpContextAccessor)
     {
-    }
-
-    [FunctionName($"{nameof(RenewCertificate)}_{nameof(Orchestrator)}")]
-    public async Task Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
-    {
-        var certificateName = context.GetInput<string>();
-
-        var activity = context.CreateActivityProxy<ISharedActivity>();
-
-        // 証明書の更新処理を開始
-        var certificatePolicyItem = await activity.GetCertificatePolicy(certificateName);
-
-        await context.CallSubOrchestratorAsync(nameof(SharedOrchestrator.IssueCertificate), certificatePolicyItem);
     }
 
     [FunctionName($"{nameof(RenewCertificate)}_{nameof(HttpStart)}")]
@@ -58,5 +46,18 @@ public class RenewCertificate : HttpFunctionBase
         log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
         return AcceptedAtFunction($"{nameof(GetInstanceState)}_{nameof(GetInstanceState.HttpStart)}", new { instanceId }, null);
+    }
+
+    [FunctionName($"{nameof(RenewCertificate)}_{nameof(Orchestrator)}")]
+    public async Task<CertificateItem> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
+    {
+        var certificateName = context.GetInput<string>();
+
+        var activity = context.CreateActivityProxy<ISharedActivity>();
+
+        // 証明書の更新処理を開始
+        var certificatePolicyItem = await activity.GetCertificatePolicy(certificateName);
+
+        return await context.CallSubOrchestratorAsync<CertificateItem>(nameof(SharedOrchestrator.IssueCertificate), certificatePolicyItem);
     }
 }

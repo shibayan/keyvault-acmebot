@@ -3,8 +3,8 @@
   "logging": {
     "applicationInsights": {
       "samplingSettings": {
-        "excludedTypes": "Request;Exception",
-        "isEnabled": true
+        "isEnabled": true,
+        "excludedTypes": "Request;Exception"
       }
     },
     "logLevel": {
@@ -13,7 +13,8 @@
   },
   "extensions": {
     "durableTask": {
-      "useGracefulShutdown": true
+      "useGracefulShutdown": true,
+      "useTablePartitionManagement": true
     },
     "http": {
       "routePrefix": "",

@@ -23,16 +23,6 @@ public class RevokeCertificate : HttpFunctionBase
     {
     }
 
-    [FunctionName($"{nameof(RevokeCertificate)}_{nameof(Orchestrator)}")]
-    public async Task Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
-    {
-        var certificateName = context.GetInput<string>();
-
-        var activity = context.CreateActivityProxy<ISharedActivity>();
-
-        await activity.RevokeCertificate(certificateName);
-    }
-
     [FunctionName($"{nameof(RevokeCertificate)}_{nameof(HttpStart)}")]
     public async Task<IActionResult> HttpStart(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/certificate/{certificateName}/revoke")] HttpRequest req,
@@ -56,5 +46,15 @@ public class RevokeCertificate : HttpFunctionBase
         log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
         return await starter.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromMinutes(1), returnInternalServerErrorOnFailure: true);
+    }
+
+    [FunctionName($"{nameof(RevokeCertificate)}_{nameof(Orchestrator)}")]
+    public async Task Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
+    {
+        var certificateName = context.GetInput<string>();
+
+        var activity = context.CreateActivityProxy<ISharedActivity>();
+
+        await activity.RevokeCertificate(certificateName);
     }
 }

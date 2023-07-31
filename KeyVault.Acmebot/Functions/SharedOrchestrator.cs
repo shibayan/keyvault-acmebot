@@ -13,7 +13,7 @@ namespace KeyVault.Acmebot.Functions;
 public class SharedOrchestrator
 {
     [FunctionName(nameof(IssueCertificate))]
-    public async Task IssueCertificate([OrchestrationTrigger] IDurableOrchestrationContext context)
+    public async Task<CertificateItem> IssueCertificate([OrchestrationTrigger] IDurableOrchestrationContext context)
     {
         var certificatePolicy = context.GetInput<CertificatePolicyItem>();
 
@@ -62,5 +62,7 @@ public class SharedOrchestrator
 
         // 証明書の更新が完了後に Webhook を送信する
         await activity.SendCompletedEvent((certificate.Name, certificate.ExpiresOn, certificatePolicy.DnsNames));
+
+        return certificate;
     }
 }

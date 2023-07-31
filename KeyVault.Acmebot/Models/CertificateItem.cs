@@ -10,6 +10,9 @@ public class CertificateItem
     [JsonProperty("id")]
     public Uri Id { get; set; }
 
+    [JsonProperty("secretId")]
+    public Uri SecretId { get; set; }
+
     [JsonProperty("name")]
     public string Name { get; set; }
 
@@ -38,7 +41,7 @@ public class CertificateItem
     public bool? ReuseKey { get; set; }
 
     [JsonProperty("isManaged")]
-    public bool IsManaged { get; set; }
+    public bool IsManaged { get; set; } = true;
 
     [JsonProperty("isExpired")]
     public bool IsExpired { get; set; }
