@@ -4,7 +4,7 @@
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Route53" Version="3.7.104.87" />
+    <PackageReference Include="AWSSDK.Route53" Version="3.7.200.6" />
     <PackageReference Include="Azure.Identity" Version="1.9.0" />
     <PackageReference Include="Azure.ResourceManager.Dns" Version="1.0.1" />
     <PackageReference Include="Azure.ResourceManager.PrivateDns" Version="1.0.1" />
@@ -12,9 +12,9 @@
     <PackageReference Include="Azure.Security.KeyVault.Keys" Version="4.5.0" />
     <PackageReference Include="DnsClient" Version="1.7.0" />
     <PackageReference Include="DurableTask.TypedProxy" Version="2.2.2" />
-    <PackageReference Include="Google.Apis.Dns.v1" Version="1.60.0.3018" />
+    <PackageReference Include="Google.Apis.Dns.v1" Version="1.61.0.3123" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.9.6" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.10.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="[6.0.*,7.0.0)" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.2.0" />
     <PackageReference Include="WebJobs.Extensions.HttpApi" Version="2.0.3" />
