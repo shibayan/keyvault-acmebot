@@ -43,7 +43,7 @@ public class AcmeProtocolClientFactory
             }
             catch (AcmeProtocolException)
             {
-                acmeProtocolClient.Directory.Directory = "";
+                acmeProtocolClient.Directory.Directory = "directory";
 
                 directory = await acmeProtocolClient.GetDirectoryAsync();
             }
