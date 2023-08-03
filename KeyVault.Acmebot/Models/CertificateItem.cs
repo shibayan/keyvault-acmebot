@@ -42,4 +42,7 @@ public class CertificateItem
 
     [JsonProperty("isExpired")]
     public bool IsExpired { get; set; }
+
+    [JsonProperty("acmeEndpoint")]
+    public string AcmeEndpoint { get; set; }
 }
