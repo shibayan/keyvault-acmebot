@@ -368,7 +368,7 @@ public class SharedActivity : ISharedActivity
             var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificatePolicyItem.CertificateName, certificatePolicy, tags: new Dictionary<string, string>
             {
                 { "Issuer", IssuerName },
-                { "Endpoint", _options.Endpoint }
+                { "Endpoint", _options.Endpoint.Host }
             });
 
             csr = certificateOperation.Properties.Csr;

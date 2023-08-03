@@ -21,11 +21,9 @@ public class AcmeProtocolClientFactory
     public AcmeProtocolClientFactory(IOptions<AcmebotOptions> options)
     {
         _options = options.Value;
-        _baseUri = new Uri(_options.Endpoint);
     }
 
     private readonly AcmebotOptions _options;
-    private readonly Uri _baseUri;
 
     public async Task<AcmeProtocolClient> CreateClientAsync()
     {
@@ -33,7 +31,7 @@ public class AcmeProtocolClientFactory
         var accountKey = LoadState<AccountKey>("account_key.json");
         var directory = LoadState<ServiceDirectory>("directory.json");
 
-        var acmeProtocolClient = new AcmeProtocolClient(_baseUri, directory, account, accountKey?.GenerateSigner(), usePostAsGet: true);
+        var acmeProtocolClient = new AcmeProtocolClient(_options.Endpoint, directory, account, accountKey?.GenerateSigner(), usePostAsGet: true);
 
         if (directory is null)
         {
@@ -41,9 +39,9 @@ public class AcmeProtocolClientFactory
             {
                 directory = await acmeProtocolClient.GetDirectoryAsync();
             }
-            catch (AcmeProtocolException)
+            catch
             {
-                acmeProtocolClient.Directory.Directory = "";
+                acmeProtocolClient.Directory.Directory = "directory";
 
                 directory = await acmeProtocolClient.GetDirectoryAsync();
             }
@@ -164,5 +162,5 @@ public class AcmeProtocolClientFactory
         File.WriteAllText(fullPath, json);
     }
 
-    private string ResolveStateFullPath(string path) => Environment.ExpandEnvironmentVariables($"%HOME%/data/.acmebot/{_baseUri.Host}/{path}");
+    private string ResolveStateFullPath(string path) => Environment.ExpandEnvironmentVariables($"%HOME%/data/.acmebot/{_options.Endpoint.Host}/{path}");
 }

@@ -10,11 +10,12 @@ param mailAddress string
 
 @description('Certification authority ACME Endpoint.')
 @allowed([
-  'https://acme-v02.api.letsencrypt.org/'
-  'https://api.buypass.com/acme/'
+  'https://acme-v02.api.letsencrypt.org/directory'
+  'https://api.buypass.com/acme/directory'
   'https://acme.zerossl.com/v2/DV90/'
+  'https://dv.acme-v02.api.pki.goog/directory'
 ])
-param acmeEndpoint string = 'https://acme-v02.api.letsencrypt.org/'
+param acmeEndpoint string = 'https://acme-v02.api.letsencrypt.org/directory'
 
 @description('If you choose true, create and configure a key vault at the same time.')
 @allowed([

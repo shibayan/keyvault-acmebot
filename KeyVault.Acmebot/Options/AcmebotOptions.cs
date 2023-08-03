@@ -1,12 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace KeyVault.Acmebot.Options;
 
 public class AcmebotOptions
 {
     [Required]
-    [Url]
-    public string Endpoint { get; set; } = "https://acme-v02.api.letsencrypt.org/";
+    public Uri Endpoint { get; set; }
 
     [Required]
     public string Contacts { get; set; }
