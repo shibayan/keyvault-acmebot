@@ -55,7 +55,12 @@ public class AcmeProtocolClientFactory
 
         if (acmeProtocolClient.Account is null)
         {
-            var externalAccountBinding = directory.Meta.ExternalAccountRequired ?? false ? CreateExternalAccountBinding(acmeProtocolClient) : null;
+            var externalAccountBinding = CreateExternalAccountBinding(acmeProtocolClient);
+
+            if (externalAccountBinding is null && (directory.Meta.ExternalAccountRequired ?? false))
+            {
+                throw new PreconditionException("This ACME endpoint requires External Account Binding.");
+            }
 
             account = await acmeProtocolClient.CreateAccountAsync(new[] { $"mailto:{_options.Contacts}" }, true, externalAccountBinding);
 
@@ -85,6 +90,11 @@ public class AcmeProtocolClientFactory
 
     private object CreateExternalAccountBinding(AcmeProtocolClient acmeProtocolClient)
     {
+        if (string.IsNullOrEmpty(_options.ExternalAccountBinding?.KeyId) || string.IsNullOrEmpty(_options.ExternalAccountBinding?.HmacKey))
+        {
+            return null;
+        }
+
         byte[] HmacSignature(byte[] x)
         {
             var hmacKeyBytes = CryptoHelper.Base64.UrlDecode(_options.ExternalAccountBinding.HmacKey);
@@ -98,11 +108,6 @@ public class AcmeProtocolClientFactory
             });
 
             return hmac.ComputeHash(x);
-        }
-
-        if (string.IsNullOrEmpty(_options.ExternalAccountBinding.KeyId) || string.IsNullOrEmpty(_options.ExternalAccountBinding.HmacKey))
-        {
-            throw new PreconditionException("This ACME endpoint requires External Account Binding.");
         }
 
         var payload = JsonConvert.SerializeObject(acmeProtocolClient.Signer.ExportJwk());

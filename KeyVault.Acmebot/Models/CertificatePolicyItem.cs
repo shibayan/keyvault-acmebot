@@ -39,7 +39,7 @@ public class CertificatePolicyItem : IValidatableObject
             subjectAlternativeNames.DnsNames.Add(dnsName);
         }
 
-        var certificatePolicy = new CertificatePolicy(WellKnownIssuerNames.Unknown, subjectAlternativeNames)
+        var certificatePolicy = new CertificatePolicy(WellKnownIssuerNames.Unknown, $"CN={DnsNames[0]}", subjectAlternativeNames)
         {
             KeySize = KeySize,
             ReuseKey = ReuseKey
