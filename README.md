@@ -39,6 +39,7 @@ Key Vault Acmebot provides secure and centralized management of ACME certificate
   - [Buypass Go SSL](https://www.buypass.com/ssl/resources/acme-free-ssl)
   - [ZeroSSL](https://zerossl.com/features/acme/) (Requires EAB Credentials)
   - [Google Trust Services](https://pki.goog/) (Requires EAB Credentials)
+  - [SSL.com](https://www.ssl.com/how-to/order-free-90-day-ssl-tls-certificates-with-acme/) (Requires EAB Credentials)
 - Azure App Services (Web Apps / Functions / Containers, regardless of OS)
 - Azure CDN / Front Door / Application Gateway v2 / etc
 
