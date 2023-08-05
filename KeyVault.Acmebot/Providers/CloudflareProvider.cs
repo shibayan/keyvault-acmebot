@@ -21,6 +21,8 @@ public class CloudflareProvider : IDnsProvider
 
     private readonly CloudflareDnsClient _cloudflareDnsClient;
 
+    public string Name => "Cloudflare";
+
     public int PropagationSeconds => 10;
 
     public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()

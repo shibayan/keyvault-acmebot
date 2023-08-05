@@ -22,6 +22,8 @@ internal class AzurePrivateDnsProvider : IDnsProvider
 
     private readonly ArmClient _armClient;
 
+    public string Name => "Azure Private DNS";
+
     public int PropagationSeconds => 10;
 
     public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()

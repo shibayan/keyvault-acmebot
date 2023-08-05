@@ -25,6 +25,8 @@ public class DnsMadeEasyProvider : IDnsProvider
 
     private readonly DnsMadeEasyClient _client;
 
+    public string Name => "DNS Made Easy";
+
     public int PropagationSeconds => 10;
 
     public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()

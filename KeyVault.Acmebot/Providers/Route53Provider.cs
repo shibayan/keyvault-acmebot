@@ -22,6 +22,8 @@ public class Route53Provider : IDnsProvider
 
     private readonly AmazonRoute53Client _amazonRoute53Client;
 
+    public string Name => "Amazon Route 53";
+
     public int PropagationSeconds => 10;
 
     public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()

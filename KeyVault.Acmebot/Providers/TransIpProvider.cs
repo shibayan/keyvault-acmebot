@@ -31,6 +31,8 @@ public class TransIpProvider : IDnsProvider
 
     private readonly TransIpClient _transIpClient;
 
+    public string Name => "TransIP DNS";
+
     public int PropagationSeconds => 360;
 
     public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()

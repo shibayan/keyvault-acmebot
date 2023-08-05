@@ -29,6 +29,8 @@ public class GoogleDnsProvider : IDnsProvider
     private readonly DnsService _dnsService;
     private readonly JsonCredentialParameters _credsParameters;
 
+    public string Name => "Google Cloud DNS";
+
     public int PropagationSeconds => 60;
 
     public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()

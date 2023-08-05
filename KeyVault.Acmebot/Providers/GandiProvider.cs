@@ -22,6 +22,8 @@ public class GandiProvider : IDnsProvider
 
     private readonly GandiClient _client;
 
+    public string Name => "Gandi LiveDNS";
+
     public int PropagationSeconds => 300;
 
     public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()

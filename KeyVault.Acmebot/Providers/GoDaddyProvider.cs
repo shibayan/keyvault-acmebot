@@ -22,6 +22,8 @@ public class GoDaddyProvider : IDnsProvider
 
     private readonly GoDaddyClient _client;
 
+    public string Name => "GoDaddy";
+
     public int PropagationSeconds => 600;
 
     public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
