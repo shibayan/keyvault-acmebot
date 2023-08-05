@@ -60,7 +60,7 @@ public class CustomDnsProvider : IDnsProvider
         response.EnsureSuccessStatusCode();
     }
 
-    public class Zone
+    private class Zone
     {
         [JsonProperty("id")]
         public string Id { get; set; }

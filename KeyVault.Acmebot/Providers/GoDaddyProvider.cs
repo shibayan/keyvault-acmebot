@@ -33,18 +33,7 @@ public class GoDaddyProvider : IDnsProvider
 
     public Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
     {
-        var entries = new List<DnsEntry>();
-
-        foreach (var value in values)
-        {
-            entries.Add(new DnsEntry
-            {
-                Name = relativeRecordName,
-                Type = "TXT",
-                TTL = 600,
-                Data = value
-            });
-        }
+        var entries = values.Select(x => new DnsEntry { Name = relativeRecordName, Type = "TXT", TTL = 600, Data = x }).ToArray();
 
         return _client.AddRecordAsync(zone.Name, entries);
     }
@@ -125,7 +114,7 @@ public class GoDaddyProvider : IDnsProvider
         }
     }
 
-    public class ZoneDomain
+    private class ZoneDomain
     {
         [JsonProperty("domain")]
         public string Domain { get; set; }
@@ -137,7 +126,7 @@ public class GoDaddyProvider : IDnsProvider
         public string[] NameServers { get; set; }
     }
 
-    public class DnsEntry
+    private class DnsEntry
     {
         [JsonProperty("data")]
         public string Data { get; set; }

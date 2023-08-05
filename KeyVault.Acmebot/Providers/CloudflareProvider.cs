@@ -61,7 +61,7 @@ public class CloudflareProvider : IDnsProvider
         {
             _httpClient = new HttpClient
             {
-                BaseAddress = new Uri("https://api.cloudflare.com")
+                BaseAddress = new Uri("https://api.cloudflare.com/client/v4/")
             };
 
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -90,7 +90,7 @@ public class CloudflareProvider : IDnsProvider
 
         public async Task<IReadOnlyList<DnsRecordResult>> GetDnsRecordsAsync(string zone, string name)
         {
-            var response = await _httpClient.GetAsync($"/client/v4/zones/{zone}/dns_records?type=TXT&name={name}&per_page=100");
+            var response = await _httpClient.GetAsync($"zones/{zone}/dns_records?type=TXT&name={name}&per_page=100");
 
             response.EnsureSuccessStatusCode();
 
@@ -101,21 +101,21 @@ public class CloudflareProvider : IDnsProvider
 
         public async Task CreateDnsRecordAsync(string zone, string name, string content)
         {
-            var response = await _httpClient.PostAsync($"/client/v4/zones/{zone}/dns_records", new { type = "TXT", name, content, ttl = 60 });
+            var response = await _httpClient.PostAsync($"zones/{zone}/dns_records", new { type = "TXT", name, content, ttl = 60 });
 
             response.EnsureSuccessStatusCode();
         }
 
         public async Task DeleteDnsRecordAsync(string zone, string id)
         {
-            var response = await _httpClient.DeleteAsync($"/client/v4/zones/{zone}/dns_records/{id}");
+            var response = await _httpClient.DeleteAsync($"zones/{zone}/dns_records/{id}");
 
             response.EnsureSuccessStatusCode();
         }
 
         private async Task<ApiResult<ZoneResult>> ListZonesAsync(int page)
         {
-            var response = await _httpClient.GetAsync($"/client/v4/zones?page={page}&per_page=50&status=active");
+            var response = await _httpClient.GetAsync($"zones?page={page}&per_page=50&status=active");
 
             response.EnsureSuccessStatusCode();
 

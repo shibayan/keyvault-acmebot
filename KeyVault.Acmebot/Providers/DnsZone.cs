@@ -8,7 +8,7 @@ public class DnsZone : IEquatable<DnsZone>
 {
     public DnsZone(IDnsProvider dnsProvider)
     {
-        Provider = dnsProvider;
+        DnsProvider = dnsProvider;
     }
 
     private static readonly IdnMapping s_idnMapping = new();
@@ -25,7 +25,7 @@ public class DnsZone : IEquatable<DnsZone>
 
     public IReadOnlyList<string> NameServers { get; init; }
 
-    public IDnsProvider Provider { get; }
+    public IDnsProvider DnsProvider { get; }
 
     public bool Equals(DnsZone other)
     {
@@ -37,10 +37,7 @@ public class DnsZone : IEquatable<DnsZone>
         return Id == other.Id;
     }
 
-    public override bool Equals(object obj)
-    {
-        return Equals(obj as DnsZone);
-    }
+    public override bool Equals(object obj) => Equals(obj as DnsZone);
 
     public override int GetHashCode() => Id?.GetHashCode() ?? 0;
 }

@@ -52,7 +52,7 @@ public class DnsMadeEasyProvider : IDnsProvider
     {
         var records = await _client.ListRecordsAsync(zone.Id);
 
-        var recordsToDelete = records.Where(r => r.Name == relativeRecordName && r.Type == "TXT");
+        var recordsToDelete = records.Where(x => x.Name == relativeRecordName && x.Type == "TXT");
 
         foreach (var record in recordsToDelete)
         {
@@ -120,20 +120,9 @@ public class DnsMadeEasyProvider : IDnsProvider
             public ApiKeyHandler(string apiKey, string secretKey, HttpMessageHandler innerHandler)
                 : base(innerHandler)
             {
-                if (apiKey is null)
-                {
-                    throw new ArgumentNullException(nameof(apiKey));
-                }
-
-                if (secretKey is null)
-                {
-                    throw new ArgumentNullException(nameof(secretKey));
-                }
-
-                if (innerHandler is null)
-                {
-                    throw new ArgumentNullException(nameof(innerHandler));
-                }
+                ArgumentNullException.ThrowIfNull(apiKey);
+                ArgumentNullException.ThrowIfNull(secretKey);
+                ArgumentNullException.ThrowIfNull(innerHandler);
 
                 if (string.IsNullOrWhiteSpace(apiKey))
                 {
