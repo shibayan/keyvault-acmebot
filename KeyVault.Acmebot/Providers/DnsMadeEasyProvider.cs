@@ -68,7 +68,7 @@ public class DnsMadeEasyProvider : IDnsProvider
         {
             _httpClient = new HttpClient(new ApiKeyHandler(apiKey, secretKey, new HttpClientHandler()))
             {
-                BaseAddress = new Uri("https://api.dnsmadeeasy.com/V2.0/")
+                BaseAddress = new Uri("https://api.dnsmadeeasy.com/V2.0/dns/")
             };
 
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -78,7 +78,7 @@ public class DnsMadeEasyProvider : IDnsProvider
 
         public async Task<IReadOnlyList<Domain>> ListZonesAsync()
         {
-            var response = await _httpClient.GetAsync("dns/managed");
+            var response = await _httpClient.GetAsync("managed");
 
             response.EnsureSuccessStatusCode();
 
@@ -89,7 +89,7 @@ public class DnsMadeEasyProvider : IDnsProvider
 
         public async Task<IReadOnlyList<DnsEntry>> ListRecordsAsync(string zoneId)
         {
-            var response = await _httpClient.GetAsync($"dns/managed/{zoneId}/records");
+            var response = await _httpClient.GetAsync($"managed/{zoneId}/records");
 
             response.EnsureSuccessStatusCode();
 
@@ -100,14 +100,14 @@ public class DnsMadeEasyProvider : IDnsProvider
 
         public async Task DeleteRecordAsync(string zoneId, DnsEntry entry)
         {
-            var response = await _httpClient.DeleteAsync($"dns/managed/{zoneId}/records/{entry.Id}");
+            var response = await _httpClient.DeleteAsync($"managed/{zoneId}/records/{entry.Id}");
 
             response.EnsureSuccessStatusCode();
         }
 
         public async Task AddRecordAsync(string zoneId, DnsEntry entry)
         {
-            var response = await _httpClient.PostAsync($"dns/managed/{zoneId}/records", entry);
+            var response = await _httpClient.PostAsync($"managed/{zoneId}/records", entry);
 
             response.EnsureSuccessStatusCode();
         }
