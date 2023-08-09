@@ -29,6 +29,8 @@ public class CustomDnsProvider : IDnsProvider
 
     private readonly HttpClient _httpClient;
 
+    public string Name => "Custom DNS";
+
     public int PropagationSeconds { get; }
 
     public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
@@ -60,7 +62,7 @@ public class CustomDnsProvider : IDnsProvider
         response.EnsureSuccessStatusCode();
     }
 
-    public class Zone
+    private class Zone
     {
         [JsonProperty("id")]
         public string Id { get; set; }

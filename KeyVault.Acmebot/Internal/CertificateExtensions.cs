@@ -55,10 +55,7 @@ internal static class CertificateExtensions
 
     private static string ToHexString(byte[] bytes)
     {
-        if (bytes is null)
-        {
-            throw new ArgumentNullException(nameof(bytes));
-        }
+        ArgumentNullException.ThrowIfNull(bytes);
 
         var result = new StringBuilder();
 

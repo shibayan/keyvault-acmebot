@@ -22,6 +22,8 @@ public class AzureDnsProvider : IDnsProvider
 
     private readonly ArmClient _armClient;
 
+    public string Name => "Azure DNS";
+
     public int PropagationSeconds => 10;
 
     public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()

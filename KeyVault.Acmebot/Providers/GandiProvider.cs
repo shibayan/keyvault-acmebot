@@ -22,6 +22,8 @@ public class GandiProvider : IDnsProvider
 
     private readonly GandiClient _client;
 
+    public string Name => "Gandi LiveDNS";
+
     public int PropagationSeconds => 300;
 
     public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
@@ -48,10 +50,7 @@ public class GandiProvider : IDnsProvider
     {
         public GandiClient(string apiKey)
         {
-            if (apiKey is null)
-            {
-                throw new ArgumentNullException(nameof(apiKey));
-            }
+            ArgumentNullException.ThrowIfNull(apiKey);
 
             _httpClient = new HttpClient
             {

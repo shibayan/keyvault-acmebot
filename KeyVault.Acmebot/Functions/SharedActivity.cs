@@ -103,7 +103,7 @@ public class SharedActivity : ISharedActivity
         {
             var zones = await _dnsProviders.ListAllZonesAsync();
 
-            return zones.Select(x => x.Name).ToArray();
+            return zones.OrderBy(x => x.DnsProvider.Name).Select(x => x.Name).ToArray();
         }
         catch
         {
@@ -252,11 +252,11 @@ public class SharedActivity : ISharedActivity
             // Challenge の詳細から DNS 向けにレコード名を作成
             var acmeDnsRecordName = dnsRecordName.Replace($".{zone.Name}", "", StringComparison.OrdinalIgnoreCase);
 
-            await zone.Provider.DeleteTxtRecordAsync(zone, acmeDnsRecordName);
-            await zone.Provider.CreateTxtRecordAsync(zone, acmeDnsRecordName, lookup.Select(x => x.DnsRecordValue));
+            await zone.DnsProvider.DeleteTxtRecordAsync(zone, acmeDnsRecordName);
+            await zone.DnsProvider.CreateTxtRecordAsync(zone, acmeDnsRecordName, lookup.Select(x => x.DnsRecordValue));
 
             // 一番時間のかかる DNS Provider に合わせる
-            propagationSeconds = Math.Max(propagationSeconds, zone.Provider.PropagationSeconds);
+            propagationSeconds = Math.Max(propagationSeconds, zone.DnsProvider.PropagationSeconds);
         }
 
         return (challengeResults, propagationSeconds);
@@ -446,7 +446,7 @@ public class SharedActivity : ISharedActivity
             // Challenge の詳細から DNS 向けにレコード名を作成
             var acmeDnsRecordName = dnsRecordName.Replace($".{zone.Name}", "", StringComparison.OrdinalIgnoreCase);
 
-            await zone.Provider.DeleteTxtRecordAsync(zone, acmeDnsRecordName);
+            await zone.DnsProvider.DeleteTxtRecordAsync(zone, acmeDnsRecordName);
         }
     }
 

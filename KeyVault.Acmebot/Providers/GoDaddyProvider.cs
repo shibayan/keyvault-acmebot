@@ -22,6 +22,8 @@ public class GoDaddyProvider : IDnsProvider
 
     private readonly GoDaddyClient _client;
 
+    public string Name => "GoDaddy";
+
     public int PropagationSeconds => 600;
 
     public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
@@ -33,18 +35,7 @@ public class GoDaddyProvider : IDnsProvider
 
     public Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
     {
-        var entries = new List<DnsEntry>();
-
-        foreach (var value in values)
-        {
-            entries.Add(new DnsEntry
-            {
-                Name = relativeRecordName,
-                Type = "TXT",
-                TTL = 600,
-                Data = value
-            });
-        }
+        var entries = values.Select(x => new DnsEntry { Name = relativeRecordName, Type = "TXT", TTL = 600, Data = x }).ToArray();
 
         return _client.AddRecordAsync(zone.Name, entries);
     }
@@ -58,19 +49,12 @@ public class GoDaddyProvider : IDnsProvider
     {
         public GoDaddyClient(string apiKey, string apiSecret)
         {
-            if (apiKey is null)
-            {
-                throw new ArgumentNullException(nameof(apiKey));
-            }
-
-            if (apiSecret is null)
-            {
-                throw new ArgumentNullException(nameof(apiSecret));
-            }
+            ArgumentNullException.ThrowIfNull(apiKey);
+            ArgumentNullException.ThrowIfNull(apiSecret);
 
             _httpClient = new HttpClient
             {
-                BaseAddress = new Uri("https://api.godaddy.com")
+                BaseAddress = new Uri("https://api.godaddy.com/v1/")
             };
 
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -88,7 +72,7 @@ public class GoDaddyProvider : IDnsProvider
 
             while (true)
             {
-                var response = await _httpClient.GetAsync($"v1/domains?statuses=ACTIVE&includes=nameServers&limit={limit}{marker}");
+                var response = await _httpClient.GetAsync($"domains?statuses=ACTIVE&includes=nameServers&limit={limit}{marker}");
 
                 response.EnsureSuccessStatusCode();
 
@@ -109,7 +93,7 @@ public class GoDaddyProvider : IDnsProvider
 
         public async Task DeleteRecordAsync(string domain, string type, string name)
         {
-            var response = await _httpClient.DeleteAsync($"v1/domains/{domain}/records/{type}/{name}");
+            var response = await _httpClient.DeleteAsync($"domains/{domain}/records/{type}/{name}");
 
             if (response.StatusCode != HttpStatusCode.NotFound)
             {
@@ -119,13 +103,13 @@ public class GoDaddyProvider : IDnsProvider
 
         public async Task AddRecordAsync(string domain, IReadOnlyList<DnsEntry> entries)
         {
-            var response = await _httpClient.PatchAsync($"v1/domains/{domain}/records", entries);
+            var response = await _httpClient.PatchAsync($"domains/{domain}/records", entries);
 
             response.EnsureSuccessStatusCode();
         }
     }
 
-    public class ZoneDomain
+    private class ZoneDomain
     {
         [JsonProperty("domain")]
         public string Domain { get; set; }
@@ -137,7 +121,7 @@ public class GoDaddyProvider : IDnsProvider
         public string[] NameServers { get; set; }
     }
 
-    public class DnsEntry
+    private class DnsEntry
     {
         [JsonProperty("data")]
         public string Data { get; set; }
