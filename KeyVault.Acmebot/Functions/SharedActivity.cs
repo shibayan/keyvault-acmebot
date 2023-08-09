@@ -103,7 +103,7 @@ public class SharedActivity : ISharedActivity
         {
             var zones = await _dnsProviders.ListAllZonesAsync();
 
-            return zones.Select(x => x.Name).ToArray();
+            return zones.OrderBy(x => x.DnsProvider.Name).Select(x => x.Name).ToArray();
         }
         catch
         {
