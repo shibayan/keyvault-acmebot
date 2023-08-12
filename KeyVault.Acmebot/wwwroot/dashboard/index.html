@@ -12,6 +12,12 @@
       }
     }
 
+    @media screen and (min-width: 769px), print {
+      .modal-card, .modal-content {
+        width: 700px;
+      }
+    }
+
     td {
       vertical-align: middle !important;
     }
@@ -74,7 +80,7 @@
         </table>
         <div class="columns">
           <div class="column is-half">
-            <h2 class="title is-4">Unmanaged certificates</h2>
+            <h2 class="title is-4">Another CA certificates</h2>
             <table class="table is-hoverable is-fullwidth">
               <thead>
                 <tr>
@@ -84,7 +90,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="certificate in unmanagedCertificates">
+                <tr v-for="certificate in anotherCACertificates">
                   <td>{{ certificate.name }}</td>
                   <td>
                     <div class="tags">
@@ -99,6 +105,35 @@
                     </div>
                   </td>
                 </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="column is-half">
+            <h2 class="title is-4">Unmanaged certificates</h2>
+            <table class="table is-hoverable is-fullwidth">
+              <thead>
+              <tr>
+                <th>Certificate name</th>
+                <th>DNS Names</th>
+                <th></th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr v-for="certificate in unmanagedCertificates">
+                <td>{{ certificate.name }}</td>
+                <td>
+                  <div class="tags">
+                    <span v-for="dnsName in certificate.dnsNames" class="tag is-light is-medium">
+                      {{ toUnicode(dnsName) }}
+                    </span>
+                  </div>
+                </td>
+                <td>
+                  <div class="buttons are-small">
+                    <button class="button is-info" @click="openDetails(certificate)">Details</button>
+                  </div>
+                </td>
+              </tr>
               </tbody>
             </table>
           </div>
@@ -392,11 +427,11 @@
                 </div>
                 <div class="field is-horizontal">
                   <div class="field-label">
-                    <label class="label">Managed by Acmebot?</label>
+                    <label class="label">Issued by Acmebot?</label>
                   </div>
                   <div class="field-body">
                     <div class="content">
-                      {{ details.certificate.isManaged }}
+                      {{ details.certificate.isIssuedByAcmebot }}
                     </div>
                   </div>
                 </div>
@@ -414,7 +449,7 @@
             </section>
             <footer class="modal-card-foot is-justify-content-flex-end">
               <button class="button is-primary" @click="renewCertificate" :class="{ 'is-loading': details.sending }">Renew</button>
-              <button class="button is-danger" @click="revokeCertificate" :class="{ 'is-loading': details.sending }" v-if="details.certificate.isManaged && !details.certificate.isExpired">Revoke</button>
+              <button class="button is-danger" @click="revokeCertificate" :class="{ 'is-loading': details.sending }" v-if="details.certificate.isIssuedByAcmebot && details.certificate.isSameEndpoint && !details.certificate.isExpired">Revoke</button>
               <button class="button" @click="details.modalActive = false" :disabled="details.sending">Close</button>
             </footer>
           </div>
@@ -459,10 +494,13 @@
       },
       computed: {
         managedCertificates() {
-          return this.certificates.filter(x => x.isManaged);
+          return this.certificates.filter(x => x.isIssuedByAcmebot && x.isSameEndpoint);
+        },
+        anotherCACertificates() {
+          return this.certificates.filter(x => x.isIssuedByAcmebot && !x.isSameEndpoint);
         },
         unmanagedCertificates() {
-          return this.certificates.filter(x => !x.isManaged);
+          return this.certificates.filter(x => !x.isIssuedByAcmebot && !x.isIssuedByAcmebot);
         }
       },
       methods: {
