@@ -61,7 +61,7 @@ public class SharedActivity : ISharedActivity
 
         await foreach (var certificate in certificates)
         {
-            if (!certificate.IsAcmebotManaged(IssuerName, _options.Endpoint))
+            if (!certificate.IsIssuedByAcmebot(IssuerName) || !certificate.IsSameEndpoint(_options.Endpoint))
             {
                 continue;
             }
@@ -88,7 +88,8 @@ public class SharedActivity : ISharedActivity
         {
             var certificateItem = (await _certificateClient.GetCertificateAsync(certificate.Name)).Value.ToCertificateItem();
 
-            certificateItem.IsManaged = certificate.IsAcmebotManaged(IssuerName, _options.Endpoint);
+            certificateItem.IsIssuedByAcmebot = certificate.IsIssuedByAcmebot(IssuerName);
+            certificateItem.IsSameEndpoint = certificate.IsSameEndpoint(_options.Endpoint);
 
             result.Add(certificateItem);
         }

@@ -37,11 +37,14 @@ public class CertificateItem
     [JsonProperty("reuseKey")]
     public bool? ReuseKey { get; set; }
 
-    [JsonProperty("isManaged")]
-    public bool IsManaged { get; set; }
-
     [JsonProperty("isExpired")]
     public bool IsExpired { get; set; }
+
+    [JsonProperty("isIssuedByAcmebot")]
+    public bool IsIssuedByAcmebot { get; set; }
+
+    [JsonProperty("isSameEndpoint")]
+    public bool IsSameEndpoint { get; set; }
 
     [JsonProperty("acmeEndpoint")]
     public string AcmeEndpoint { get; set; }

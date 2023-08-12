@@ -10,7 +10,7 @@ namespace KeyVault.Acmebot.Internal;
 
 internal static class CertificateExtensions
 {
-    public static bool IsAcmebotManaged(this CertificateProperties properties, string issuer, Uri endpoint)
+    public static bool IsIssuedByAcmebot(this CertificateProperties properties, string issuer)
     {
         var tags = properties.Tags;
 
@@ -19,17 +19,19 @@ internal static class CertificateExtensions
             return false;
         }
 
-        if (!tags.TryGetValue("Issuer", out var tagIssuer) || tagIssuer != issuer)
+        return tags.TryGetValue("Issuer", out var tagIssuer) && tagIssuer == issuer;
+    }
+
+    public static bool IsSameEndpoint(this CertificateProperties properties, Uri endpoint)
+    {
+        var tags = properties.Tags;
+
+        if (tags is null)
         {
             return false;
         }
 
-        if (!tags.TryGetValue("Endpoint", out var tagEndpoint) || NormalizeEndpoint(tagEndpoint) != endpoint.Host)
-        {
-            return false;
-        }
-
-        return true;
+        return tags.TryGetValue("Endpoint", out var tagEndpoint) && NormalizeEndpoint(tagEndpoint) == endpoint.Host;
     }
 
     public static CertificateItem ToCertificateItem(this KeyVaultCertificateWithPolicy certificate)
