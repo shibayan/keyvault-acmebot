@@ -456,6 +456,6 @@ public class SharedActivity : ISharedActivity
     {
         var (certificateName, expirationDate, dnsNames) = input;
 
-        return _webhookInvoker.SendCompletedEventAsync(certificateName, expirationDate, dnsNames);
+        return _webhookInvoker.SendCompletedEventAsync(certificateName, expirationDate, dnsNames, _options.Endpoint.Host);
     }
 }

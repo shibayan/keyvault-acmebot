@@ -26,7 +26,7 @@ public class WebhookInvoker
     private readonly AcmebotOptions _options;
     private readonly ILogger<WebhookInvoker> _logger;
 
-    public Task SendCompletedEventAsync(string certificateName, DateTimeOffset? expirationDate, IEnumerable<string> dnsNames)
+    public Task SendCompletedEventAsync(string certificateName, DateTimeOffset? expirationDate, IEnumerable<string> dnsNames, string acmeEndpoint)
     {
         if (string.IsNullOrEmpty(_options.Webhook))
         {
@@ -62,6 +62,12 @@ public class WebhookInvoker
                             },
                             new
                             {
+                                title = "ACME Endpoint",
+                                value = acmeEndpoint,
+                                @short = true
+                            },
+                            new
+                            {
                                 title = "DNS Names",
                                 value = string.Join("\n", dnsNames)
                             }
@@ -75,7 +81,7 @@ public class WebhookInvoker
             model = new
             {
                 title = "Acmebot",
-                text = $"A new certificate has been issued.\n\n**Certificate Name**: {certificateName}\n\n**Expiration Date**: {expirationDate}\n\n**DNS Names**: {string.Join(", ", dnsNames)}",
+                text = $"A new certificate has been issued.\n\n**Certificate Name**: {certificateName}\n\n**Expiration Date**: {expirationDate}\n\n**ACME Endpoint**: {acmeEndpoint}\n\n**DNS Names**: {string.Join(", ", dnsNames)}",
                 themeColor = "2EB886"
             };
         }
@@ -84,7 +90,9 @@ public class WebhookInvoker
             model = new
             {
                 certificateName,
-                dnsNames
+                expirationDate,
+                dnsNames,
+                acmeEndpoint
             };
         }
 
