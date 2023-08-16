@@ -26,7 +26,7 @@ internal class AccountKey
         {
             var tool = new ACMESharp.Crypto.JOSE.Impl.RSJwsTool
             {
-                KeySize = int.Parse(KeyType[2..])
+                HashSize = int.Parse(KeyType[2..])
             };
             tool.Init();
             tool.Import(KeyExport);

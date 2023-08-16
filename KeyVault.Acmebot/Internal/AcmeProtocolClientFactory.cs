@@ -104,7 +104,7 @@ public class AcmeProtocolClientFactory
                 "HS256" => new HMACSHA256(hmacKeyBytes),
                 "HS384" => new HMACSHA384(hmacKeyBytes),
                 "HS512" => new HMACSHA512(hmacKeyBytes),
-                _ => throw new NotSupportedException($"The signature algorithm {_options.ExternalAccountBinding.Algorithm} is not supported.")
+                _ => throw new NotSupportedException($"The signature algorithm {_options.ExternalAccountBinding.Algorithm} is not supported. (supported values are HS256 / HS384 / HS512)")
             });
 
             return hmac.ComputeHash(x);
