@@ -550,18 +550,22 @@
             return;
           }
 
-          this.add.dnsProviderName = this.add.zone.dnsProviderName;
-
           const dnsName = this.add.recordName === "" ? this.add.zone.name : punycode.toASCII(this.add.recordName) + "." + this.add.zone.name;
 
           if (this.add.dnsNames.indexOf(dnsName) === -1) {
             this.add.dnsNames.push(dnsName);
           }
 
+          this.add.dnsProviderName = this.add.zone.dnsProviderName;
+
           this.add.recordName = "";
         },
         removeDnsName(dnsName) {
           this.add.dnsNames = this.add.dnsNames.filter(x => x !== dnsName);
+
+          if (this.add.dnsNames.length === 0) {
+            this.add.dnsProviderName = "";
+          }
         },
         async addCertificate() {
           this.add.sending = true;

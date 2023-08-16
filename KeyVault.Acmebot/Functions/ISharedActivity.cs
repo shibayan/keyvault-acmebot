@@ -24,7 +24,7 @@ public interface ISharedActivity
 
     Task<OrderDetails> Order(IReadOnlyList<string> dnsNames);
 
-    Task Dns01Precondition((string, IReadOnlyList<string>) input);
+    Task<string> Dns01Precondition((string, IReadOnlyList<string>) input);
 
     Task<(IReadOnlyList<AcmeChallengeResult>, int)> Dns01Authorization((string, IReadOnlyList<string>) input);
 

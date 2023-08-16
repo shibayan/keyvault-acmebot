@@ -20,7 +20,7 @@ public class SharedOrchestrator
         var activity = context.CreateActivityProxy<ISharedActivity>();
 
         // 前提条件をチェック
-        await activity.Dns01Precondition((certificatePolicy.DnsProviderName, certificatePolicy.DnsNames));
+        certificatePolicy.DnsProviderName = await activity.Dns01Precondition((certificatePolicy.DnsProviderName, certificatePolicy.DnsNames));
 
         // 新しく ACME Order を作成する
         var orderDetails = await activity.Order(certificatePolicy.DnsNames);

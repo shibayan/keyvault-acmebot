@@ -115,18 +115,19 @@ public class SharedActivity : ISharedActivity
     [FunctionName(nameof(GetCertificatePolicy))]
     public async Task<CertificatePolicyItem> GetCertificatePolicy([ActivityTrigger] string certificateName)
     {
-        CertificatePolicy certificatePolicy = await _certificateClient.GetCertificatePolicyAsync(certificateName);
+        KeyVaultCertificateWithPolicy certificate = await _certificateClient.GetCertificateAsync(certificateName);
 
-        var dnsNames = certificatePolicy.SubjectAlternativeNames.DnsNames.ToArray();
+        var dnsNames = certificate.Policy.SubjectAlternativeNames.DnsNames.ToArray();
 
         return new CertificatePolicyItem
         {
             CertificateName = certificateName,
-            DnsNames = dnsNames.Length > 0 ? dnsNames : new[] { certificatePolicy.Subject[3..] },
-            KeyType = certificatePolicy.KeyType?.ToString(),
-            KeySize = certificatePolicy.KeySize,
-            KeyCurveName = certificatePolicy.KeyCurveName?.ToString(),
-            ReuseKey = certificatePolicy.ReuseKey
+            DnsNames = dnsNames.Length > 0 ? dnsNames : new[] { certificate.Policy.Subject[3..] },
+            DnsProviderName = certificate.Properties.Tags?.TryGetValue("DnsProvider", out var dnsProviderName) ?? false ? dnsProviderName : "",
+            KeyType = certificate.Policy.KeyType?.ToString(),
+            KeySize = certificate.Policy.KeySize,
+            KeyCurveName = certificate.Policy.KeyCurveName?.ToString(),
+            ReuseKey = certificate.Policy.ReuseKey
         };
     }
 
@@ -149,12 +150,12 @@ public class SharedActivity : ISharedActivity
     }
 
     [FunctionName(nameof(Dns01Precondition))]
-    public async Task Dns01Precondition([ActivityTrigger] (string, IReadOnlyList<string>) input)
+    public async Task<string> Dns01Precondition([ActivityTrigger] (string, IReadOnlyList<string>) input)
     {
         var (dnsProviderName, dnsNames) = input;
 
         // DNS zone の一覧を各 Provider から取得
-        var zones = await (string.IsNullOrEmpty(dnsProviderName) ? _dnsProviders.ListAllZonesAsync() : _dnsProviders.ListZonesAsync(dnsProviderName));
+        var zones = await _dnsProviders.ListAllZonesAsync();
 
         // DNS zone が存在するか確認
         var foundZones = new HashSet<DnsZone>();
@@ -202,6 +203,28 @@ public class SharedActivity : ISharedActivity
                 throw new PreconditionException($"The delegated name server is not correct. DNS zone = {zone.Name}, Expected = {string.Join(",", expectedNameServers)}, Actual = {string.Join(",", actualNameServers)}");
             }
         }
+
+        // 指定された DNS Provider に属する DNS zone を優先する
+        var dnsProvider = foundZones.Select(x => x.DnsProvider).FirstOrDefault(x => x.Name == dnsProviderName);
+
+        // DNS zone の属する Provider が変わった可能性があるのでフォールバック
+        if (dnsProvider is null)
+        {
+            // 見つかった DNS zone の属する DNS Provider を取得
+            var dnsProviders = foundZones.Select(x => x.DnsProvider).DistinctBy(x => x.Name).ToArray();
+
+            // 単一の DNS Provider で構成された証明書かチェックする
+            if (dnsProviders.Length != 1)
+            {
+                // 互換性のために常に空文字列を返す
+                return "";
+            }
+
+            // 単一の DNS Provider で構成されている場合は問題ない
+            dnsProvider = dnsProviders.First();
+        }
+
+        return dnsProvider.Name;
     }
 
     [FunctionName(nameof(Dns01Authorization))]
@@ -374,7 +397,8 @@ public class SharedActivity : ISharedActivity
             var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificatePolicyItem.CertificateName, certificatePolicy, tags: new Dictionary<string, string>
             {
                 { "Issuer", IssuerName },
-                { "Endpoint", _options.Endpoint.Host }
+                { "Endpoint", _options.Endpoint.Host },
+                { "DnsProvider", certificatePolicyItem.DnsProviderName }
             });
 
             csr = certificateOperation.Properties.Csr;
