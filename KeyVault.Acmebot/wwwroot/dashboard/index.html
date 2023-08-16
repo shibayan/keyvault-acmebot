@@ -112,28 +112,28 @@
             <h2 class="title is-4">Unmanaged certificates</h2>
             <table class="table is-hoverable is-fullwidth">
               <thead>
-              <tr>
-                <th>Certificate name</th>
-                <th>DNS Names</th>
-                <th></th>
-              </tr>
+                <tr>
+                  <th>Certificate name</th>
+                  <th>DNS Names</th>
+                  <th></th>
+                </tr>
               </thead>
               <tbody>
-              <tr v-for="certificate in unmanagedCertificates">
-                <td>{{ certificate.name }}</td>
-                <td>
-                  <div class="tags">
-                    <span v-for="dnsName in certificate.dnsNames" class="tag is-light is-medium">
-                      {{ toUnicode(dnsName) }}
-                    </span>
-                  </div>
-                </td>
-                <td>
-                  <div class="buttons are-small">
-                    <button class="button is-info" @click="openDetails(certificate)">Details</button>
-                  </div>
-                </td>
-              </tr>
+                <tr v-for="certificate in unmanagedCertificates">
+                  <td>{{ certificate.name }}</td>
+                  <td>
+                    <div class="tags">
+                      <span v-for="dnsName in certificate.dnsNames" class="tag is-light is-medium">
+                        {{ toUnicode(dnsName) }}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="buttons are-small">
+                      <button class="button is-info" @click="openDetails(certificate)">Details</button>
+                    </div>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -154,9 +154,9 @@
                   <div class="field">
                     <div class="control">
                       <div class="select" :class="{ 'is-loading': add.loading }">
-                        <select v-model="add.zoneName">
-                          <option disabled value="">Please select one</option>
-                          <option v-for="zone in add.zones" :value="zone">{{ toUnicode(zone) }}</option>
+                        <select v-model="add.zone">
+                          <option disabled :value="null">Please select one</option>
+                          <option v-for="zone in add.zones" :value="zone">{{ toUnicode(zone.name) }} ({{ zone.dnsProviderName }})</option>
                         </select>
                       </div>
                     </div>
@@ -170,15 +170,15 @@
                 <div class="field-body">
                   <div class="field has-addons">
                     <p class="control">
-                      <input v-model="add.recordName" class="input" type="text" placeholder="Record name" :disabled="add.zoneName.length === 0">
+                      <input v-model="add.recordName" class="input" type="text" placeholder="Record name" :disabled="add.zone === null">
                     </p>
                     <p class="control">
                       <a class="button is-static">
-                        .{{ toUnicode(add.zoneName) }}
+                        .{{ (add.zone === null ? "" : toUnicode(add.zone.name)) }}
                       </a>
                     </p>
                     <p class="control">
-                      <button class="button is-info" @click="addDnsName" :disabled="add.zoneName.length === 0">Add</button>
+                      <button class="button is-info" @click="addDnsName" :disabled="add.zone === null">Add</button>
                     </p>
                   </div>
                 </div>
@@ -204,11 +204,11 @@
                   <div class="field is-narrow">
                     <div class="control">
                       <label class="radio">
-                        <input type="radio" v-model="add.useAdvancedOptions" v-bind:value="true">
+                        <input type="radio" v-model="add.useAdvancedOptions" :value="true">
                         Yes
                       </label>
                       <label class="radio">
-                        <input type="radio" v-model="add.useAdvancedOptions" v-bind:value="false">
+                        <input type="radio" v-model="add.useAdvancedOptions" :value="false">
                         No
                       </label>
                     </div>
@@ -304,11 +304,11 @@
                   <div class="field">
                     <div class="control">
                       <label class="radio">
-                        <input type="radio" v-model="add.reuseKey" v-bind:value="true">
+                        <input type="radio" v-model="add.reuseKey" :value="true">
                         Yes
                       </label>
                       <label class="radio">
-                        <input type="radio" v-model="add.reuseKey" v-bind:value="false">
+                        <input type="radio" v-model="add.reuseKey" :value="false">
                         No
                       </label>
                     </div>
@@ -472,9 +472,10 @@
           loading: false,
           add: {
             zones: [],
-            zoneName: "",
-            dnsNames: [],
+            zone: null,
             recordName: "",
+            dnsNames: [],
+            dnsProviderName: "",
             useAdvancedOptions: false,
             certificateName: "",
             keyType: "RSA",
@@ -540,11 +541,18 @@
           this.add.loading = false;
         },
         addDnsName() {
-          if (this.add.zoneName === "") {
+          if (this.add.zone === null) {
             return;
           }
 
-          const dnsName = this.add.recordName === "" ? this.add.zoneName : punycode.toASCII(this.add.recordName) + "." + this.add.zoneName;
+          if (this.add.dnsProviderName !== "" && this.add.dnsProviderName !== this.add.zone.dnsProviderName) {
+            alert("DNS zones belonging to different DNS Providers cannot be included in the same certificate.");
+            return;
+          }
+
+          this.add.dnsProviderName = this.add.zone.dnsProviderName;
+
+          const dnsName = this.add.recordName === "" ? this.add.zone.name : punycode.toASCII(this.add.recordName) + "." + this.add.zone.name;
 
           if (this.add.dnsNames.indexOf(dnsName) === -1) {
             this.add.dnsNames.push(dnsName);
@@ -560,6 +568,7 @@
 
           const postData = {
             dnsNames: this.add.dnsNames,
+            dnsProviderName: this.add.dnsProviderName,
             certificateName: this.add.certificateName,
             keyType: this.add.keyType,
             reuseKey: this.add.reuseKey

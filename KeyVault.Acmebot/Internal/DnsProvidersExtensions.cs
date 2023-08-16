@@ -16,6 +16,18 @@ internal static class DnsProvidersExtensions
         return zones.SelectMany(x => x).ToArray();
     }
 
+    public static async Task<IReadOnlyList<DnsZone>> ListZonesAsync(this IEnumerable<IDnsProvider> dnsProviders, string dnsProviderName)
+    {
+        var dnsProvider = dnsProviders.FirstOrDefault(x => x.Name == dnsProviderName);
+
+        if (dnsProvider is null)
+        {
+            return Array.Empty<DnsZone>();
+        }
+
+        return await dnsProvider.ListZonesAsync();
+    }
+
     public static void TryAdd<TOption>(this IList<IDnsProvider> dnsProviders, TOption options, Func<TOption, IDnsProvider> factory)
     {
         if (options is not null)

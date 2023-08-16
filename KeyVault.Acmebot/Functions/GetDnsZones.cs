@@ -6,6 +6,8 @@ using Azure.WebJobs.Extensions.HttpApi;
 
 using DurableTask.TypedProxy;
 
+using KeyVault.Acmebot.Models;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -23,11 +25,11 @@ public class GetDnsZones : HttpFunctionBase
     }
 
     [FunctionName($"{nameof(GetDnsZones)}_{nameof(Orchestrator)}")]
-    public Task<IReadOnlyList<string>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
+    public Task<IReadOnlyList<DnsZoneItem>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
     {
         var activity = context.CreateActivityProxy<ISharedActivity>();
 
-        return activity.GetZones();
+        return activity.GetAllDnsZones();
     }
 
     [FunctionName($"{nameof(GetDnsZones)}_{nameof(HttpStart)}")]

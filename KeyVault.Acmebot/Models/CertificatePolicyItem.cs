@@ -16,6 +16,9 @@ public class CertificatePolicyItem : IValidatableObject
     [JsonProperty("dnsNames")]
     public string[] DnsNames { get; set; }
 
+    [JsonProperty("dnsProviderName")]
+    public string DnsProviderName { get; set; }
+
     [JsonProperty("keyType")]
     [RegularExpression("^(RSA|EC)$")]
     public string KeyType { get; set; }

@@ -20,7 +20,7 @@ public class SharedOrchestrator
         var activity = context.CreateActivityProxy<ISharedActivity>();
 
         // 前提条件をチェック
-        await activity.Dns01Precondition(certificatePolicy.DnsNames);
+        await activity.Dns01Precondition((certificatePolicy.DnsProviderName, certificatePolicy.DnsNames));
 
         // 新しく ACME Order を作成する
         var orderDetails = await activity.Order(certificatePolicy.DnsNames);
@@ -29,7 +29,7 @@ public class SharedOrchestrator
         if (orderDetails.Payload.Status != "ready")
         {
             // ACME Challenge を実行
-            var (challengeResults, propagationSeconds) = await activity.Dns01Authorization(orderDetails.Payload.Authorizations);
+            var (challengeResults, propagationSeconds) = await activity.Dns01Authorization((certificatePolicy.DnsProviderName, orderDetails.Payload.Authorizations));
 
             // DNS Provider が指定した分だけ遅延させる
             await context.CreateTimer(context.CurrentUtcDateTime.AddSeconds(propagationSeconds), CancellationToken.None);
@@ -44,7 +44,7 @@ public class SharedOrchestrator
             await activity.CheckIsReady((orderDetails, challengeResults));
 
             // 作成した DNS レコードを削除
-            await activity.CleanupDnsChallenge(challengeResults);
+            await activity.CleanupDnsChallenge((certificatePolicy.DnsProviderName, challengeResults));
         }
 
         // Key Vault で CSR を作成し Finalize を実行
