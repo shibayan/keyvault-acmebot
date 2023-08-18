@@ -222,7 +222,7 @@ public class TransIpProvider : IDnsProvider
 
         private void StoreToken(TransIpToken token)
         {
-            var fullPath = Environment.ExpandEnvironmentVariables(@"%HOME%\.acme\transip_token.json");
+            var fullPath = Environment.ExpandEnvironmentVariables("%HOME%/.acmebot/transip_token.json");
             var directoryPath = Path.GetDirectoryName(fullPath);
 
             if (!Directory.Exists(directoryPath))
@@ -237,7 +237,7 @@ public class TransIpProvider : IDnsProvider
 
         private TransIpToken LoadToken()
         {
-            var fullPath = Environment.ExpandEnvironmentVariables(@"%HOME%\.acme\transip_token.json");
+            var fullPath = Environment.ExpandEnvironmentVariables("%HOME%/.acmebot/transip_token.json");
 
             if (!File.Exists(fullPath))
             {
