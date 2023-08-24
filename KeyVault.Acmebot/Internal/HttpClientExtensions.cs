@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -8,6 +9,8 @@ namespace KeyVault.Acmebot.Internal;
 
 internal static class HttpClientExtensions
 {
+    public static Task<HttpResponseMessage> PostAsync<T>(this HttpClient client, Uri requestUri, T value) => client.PostAsync(requestUri, SerializeToJson(value));
+
     public static Task<HttpResponseMessage> PostAsync<T>(this HttpClient client, string requestUri, T value) => client.PostAsync(requestUri, SerializeToJson(value));
 
     public static Task<HttpResponseMessage> PutAsync<T>(this HttpClient client, string requestUri, T value) => client.PutAsync(requestUri, SerializeToJson(value));

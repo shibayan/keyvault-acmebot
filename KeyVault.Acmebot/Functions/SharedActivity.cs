@@ -50,8 +50,6 @@ public class SharedActivity : ISharedActivity
     private readonly AcmebotOptions _options;
     private readonly ILogger<SharedActivity> _logger;
 
-    private const string IssuerName = "Acmebot";
-
     [FunctionName(nameof(GetExpiringCertificates))]
     public async Task<IReadOnlyList<CertificateItem>> GetExpiringCertificates([ActivityTrigger] DateTime currentDateTime)
     {
@@ -61,7 +59,7 @@ public class SharedActivity : ISharedActivity
 
         await foreach (var certificate in certificates)
         {
-            if (!certificate.IsIssuedByAcmebot(IssuerName) || !certificate.IsSameEndpoint(_options.Endpoint))
+            if (!certificate.IsIssuedByAcmebot() || !certificate.IsSameEndpoint(_options.Endpoint))
             {
                 continue;
             }
@@ -88,7 +86,7 @@ public class SharedActivity : ISharedActivity
         {
             var certificateItem = (await _certificateClient.GetCertificateAsync(certificate.Name)).Value.ToCertificateItem();
 
-            certificateItem.IsIssuedByAcmebot = certificate.IsIssuedByAcmebot(IssuerName);
+            certificateItem.IsIssuedByAcmebot = certificate.IsIssuedByAcmebot();
             certificateItem.IsSameEndpoint = certificate.IsSameEndpoint(_options.Endpoint);
 
             result.Add(certificateItem);
@@ -117,17 +115,7 @@ public class SharedActivity : ISharedActivity
     {
         CertificatePolicy certificatePolicy = await _certificateClient.GetCertificatePolicyAsync(certificateName);
 
-        var dnsNames = certificatePolicy.SubjectAlternativeNames.DnsNames.ToArray();
-
-        return new CertificatePolicyItem
-        {
-            CertificateName = certificateName,
-            DnsNames = dnsNames.Length > 0 ? dnsNames : new[] { certificatePolicy.Subject[3..] },
-            KeyType = certificatePolicy.KeyType?.ToString(),
-            KeySize = certificatePolicy.KeySize,
-            KeyCurveName = certificatePolicy.KeyCurveName?.ToString(),
-            ReuseKey = certificatePolicy.ReuseKey
-        };
+        return certificatePolicy.ToCertificatePolicyItem(certificateName);
     }
 
     [FunctionName(nameof(RevokeCertificate))]
@@ -159,8 +147,7 @@ public class SharedActivity : ISharedActivity
 
         foreach (var dnsName in dnsNames)
         {
-            var zone = zones.Where(x => string.Equals(dnsName, x.Name, StringComparison.OrdinalIgnoreCase) || dnsName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase))
-                            .MaxBy(x => x.Name.Length);
+            var zone = zones.FindDnsZone(dnsName);
 
             // マッチする DNS zone が見つからない場合はエラー
             if (zone is null)
@@ -242,8 +229,7 @@ public class SharedActivity : ISharedActivity
         {
             var dnsRecordName = lookup.Key;
 
-            var zone = zones.Where(x => dnsRecordName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase))
-                            .MaxBy(x => x.Name.Length);
+            var zone = zones.FindDnsZone(dnsRecordName);
 
             if (zone is null)
             {
@@ -368,7 +354,7 @@ public class SharedActivity : ISharedActivity
 
             var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificatePolicyItem.CertificateName, certificatePolicy, tags: new Dictionary<string, string>
             {
-                { "Issuer", IssuerName },
+                { "Issuer", "Acmebot" },
                 { "Endpoint", _options.Endpoint.Host }
             });
 
@@ -440,9 +426,7 @@ public class SharedActivity : ISharedActivity
         {
             var dnsRecordName = lookup.Key;
 
-            var zone = zones.Where(x => dnsRecordName.EndsWith($".{x.Name}", StringComparison.OrdinalIgnoreCase))
-                            .OrderByDescending(x => x.Name.Length)
-                            .First();
+            var zone = zones.FindDnsZone(dnsRecordName);
 
             // Challenge の詳細から DNS 向けにレコード名を作成
             var acmeDnsRecordName = dnsRecordName.Replace($".{zone.Name}", "", StringComparison.OrdinalIgnoreCase);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -10,28 +11,14 @@ namespace KeyVault.Acmebot.Internal;
 
 internal static class CertificateExtensions
 {
-    public static bool IsIssuedByAcmebot(this CertificateProperties properties, string issuer)
+    public static bool IsIssuedByAcmebot(this CertificateProperties properties)
     {
-        var tags = properties.Tags;
-
-        if (tags is null)
-        {
-            return false;
-        }
-
-        return tags.TryGetValue("Issuer", out var tagIssuer) && tagIssuer == issuer;
+        return properties.Tags.TryGetIssuer(out var tagIssuer) && tagIssuer == IssuerValue;
     }
 
     public static bool IsSameEndpoint(this CertificateProperties properties, Uri endpoint)
     {
-        var tags = properties.Tags;
-
-        if (tags is null)
-        {
-            return false;
-        }
-
-        return tags.TryGetValue("Endpoint", out var tagEndpoint) && NormalizeEndpoint(tagEndpoint) == endpoint.Host;
+        return properties.Tags.TryGetEndpoint(out var tagEndpoint) && NormalizeEndpoint(tagEndpoint) == endpoint.Host;
     }
 
     public static CertificateItem ToCertificateItem(this KeyVaultCertificateWithPolicy certificate)
@@ -51,9 +38,18 @@ internal static class CertificateExtensions
             KeyCurveName = certificate.Policy.KeyCurveName?.ToString(),
             ReuseKey = certificate.Policy.ReuseKey,
             IsExpired = DateTimeOffset.UtcNow > certificate.Properties.ExpiresOn.Value,
-            AcmeEndpoint = certificate.Properties.Tags?.TryGetValue("Endpoint", out var acmeEndpoint) ?? false ? NormalizeEndpoint(acmeEndpoint) : ""
+            AcmeEndpoint = certificate.Properties.Tags.TryGetEndpoint(out var acmeEndpoint) ? NormalizeEndpoint(acmeEndpoint) : ""
         };
     }
+
+    private const string IssuerKey = "Issuer";
+    private const string EndpointKey = "Endpoint";
+
+    private const string IssuerValue = "Acmebot";
+
+    private static bool TryGetIssuer(this IDictionary<string, string> tags, out string issuer) => tags.TryGetValue(IssuerKey, out issuer);
+
+    private static bool TryGetEndpoint(this IDictionary<string, string> tags, out string endpoint) => tags.TryGetValue(EndpointKey, out endpoint);
 
     private static string ToHexString(byte[] bytes)
     {

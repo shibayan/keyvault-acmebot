@@ -79,8 +79,31 @@ public class Startup : FunctionsStartup
 
         builder.Services.AddSingleton<AcmeProtocolClientFactory>();
 
+        // Add Webhook invoker
         builder.Services.AddSingleton<WebhookInvoker>();
         builder.Services.AddSingleton<ILifeCycleNotificationHelper, WebhookLifeCycleNotification>();
+
+        builder.Services.AddSingleton<IWebhookPayloadBuilder>(provider =>
+        {
+            var options = provider.GetRequiredService<IOptions<AcmebotOptions>>().Value;
+
+            if (options.Webhook is null)
+            {
+                return new GenericPayloadBuilder();
+            }
+
+            if (options.Webhook.Host.EndsWith("hooks.slack.com", StringComparison.OrdinalIgnoreCase))
+            {
+                return new SlackPayloadBuilder();
+            }
+
+            if (options.Webhook.Host.EndsWith(".office.com", StringComparison.OrdinalIgnoreCase))
+            {
+                return new TeamsPayloadBuilder();
+            }
+
+            return new GenericPayloadBuilder();
+        });
 
         // Add DNS Providers
         builder.Services.AddSingleton<IEnumerable<IDnsProvider>>(provider =>
