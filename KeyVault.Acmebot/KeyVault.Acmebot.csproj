@@ -17,7 +17,7 @@
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.10.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="[6.0.*,7.0.0)" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.2.0" />
-    <PackageReference Include="WebJobs.Extensions.HttpApi" Version="2.0.3" />
+    <PackageReference Include="WebJobs.Extensions.HttpApi" Version="2.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ACMESharpCore\src\ACMESharp\ACMESharp.csproj" />

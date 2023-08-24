@@ -7,14 +7,9 @@ namespace KeyVault.Acmebot.Internal;
 
 internal class ApplicationVersionInitializer<TStartup> : ITelemetryInitializer
 {
-    public ApplicationVersionInitializer()
-    {
-        ApplicationVersion = typeof(TStartup).Assembly
-                                             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                                             ?.InformationalVersion;
-    }
-
-    public string ApplicationVersion { get; }
+    public string ApplicationVersion { get; } = typeof(TStartup).Assembly
+                                                                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                                                                ?.InformationalVersion;
 
     public void Initialize(ITelemetry telemetry) => telemetry.Context.Component.Version = ApplicationVersion;
 }

@@ -47,15 +47,14 @@ internal static class AcmeProtocolClientExtensions
             var url = Regex.Match(linkHeader, "(?<=<).+?(?=>)", RegexOptions.IgnoreCase);
 
             // 代替の証明書をダウンロードする
-            using (var resp = await acmeProtocolClient.GetAsync(url.Value, cancel))
-            {
-                var x509Certificates = await resp.Content.ReadAsCertificatesAsync();
+            using var resp = await acmeProtocolClient.GetAsync(url.Value, cancel);
 
-                // ルート CA の名前が指定された証明書チェーンに一致する場合は返す
-                if (x509Certificates[^1].GetNameInfo(X509NameType.DnsName, true) == preferredChain)
-                {
-                    return x509Certificates;
-                }
+            var x509Certificates = await resp.Content.ReadAsCertificatesAsync();
+
+            // ルート CA の名前が指定された証明書チェーンに一致する場合は返す
+            if (x509Certificates[^1].GetNameInfo(X509NameType.DnsName, true) == preferredChain)
+            {
+                return x509Certificates;
             }
         }
 
