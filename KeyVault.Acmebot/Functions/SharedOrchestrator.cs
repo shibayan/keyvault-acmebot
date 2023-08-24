@@ -44,7 +44,7 @@ public class SharedOrchestrator
             await activity.CheckIsReady((orderDetails, challengeResults));
 
             // 作成した DNS レコードを削除
-            await activity.CleanupDnsChallenge(challengeResults);
+            await activity.CleanupDnsChallenge((certificatePolicy.DnsProviderName, challengeResults));
         }
 
         // Key Vault で CSR を作成し Finalize を実行

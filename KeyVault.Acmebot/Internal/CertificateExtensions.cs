@@ -42,6 +42,22 @@ internal static class CertificateExtensions
         };
     }
 
+    public static CertificatePolicyItem ToCertificatePolicyItem(this KeyVaultCertificateWithPolicy certificate)
+    {
+        var dnsNames = certificate.Policy.SubjectAlternativeNames.DnsNames.ToArray();
+
+        return new CertificatePolicyItem
+        {
+            CertificateName = certificate.Name,
+            DnsNames = dnsNames.Length > 0 ? dnsNames : new[] { certificate.Policy.Subject[3..] },
+            DnsProviderName = certificate.Properties.Tags?.TryGetValue("DnsProvider", out var dnsProviderName) ?? false ? dnsProviderName : "",
+            KeyType = certificate.Policy.KeyType?.ToString(),
+            KeySize = certificate.Policy.KeySize,
+            KeyCurveName = certificate.Policy.KeyCurveName?.ToString(),
+            ReuseKey = certificate.Policy.ReuseKey
+        };
+    }
+
     private const string IssuerKey = "Issuer";
     private const string EndpointKey = "Endpoint";
 

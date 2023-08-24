@@ -115,18 +115,7 @@ public class SharedActivity : ISharedActivity
     {
         KeyVaultCertificateWithPolicy certificate = await _certificateClient.GetCertificateAsync(certificateName);
 
-        var dnsNames = certificate.Policy.SubjectAlternativeNames.DnsNames.ToArray();
-
-        return new CertificatePolicyItem
-        {
-            CertificateName = certificateName,
-            DnsNames = dnsNames.Length > 0 ? dnsNames : new[] { certificate.Policy.Subject[3..] },
-            DnsProviderName = certificate.Properties.Tags?.TryGetValue("DnsProvider", out var dnsProviderName) ?? false ? dnsProviderName : "",
-            KeyType = certificate.Policy.KeyType?.ToString(),
-            KeySize = certificate.Policy.KeySize,
-            KeyCurveName = certificate.Policy.KeyCurveName?.ToString(),
-            ReuseKey = certificate.Policy.ReuseKey
-        };
+        return certificate.ToCertificatePolicyItem();
     }
 
     [FunctionName(nameof(RevokeCertificate))]
