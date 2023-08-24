@@ -129,7 +129,7 @@ public class AcmeProtocolClientFactory
         if (!File.Exists(fullPath))
         {
             // Fallback legacy state
-            var legacyFullPath = Environment.ExpandEnvironmentVariables(@"%HOME%\.acme\" + path);
+            var legacyFullPath = Environment.ExpandEnvironmentVariables(@"%HOME%/.acme/" + path);
 
             if (!File.Exists(legacyFullPath))
             {

@@ -28,23 +28,23 @@ public class SharedOrchestrator
         // 既に確認済みの場合は Challenge をスキップする
         if (orderDetails.Payload.Status != "ready")
         {
-            // ACME Challenge を実行
+            // ACME DNS-01 Challenge を実行
             var (challengeResults, propagationSeconds) = await activity.Dns01Authorization((certificatePolicy.DnsProviderName, orderDetails.Payload.Authorizations));
 
-            // DNS Provider が指定した分だけ遅延させる
+            // DNS Provider が指定した分だけ後続の処理を遅延させる
             await context.CreateTimer(context.CurrentUtcDateTime.AddSeconds(propagationSeconds), CancellationToken.None);
 
-            // DNS で正しくレコードが引けるか確認
+            // 正しく追加した DNS TXT レコードが引けるか確認
             await activity.CheckDnsChallenge(challengeResults);
 
-            // ACME Answer を実行
+            // ACME Answer Challenge を実行
             await activity.AnswerChallenges(challengeResults);
 
-            // Order のステータスが ready になるまで 60 秒待機
+            // ACME Order のステータスが ready になるまで 60 秒待機
             await activity.CheckIsReady((orderDetails, challengeResults));
 
             // 作成した DNS レコードを削除
-            await activity.CleanupDnsChallenge((certificatePolicy.DnsProviderName, challengeResults));
+            await activity.CleanupDnsChallenge(challengeResults);
         }
 
         // Key Vault で CSR を作成し Finalize を実行
@@ -57,7 +57,7 @@ public class SharedOrchestrator
             orderDetails = await activity.CheckIsValid(orderDetails);
         }
 
-        // 証明書をダウンロードし Key Vault に保存
+        // 証明書をダウンロードし Key Vault に保存された秘密鍵とマージ
         var certificate = await activity.MergeCertificate((certificatePolicy.CertificateName, orderDetails));
 
         // 証明書の更新が完了後に Webhook を送信する

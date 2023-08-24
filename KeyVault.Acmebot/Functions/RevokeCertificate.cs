@@ -24,7 +24,7 @@ public class RevokeCertificate : HttpFunctionBase
     }
 
     [FunctionName($"{nameof(RevokeCertificate)}_{nameof(Orchestrator)}")]
-    public async Task Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
+    public async Task Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
     {
         var certificateName = context.GetInput<string>();
 

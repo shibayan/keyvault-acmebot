@@ -35,16 +35,11 @@ public class GetInstanceState : HttpFunctionBase
             return BadRequest();
         }
 
-        if (status.RuntimeStatus == OrchestrationRuntimeStatus.Failed)
+        return status.RuntimeStatus switch
         {
-            return Problem(status.Output.ToString());
-        }
-
-        if (status.RuntimeStatus is OrchestrationRuntimeStatus.Running or OrchestrationRuntimeStatus.Pending or OrchestrationRuntimeStatus.ContinuedAsNew)
-        {
-            return AcceptedAtFunction($"{nameof(GetInstanceState)}_{nameof(HttpStart)}", new { instanceId }, null);
-        }
-
-        return Ok();
+            OrchestrationRuntimeStatus.Failed => Problem(status.Output.ToString()),
+            OrchestrationRuntimeStatus.Running or OrchestrationRuntimeStatus.Pending or OrchestrationRuntimeStatus.ContinuedAsNew => AcceptedAtFunction($"{nameof(GetInstanceState)}_{nameof(HttpStart)}", new { instanceId }, null),
+            _ => Ok()
+        };
     }
 }

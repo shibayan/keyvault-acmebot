@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 
 using KeyVault.Acmebot.Options;
@@ -9,149 +8,52 @@ using KeyVault.Acmebot.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-using Newtonsoft.Json;
-
 namespace KeyVault.Acmebot.Internal;
 
 public class WebhookInvoker
 {
-    public WebhookInvoker(IHttpClientFactory httpClientFactory, IOptions<AcmebotOptions> options, ILogger<WebhookInvoker> logger)
+    public WebhookInvoker(IWebhookPayloadBuilder webhookPayloadBuilder, IHttpClientFactory httpClientFactory, IOptions<AcmebotOptions> options, ILogger<WebhookInvoker> logger)
     {
+        _webhookPayloadBuilder = webhookPayloadBuilder;
         _httpClientFactory = httpClientFactory;
         _options = options.Value;
         _logger = logger;
     }
 
+    private readonly IWebhookPayloadBuilder _webhookPayloadBuilder;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly AcmebotOptions _options;
     private readonly ILogger<WebhookInvoker> _logger;
 
     public Task SendCompletedEventAsync(string certificateName, DateTimeOffset? expirationDate, IEnumerable<string> dnsNames, string acmeEndpoint)
     {
-        if (string.IsNullOrEmpty(_options.Webhook))
+        if (_options.Webhook is null)
         {
             return Task.CompletedTask;
         }
 
-        object model;
+        var payload = _webhookPayloadBuilder.BuildCompleted(certificateName, expirationDate, dnsNames, acmeEndpoint);
 
-        if (_options.Webhook.Contains("hooks.slack.com"))
-        {
-            model = new
-            {
-                username = "Acmebot",
-                attachments = new[]
-                {
-                    new
-                    {
-                        text = "A new certificate has been issued.",
-                        color = "good",
-                        fields = new object[]
-                        {
-                            new
-                            {
-                                title = "Certificate Name",
-                                value= certificateName,
-                                @short = true
-                            },
-                            new
-                            {
-                                title = "Expiration Date",
-                                value = expirationDate,
-                                @short = true
-                            },
-                            new
-                            {
-                                title = "ACME Endpoint",
-                                value = acmeEndpoint,
-                                @short = true
-                            },
-                            new
-                            {
-                                title = "DNS Names",
-                                value = string.Join("\n", dnsNames)
-                            }
-                        }
-                    }
-                }
-            };
-        }
-        else if (_options.Webhook.Contains(".office.com"))
-        {
-            model = new
-            {
-                title = "Acmebot",
-                text = $"A new certificate has been issued.\n\n**Certificate Name**: {certificateName}\n\n**Expiration Date**: {expirationDate}\n\n**ACME Endpoint**: {acmeEndpoint}\n\n**DNS Names**: {string.Join(", ", dnsNames)}",
-                themeColor = "2EB886"
-            };
-        }
-        else
-        {
-            model = new
-            {
-                certificateName,
-                expirationDate,
-                dnsNames,
-                acmeEndpoint
-            };
-        }
-
-        return SendEventAsync(model);
+        return SendEventAsync(payload);
     }
 
     public Task SendFailedEventAsync(string functionName, string reason)
     {
-        if (string.IsNullOrEmpty(_options.Webhook))
+        if (_options.Webhook is null)
         {
             return Task.CompletedTask;
         }
 
-        object model;
+        var payload = _webhookPayloadBuilder.BuildFailed(functionName, reason);
 
-        if (_options.Webhook.Contains("hooks.slack.com"))
-        {
-            model = new
-            {
-                username = "Acmebot",
-                attachments = new[]
-                {
-                    new
-                    {
-                        title = functionName,
-                        text = reason,
-                        color = "danger"
-                    }
-                }
-            };
-        }
-        else if (_options.Webhook.Contains(".office.com"))
-        {
-            model = new
-            {
-                title = "Acmebot",
-                text = $"**{functionName}**\n\n**Reason**\n\n{reason}",
-                themeColor = "A30200"
-            };
-        }
-        else
-        {
-            model = new
-            {
-                functionName,
-                reason
-            };
-        }
-
-        return SendEventAsync(model);
+        return SendEventAsync(payload);
     }
 
-    private async Task SendEventAsync(object model)
+    private async Task SendEventAsync(object payload)
     {
         var httpClient = _httpClientFactory.CreateClient();
 
-        var content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
-
-        var response = await httpClient.PostAsync(_options.Webhook, content);
+        var response = await httpClient.PostAsync(_options.Webhook, payload);
 
         if (!response.IsSuccessStatusCode)
         {

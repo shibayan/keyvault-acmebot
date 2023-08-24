@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-using Azure.Security.KeyVault.Certificates;
-
 using Newtonsoft.Json;
 
 namespace KeyVault.Acmebot.Models;
@@ -32,34 +30,6 @@ public class CertificatePolicyItem : IValidatableObject
 
     [JsonProperty("reuseKey")]
     public bool? ReuseKey { get; set; }
-
-    public CertificatePolicy ToCertificatePolicy()
-    {
-        var subjectAlternativeNames = new SubjectAlternativeNames();
-
-        foreach (var dnsName in DnsNames)
-        {
-            subjectAlternativeNames.DnsNames.Add(dnsName);
-        }
-
-        var certificatePolicy = new CertificatePolicy(WellKnownIssuerNames.Unknown, $"CN={DnsNames[0]}", subjectAlternativeNames)
-        {
-            KeySize = KeySize,
-            ReuseKey = ReuseKey
-        };
-
-        if (!string.IsNullOrEmpty(KeyType))
-        {
-            certificatePolicy.KeyType = KeyType;
-        }
-
-        if (!string.IsNullOrEmpty(KeyCurveName))
-        {
-            certificatePolicy.KeyCurveName = KeyCurveName;
-        }
-
-        return certificatePolicy;
-    }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

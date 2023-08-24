@@ -31,6 +31,8 @@ public class RenewCertificates
         // スロットリング対策として 600 秒以内でジッターを追加する
         var jitter = (uint)context.NewGuid().GetHashCode() % 600;
 
+        log.LogInformation("Adding random delay = " + jitter);
+
         await context.CreateTimer(context.CurrentUtcDateTime.AddSeconds(jitter), CancellationToken.None);
 
         // 証明書の更新を行う

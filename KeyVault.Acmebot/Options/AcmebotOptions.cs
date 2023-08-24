@@ -14,8 +14,7 @@ public class AcmebotOptions
     [Required]
     public string VaultBaseUrl { get; set; }
 
-    [Url]
-    public string Webhook { get; set; }
+    public Uri Webhook { get; set; }
 
     [Required]
     public string Environment { get; set; } = "AzureCloud";

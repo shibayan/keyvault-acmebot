@@ -23,7 +23,7 @@ public class RenewCertificate : HttpFunctionBase
     }
 
     [FunctionName($"{nameof(RenewCertificate)}_{nameof(Orchestrator)}")]
-    public async Task Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context, ILogger log)
+    public async Task Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
     {
         var certificateName = context.GetInput<string>();
 

@@ -1,6 +1,4 @@
-﻿using System;
-
-using Azure.WebJobs.Extensions.HttpApi;
+﻿using Azure.WebJobs.Extensions.HttpApi;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -22,13 +20,11 @@ public class StaticPage : HttpFunctionBase
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "{*path}")] HttpRequest req,
         ILogger log)
     {
-        if (!IsEasyAuthEnabled || !User.Identity.IsAuthenticated)
+        if (!IsAuthenticationEnabled || !User.Identity.IsAuthenticated)
         {
-            return Forbid();
+            return Unauthorized();
         }
 
         return LocalStaticApp();
     }
-
-    private static bool IsEasyAuthEnabled => bool.TryParse(Environment.GetEnvironmentVariable("WEBSITE_AUTH_ENABLED"), out var result) && result;
 }
