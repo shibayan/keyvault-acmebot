@@ -16,6 +16,9 @@ public class CertificateItem
     [JsonProperty("dnsNames")]
     public IReadOnlyList<string> DnsNames { get; set; }
 
+    [JsonProperty("dnsProviderName")]
+    public string DnsProviderName { get; set; }
+
     [JsonProperty("createdOn")]
     public DateTimeOffset CreatedOn { get; set; }
 

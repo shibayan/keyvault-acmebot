@@ -156,7 +156,9 @@
                       <div class="select" :class="{ 'is-loading': add.loading }">
                         <select v-model="add.zone">
                           <option disabled :value="null">Please select one</option>
-                          <option v-for="zone in add.zones" :value="zone">{{ toUnicode(zone.name) }} ({{ zone.dnsProviderName }})</option>
+                          <optgroup v-for="(zones, dnsProviderName) in add.zones" :label="dnsProviderName">
+                            <option v-for="zone in zones" :value="zone">{{ toUnicode(zone.name) }}</option>
+                          </optgroup>
                         </select>
                       </div>
                     </div>
@@ -435,7 +437,17 @@
                     </div>
                   </div>
                 </div>
-                <div class="field is-horizontal">
+                <div v-if="details.certificate.dnsProviderName !== ''" class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">DNS Provider Name</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ details.certificate.dnsProviderName }}
+                    </div>
+                  </div>
+                </div>
+                <div v-if="details.certificate.acmeEndpoint !== ''" class="field is-horizontal">
                   <div class="field-label">
                     <label class="label">ACME Endpoint</label>
                   </div>
@@ -471,7 +483,7 @@
           certificates: [],
           loading: false,
           add: {
-            zones: [],
+            zones: {},
             zone: null,
             recordName: "",
             dnsNames: [],
@@ -528,11 +540,23 @@
         async loadDnsZones() {
           this.add.loading = true;
 
+          this.add.zone = null;
+
           try {
             const response = await axios.get("/api/dns-zones");
 
             if (response.status === 200) {
-              this.add.zones = response.data;
+              this.add.zones = {};
+
+              for (var i = 0; i < response.data.length; i++) {
+                const item = response.data[i];
+
+                if (!this.add.zones[item.dnsProviderName]) {
+                  this.add.zones[item.dnsProviderName] = [];
+                }
+
+                this.add.zones[item.dnsProviderName].push(item);
+              }
             }
           } catch (error) {
             this.handleHttpError(error);

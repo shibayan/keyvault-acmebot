@@ -30,6 +30,7 @@ internal static class CertificateExtensions
             Id = certificate.Id,
             Name = certificate.Name,
             DnsNames = dnsNames is { Length: > 0 } ? dnsNames : new[] { certificate.Policy.Subject[3..] },
+            DnsProviderName = certificate.Properties.Tags.TryGetDnsProvider(out var dnsProviderName) ? dnsProviderName : "",
             CreatedOn = certificate.Properties.CreatedOn.Value,
             ExpiresOn = certificate.Properties.ExpiresOn.Value,
             X509Thumbprint = ToHexString(certificate.Properties.X509Thumbprint),
@@ -50,7 +51,7 @@ internal static class CertificateExtensions
         {
             CertificateName = certificate.Name,
             DnsNames = dnsNames.Length > 0 ? dnsNames : new[] { certificate.Policy.Subject[3..] },
-            DnsProviderName = certificate.Properties.Tags?.TryGetValue("DnsProvider", out var dnsProviderName) ?? false ? dnsProviderName : "",
+            DnsProviderName = certificate.Properties.Tags.TryGetDnsProvider(out var dnsProviderName) ? dnsProviderName : "",
             KeyType = certificate.Policy.KeyType?.ToString(),
             KeySize = certificate.Policy.KeySize,
             KeyCurveName = certificate.Policy.KeyCurveName?.ToString(),
@@ -60,12 +61,15 @@ internal static class CertificateExtensions
 
     private const string IssuerKey = "Issuer";
     private const string EndpointKey = "Endpoint";
+    private const string DnsProviderKey = "DnsProvider";
 
     private const string IssuerValue = "Acmebot";
 
     private static bool TryGetIssuer(this IDictionary<string, string> tags, out string issuer) => tags.TryGetValue(IssuerKey, out issuer);
 
     private static bool TryGetEndpoint(this IDictionary<string, string> tags, out string endpoint) => tags.TryGetValue(EndpointKey, out endpoint);
+
+    private static bool TryGetDnsProvider(this IDictionary<string, string> tags, out string dnsProviderName) => tags.TryGetValue(DnsProviderKey, out dnsProviderName);
 
     private static string ToHexString(byte[] bytes)
     {
