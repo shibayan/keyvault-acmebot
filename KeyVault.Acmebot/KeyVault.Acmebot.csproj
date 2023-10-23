@@ -4,17 +4,17 @@
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Route53" Version="3.7.201.6" />
-    <PackageReference Include="Azure.Identity" Version="1.9.0" />
+    <PackageReference Include="AWSSDK.Route53" Version="3.7.202.7" />
+    <PackageReference Include="Azure.Identity" Version="1.10.3" />
     <PackageReference Include="Azure.ResourceManager.Dns" Version="1.0.1" />
     <PackageReference Include="Azure.ResourceManager.PrivateDns" Version="1.0.1" />
     <PackageReference Include="Azure.Security.KeyVault.Certificates" Version="4.5.1" />
     <PackageReference Include="Azure.Security.KeyVault.Keys" Version="4.5.0" />
     <PackageReference Include="DnsClient" Version="1.7.0" />
     <PackageReference Include="DurableTask.TypedProxy" Version="2.2.2" />
-    <PackageReference Include="Google.Apis.Dns.v1" Version="1.61.0.3134" />
+    <PackageReference Include="Google.Apis.Dns.v1" Version="1.62.0.3164" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.10.0" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.12.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="[6.0.*,7.0.0)" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.2.0" />
     <PackageReference Include="WebJobs.Extensions.HttpApi" Version="2.1.0" />
@@ -31,7 +31,7 @@
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>
     <None Update="wwwroot\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <Target Name="DeleteFiles" AfterTargets="Publish">

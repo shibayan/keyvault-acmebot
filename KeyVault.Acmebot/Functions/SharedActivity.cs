@@ -95,27 +95,27 @@ public class SharedActivity : ISharedActivity
         return result;
     }
 
-    [FunctionName(nameof(GetZones))]
-    public async Task<IReadOnlyList<string>> GetZones([ActivityTrigger] object input = null)
+    [FunctionName(nameof(GetAllDnsZones))]
+    public async Task<IReadOnlyList<DnsZoneItem>> GetAllDnsZones([ActivityTrigger] object input = null)
     {
         try
         {
             var zones = await _dnsProviders.ListAllZonesAsync();
 
-            return zones.OrderBy(x => x.DnsProvider.Name).Select(x => x.Name).ToArray();
+            return zones.OrderBy(x => x.DnsProvider.Name).Select(x => x.ToDnsZoneItem()).ToArray();
         }
         catch
         {
-            return Array.Empty<string>();
+            return Array.Empty<DnsZoneItem>();
         }
     }
 
     [FunctionName(nameof(GetCertificatePolicy))]
     public async Task<CertificatePolicyItem> GetCertificatePolicy([ActivityTrigger] string certificateName)
     {
-        CertificatePolicy certificatePolicy = await _certificateClient.GetCertificatePolicyAsync(certificateName);
+        KeyVaultCertificateWithPolicy certificate = await _certificateClient.GetCertificateAsync(certificateName);
 
-        return certificatePolicy.ToCertificatePolicyItem(certificateName);
+        return certificate.ToCertificatePolicyItem();
     }
 
     [FunctionName(nameof(RevokeCertificate))]
@@ -137,11 +137,14 @@ public class SharedActivity : ISharedActivity
     }
 
     [FunctionName(nameof(Dns01Precondition))]
-    public async Task Dns01Precondition([ActivityTrigger] IReadOnlyList<string> dnsNames)
+    public async Task<string> Dns01Precondition([ActivityTrigger] (string, IReadOnlyList<string>) input)
     {
-        // DNS zone が存在するか確認
+        var (dnsProviderName, dnsNames) = input;
+
+        // DNS zone の一覧を各 Provider から取得
         var zones = await _dnsProviders.ListAllZonesAsync();
 
+        // DNS zone が存在するか確認
         var foundZones = new HashSet<DnsZone>();
         var notFoundZoneDnsNames = new List<string>();
 
@@ -186,11 +189,35 @@ public class SharedActivity : ISharedActivity
                 throw new PreconditionException($"The delegated name server is not correct. DNS zone = {zone.Name}, Expected = {string.Join(",", expectedNameServers)}, Actual = {string.Join(",", actualNameServers)}");
             }
         }
+
+        // 指定された DNS Provider に属する DNS zone を優先する
+        var dnsProvider = foundZones.Select(x => x.DnsProvider).FirstOrDefault(x => x.Name == dnsProviderName);
+
+        // DNS zone の属する Provider が変わった可能性があるのでフォールバック
+        if (dnsProvider is null)
+        {
+            // 見つかった DNS zone の属する DNS Provider を取得
+            var dnsProviders = foundZones.Select(x => x.DnsProvider).DistinctBy(x => x.Name).ToArray();
+
+            // 単一の DNS Provider で構成された証明書かチェックする
+            if (dnsProviders.Length != 1)
+            {
+                // 互換性のために常に空文字列を返す
+                return "";
+            }
+
+            // 単一の DNS Provider で構成されている場合は問題ない
+            dnsProvider = dnsProviders.First();
+        }
+
+        return dnsProvider.Name;
     }
 
     [FunctionName(nameof(Dns01Authorization))]
-    public async Task<(IReadOnlyList<AcmeChallengeResult>, int)> Dns01Authorization([ActivityTrigger] IReadOnlyList<string> authorizationUrls)
+    public async Task<(IReadOnlyList<AcmeChallengeResult>, int)> Dns01Authorization([ActivityTrigger] (string, IReadOnlyList<string>) input)
     {
+        var (dnsProviderName, authorizationUrls) = input;
+
         var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
         var challengeResults = new List<AcmeChallengeResult>();
@@ -219,8 +246,8 @@ public class SharedActivity : ISharedActivity
             });
         }
 
-        // DNS zone の一覧を取得する
-        var zones = await _dnsProviders.ListAllZonesAsync();
+        // DNS zone の一覧を各 Provider から取得
+        var zones = await (string.IsNullOrEmpty(dnsProviderName) ? _dnsProviders.ListAllZonesAsync() : _dnsProviders.ListZonesAsync(dnsProviderName));
 
         var propagationSeconds = 0;
 
@@ -355,7 +382,8 @@ public class SharedActivity : ISharedActivity
             var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificatePolicyItem.CertificateName, certificatePolicy, tags: new Dictionary<string, string>
             {
                 { "Issuer", "Acmebot" },
-                { "Endpoint", _options.Endpoint.Host }
+                { "Endpoint", _options.Endpoint.Host },
+                { "DnsProvider", certificatePolicyItem.DnsProviderName }
             });
 
             csr = certificateOperation.Properties.Csr;
@@ -416,10 +444,12 @@ public class SharedActivity : ISharedActivity
     }
 
     [FunctionName(nameof(CleanupDnsChallenge))]
-    public async Task CleanupDnsChallenge([ActivityTrigger] IReadOnlyList<AcmeChallengeResult> challengeResults)
+    public async Task CleanupDnsChallenge([ActivityTrigger] (string, IReadOnlyList<AcmeChallengeResult>) input)
     {
-        // DNS zone の一覧を取得する
-        var zones = await _dnsProviders.ListAllZonesAsync();
+        var (dnsProviderName, challengeResults) = input;
+
+        // DNS zone の一覧を各 Provider から取得
+        var zones = await (string.IsNullOrEmpty(dnsProviderName) ? _dnsProviders.ListAllZonesAsync() : _dnsProviders.ListZonesAsync(dnsProviderName));
 
         // DNS-01 の検証レコード名毎に DNS から TXT レコードを削除
         foreach (var lookup in challengeResults.ToLookup(x => x.DnsRecordName))
