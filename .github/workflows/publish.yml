@@ -6,7 +6,7 @@ on:
 
 env:
   DOTNET_VERSION: 6.0.x
-  BICEP_VERSION: 0.19.5
+  BICEP_VERSION: 0.22.6
 
 jobs:
   publish:
@@ -14,12 +14,12 @@ jobs:
     outputs:
       version: ${{ steps.setup_version.outputs.version }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
-    - name: Use .NET Core ${{ env.DOTNET_VERSION }}
-      uses: actions/setup-dotnet@v2
+    - name: Use .NET ${{ env.DOTNET_VERSION }}
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -27,10 +27,10 @@ jobs:
       id: setup_version
       run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_OUTPUT
 
-    - name: Publish Functions
-      run: dotnet publish -c Release -r win-x86 --self-contained false -o ./dist -p:Version=${{ steps.setup_version.outputs.version }} KeyVault.Acmebot
+    - name: Publish Function app
+      run: dotnet publish -c Release -r win-x86 --no-self-contained -o ./dist -p:Version=${{ steps.setup_version.outputs.version }} KeyVault.Acmebot
 
-    - name: Zip Functions
+    - name: Zip Function app
       run: 7z a -mx=9 latest.zip ./dist/*
 
     - name: Upload artifacts
