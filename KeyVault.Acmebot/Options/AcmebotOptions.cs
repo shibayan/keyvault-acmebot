@@ -43,6 +43,8 @@ public class AcmebotOptions
 
     public GandiOptions Gandi { get; set; }
 
+    public GandiLiveDnsOptions GandiLiveDns { get; set; }
+
     public GoDaddyOptions GoDaddy { get; set; }
 
     public GoogleDnsOptions GoogleDns { get; set; }
