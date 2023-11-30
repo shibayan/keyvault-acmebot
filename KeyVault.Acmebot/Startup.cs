@@ -120,6 +120,7 @@ public class Startup : FunctionsStartup
             dnsProviders.TryAdd(options.CustomDns, o => new CustomDnsProvider(o));
             dnsProviders.TryAdd(options.DnsMadeEasy, o => new DnsMadeEasyProvider(o));
             dnsProviders.TryAdd(options.Gandi, o => new GandiProvider(o));
+            dnsProviders.TryAdd(options.GandiLiveDns, o => new GandiLiveDnsProvider(o));
             dnsProviders.TryAdd(options.GoDaddy, o => new GoDaddyProvider(o));
             dnsProviders.TryAdd(options.GoogleDns, o => new GoogleDnsProvider(o));
             dnsProviders.TryAdd(options.Route53, o => new Route53Provider(o));
