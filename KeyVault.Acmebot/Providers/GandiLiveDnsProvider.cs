@@ -17,10 +17,10 @@ public class GandiLiveDnsProvider : IDnsProvider
 {
     public GandiLiveDnsProvider(GandiLiveDnsOptions options)
     {
-        _client = new GandiClient(options.ApiKey);
+        _client = new GandiLiveDnsClient(options.ApiKey);
     }
 
-    private readonly GandiClient _client;
+    private readonly GandiLiveDnsClient _client;
 
     public string Name => "Gandi LiveDNS";
 
@@ -43,9 +43,9 @@ public class GandiLiveDnsProvider : IDnsProvider
         return _client.DeleteRecordAsync(zone.Name, relativeRecordName);
     }
 
-    private class GandiClient
+    private class GandiLiveDnsClient
     {
-        public GandiClient(string apiKey)
+        public GandiLiveDnsClient(string apiKey)
         {
             ArgumentNullException.ThrowIfNull(apiKey);
 
