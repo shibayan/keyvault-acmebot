@@ -14,7 +14,7 @@
     <PackageReference Include="DurableTask.TypedProxy" Version="2.2.2" />
     <PackageReference Include="Google.Apis.Dns.v1" Version="1.64.0.3164" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.13.0" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="3.0.0-rc.1" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="[6.0.*,7.0.0)" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.2.0" />
     <PackageReference Include="WebJobs.Extensions.HttpApi" Version="2.1.0" />
