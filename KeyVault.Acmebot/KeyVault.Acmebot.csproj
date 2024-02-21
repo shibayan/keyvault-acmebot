@@ -4,12 +4,12 @@
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Route53" Version="3.7.302.9" />
+    <PackageReference Include="AWSSDK.Route53" Version="3.7.302.19" />
     <PackageReference Include="Azure.Identity" Version="1.10.4" />
     <PackageReference Include="Azure.ResourceManager.Dns" Version="1.1.0" />
     <PackageReference Include="Azure.ResourceManager.PrivateDns" Version="1.1.0" />
-    <PackageReference Include="Azure.Security.KeyVault.Certificates" Version="4.5.1" />
-    <PackageReference Include="Azure.Security.KeyVault.Keys" Version="4.5.0" />
+    <PackageReference Include="Azure.Security.KeyVault.Certificates" Version="4.6.0" />
+    <PackageReference Include="Azure.Security.KeyVault.Keys" Version="4.6.0" />
     <PackageReference Include="DnsClient" Version="1.7.0" />
     <PackageReference Include="DurableTask.TypedProxy" Version="2.2.2" />
     <PackageReference Include="Google.Apis.Dns.v1" Version="1.66.0.3304" />
