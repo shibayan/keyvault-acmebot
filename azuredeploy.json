@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.22.6.54827",
-      "templateHash": "18177599109201060587"
+      "version": "0.23.1.45101",
+      "templateHash": "6215031968258734466"
     }
   },
   "parameters": {
@@ -29,6 +29,13 @@
         "description": "Email address for ACME account."
       }
     },
+    "additionalAppSettings": {
+      "type": "object",
+      "defaultValue": {},
+      "metadata": {
+        "description": "Specifies additional name/value pairs to be appended to the functionap app appsettings."
+      }
+    },
     "acmeEndpoint": {
       "type": "string",
       "defaultValue": "https://acme-v02.api.letsencrypt.org/directory",
@@ -42,17 +49,6 @@
         "description": "Certification authority ACME Endpoint."
       }
     },
-    "createWithKeyVault": {
-      "type": "bool",
-      "defaultValue": true,
-      "allowedValues": [
-        true,
-        false
-      ],
-      "metadata": {
-        "description": "If you choose true, create and configure a key vault at the same time."
-      }
-    },
     "keyVaultSkuName": {
       "type": "string",
       "defaultValue": "standard",
@@ -62,20 +58,6 @@
       ],
       "metadata": {
         "description": "Specifies whether the key vault is a standard vault or a premium vault."
-      }
-    },
-    "keyVaultBaseUrl": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "Enter the base URL of an existing Key Vault. (ex. https://example.vault.azure.net)"
-      }
-    },
-    "additionalAppSettings": {
-      "type": "array",
-      "defaultValue": [],
-      "metadata": {
-        "description": "Specifies additional name/value pairs to be appended to the functionap app appsettings."
       }
     }
   },
@@ -90,8 +72,7 @@
       "AzureCloud": "applicationinsights.azure.com",
       "AzureChinaCloud": "applicationinsights.azure.cn",
       "AzureUSGovernment": "applicationinsights.us"
-    },
-    "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions/', 'a4417e6f-fecd-4de8-b567-7b0420556985')]"
+    }
   },
   "resources": [
     {
@@ -163,7 +144,6 @@
         "httpsOnly": true,
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
         "siteConfig": {
-          "appSettings": "[concat(createArray(createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'value', format('InstrumentationKey={0};EndpointSuffix={1}', reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02').InstrumentationKey, variables('appInsightsEndpoints')[environment().name])), createObject('name', 'AzureWebJobsStorage', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', variables('storageAccountName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').keys[0].value, environment().suffixes.storage)), createObject('name', 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', variables('storageAccountName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').keys[0].value, environment().suffixes.storage)), createObject('name', 'WEBSITE_CONTENTSHARE', 'value', toLower(variables('functionAppName'))), createObject('name', 'WEBSITE_RUN_FROM_PACKAGE', 'value', 'https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v4/latest.zip'), createObject('name', 'FUNCTIONS_EXTENSION_VERSION', 'value', '~4'), createObject('name', 'FUNCTIONS_WORKER_RUNTIME', 'value', 'dotnet'), createObject('name', 'Acmebot:Contacts', 'value', parameters('mailAddress')), createObject('name', 'Acmebot:Endpoint', 'value', parameters('acmeEndpoint')), createObject('name', 'Acmebot:VaultBaseUrl', 'value', if(parameters('createWithKeyVault'), format('https://{0}{1}', variables('keyVaultName'), environment().suffixes.keyvaultDns), parameters('keyVaultBaseUrl'))), createObject('name', 'Acmebot:Environment', 'value', environment().name)), parameters('additionalAppSettings'))]",
           "netFrameworkVersion": "v6.0",
           "ftpsState": "Disabled",
           "minTlsVersion": "1.2",
@@ -171,13 +151,23 @@
         }
       },
       "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/sites/config",
+      "apiVersion": "2020-06-01",
+      "name": "[format('{0}/{1}', variables('functionAppName'), 'appsettings')]",
+      "properties": "[union(createObject('AzureWebJobsSecretStorageKeyVaultUri', reference(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), '2022-07-01').vaultUri, 'AzureWebJobsSecretStorageType', 'keyvault', 'AzureWebJobsStorage__accountName', variables('storageAccountName'), 'AzureWebJobsStorage__blobServiceUri', reference(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').primaryEndpoints.blob, 'AzureWebJobsStorage__queueServiceUri', reference(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').primaryEndpoints.queue, 'AzureWebJobsStorage__tableServiceUri', reference(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').primaryEndpoints.table, 'FUNCTIONS_APP_EDIT_MODE', 'readonly', 'StorageQueueConnection__credential', 'managedidentity', 'StorageQueueConnection__queueServiceUri', reference(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').primaryEndpoints.queue, 'FUNCTIONS_WORKER_RUNTIME', 'dotnet', 'FUNCTIONS_EXTENSION_VERSION', '~4', 'APPINSIGHTS_INSTRUMENTATIONKEY', format('{0};EndpointSuffix={1}', reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02').InstrumentationKey, variables('appInsightsEndpoints')[environment().name]), 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING', format('@Microsoft.KeyVault(SecretUri={0})', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'azurefilesconnectionstring'), '2023-07-01').secretUri), 'WEBSITE_CONTENTSHARE', toLower(variables('functionAppName')), 'Acmebot:Contacts', parameters('mailAddress'), 'Acmebot:Endpoint', parameters('acmeEndpoint'), 'Acmebot:VaultBaseUrl', format('https://{0}{1}', variables('keyVaultName'), environment().suffixes.keyvaultDns), 'Acmebot:Environment', environment().name), parameters('additionalAppSettings'))]",
+      "dependsOn": [
         "[resourceId('Microsoft.Insights/components', variables('appInsightsName'))]",
-        "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'azurefilesconnectionstring')]",
+        "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]",
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
       ]
     },
     {
-      "condition": "[parameters('createWithKeyVault')]",
       "type": "Microsoft.KeyVault/vaults",
       "apiVersion": "2022-07-01",
       "name": "[variables('keyVaultName')]",
@@ -192,13 +182,98 @@
       }
     },
     {
-      "condition": "[parameters('createWithKeyVault')]",
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[format('{0}/{1}', variables('keyVaultName'), 'azurefilesconnectionstring')]",
+      "properties": {
+        "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix=core.windows.net', variables('storageAccountName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value)]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', variables('storageAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), variables('functionAppName'), subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '17d1049b-9a84-46fb-8f53-869881c3d3ab'))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '17d1049b-9a84-46fb-8f53-869881c3d3ab')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2022-03-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', variables('storageAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), variables('functionAppName'), subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2022-03-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', variables('storageAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), variables('functionAppName'), subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2022-03-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', variables('storageAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), variables('functionAppName'), subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88'))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2022-03-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', variables('storageAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), variables('functionAppName'), subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3'))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2022-03-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ]
+    },
+    {
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2022-04-01",
       "scope": "[format('Microsoft.KeyVault/vaults/{0}', variables('keyVaultName'))]",
-      "name": "[guid(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), variables('functionAppName'), variables('roleDefinitionId'))]",
+      "name": "[guid(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), variables('functionAppName'), subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483'))]",
       "properties": {
-        "roleDefinitionId": "[variables('roleDefinitionId')]",
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')]",
         "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2022-03-01', 'full').identity.principalId]",
         "principalType": "ServicePrincipal"
       },
@@ -223,7 +298,7 @@
     },
     "keyVaultName": {
       "type": "string",
-      "value": "[if(parameters('createWithKeyVault'), variables('keyVaultName'), '')]"
+      "value": "[variables('keyVaultName')]"
     }
   }
 }
