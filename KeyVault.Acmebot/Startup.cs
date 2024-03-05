@@ -38,7 +38,7 @@ public class Startup : FunctionsStartup
 
         builder.Services.AddHttpClient();
 
-        builder.Services.AddSingleton<ITelemetryInitializer, ApplicationVersionInitializer<Startup>>();
+        builder.Services.AddSingleton<ITelemetryInitializer, ApplicationVersionInitializer>();
 
         builder.Services.AddSingleton(provider =>
         {
