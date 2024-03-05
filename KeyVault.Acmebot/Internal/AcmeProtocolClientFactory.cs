@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 
@@ -29,9 +30,15 @@ public class AcmeProtocolClientFactory
     {
         var account = LoadState<AccountDetails>("account.json");
         var accountKey = LoadState<AccountKey>("account_key.json");
-        var directory = LoadState<ServiceDirectory>("directory.json");
+        var directory = LoadTempState<ServiceDirectory>("directory.json");
 
-        var acmeProtocolClient = new AcmeProtocolClient(_options.Endpoint, directory, account, accountKey?.GenerateSigner(), usePostAsGet: true);
+        var acmeProtocolClient = new AcmeProtocolClient(_options.Endpoint, directory, account, accountKey?.GenerateSigner(), usePostAsGet: true)
+        {
+            BeforeHttpSend = (_, req) =>
+            {
+                req.Headers.UserAgent.Add(new ProductInfoHeaderValue("KeyVault-Acmebot", Constants.ApplicationVersion));
+            }
+        };
 
         if (directory is null)
         {
@@ -46,7 +53,7 @@ public class AcmeProtocolClientFactory
                 directory = await acmeProtocolClient.GetDirectoryAsync();
             }
 
-            SaveState(directory, "directory.json");
+            SaveTempState(directory, "directory.json");
 
             acmeProtocolClient.Directory = directory;
         }
@@ -128,28 +135,12 @@ public class AcmeProtocolClientFactory
 
         if (!File.Exists(fullPath))
         {
-            // Fallback legacy state
-            var legacyFullPath = Environment.ExpandEnvironmentVariables(@"%HOME%/.acme/" + path);
-
-            if (!File.Exists(legacyFullPath))
-            {
-                return default;
-            }
-
-            var json = File.ReadAllText(legacyFullPath);
-
-            var state = JsonConvert.DeserializeObject<TState>(json);
-
-            SaveState(state, path);
-
-            return state;
+            return default;
         }
-        else
-        {
-            var json = File.ReadAllText(fullPath);
 
-            return JsonConvert.DeserializeObject<TState>(json);
-        }
+        var json = File.ReadAllText(fullPath);
+
+        return JsonConvert.DeserializeObject<TState>(json);
     }
 
     private void SaveState<TState>(TState value, string path)
@@ -167,5 +158,36 @@ public class AcmeProtocolClientFactory
         File.WriteAllText(fullPath, json);
     }
 
+    private TState LoadTempState<TState>(string path)
+    {
+        var fullPath = ResolveTempStateFullPath(path);
+
+        if (!File.Exists(fullPath))
+        {
+            return default;
+        }
+
+        var json = File.ReadAllText(fullPath);
+
+        return JsonConvert.DeserializeObject<TState>(json);
+    }
+
+    private void SaveTempState<TState>(TState value, string path)
+    {
+        var fullPath = ResolveTempStateFullPath(path);
+        var directoryPath = Path.GetDirectoryName(fullPath);
+
+        if (!Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+        }
+
+        var json = JsonConvert.SerializeObject(value, Formatting.Indented);
+
+        File.WriteAllText(fullPath, json);
+    }
+
     private string ResolveStateFullPath(string path) => Environment.ExpandEnvironmentVariables($"%HOME%/data/.acmebot/{_options.Endpoint.Host}/{path}");
+
+    private string ResolveTempStateFullPath(string path) => Environment.ExpandEnvironmentVariables($"%TEMP%/.acmebot/{_options.Endpoint.Host}/{path}");
 }
