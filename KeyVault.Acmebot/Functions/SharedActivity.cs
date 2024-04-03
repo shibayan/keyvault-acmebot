@@ -227,6 +227,12 @@ public class SharedActivity : ISharedActivity
             // Authorization の詳細を取得
             var authorization = await acmeProtocolClient.GetAuthorizationDetailsAsync(authorizationUrl);
 
+            // ignore authorizations that are already valid 
+            if (authorization.Status == "valid")
+            {
+                continue;
+            }
+
             // DNS-01 Challenge の情報を拾う
             var challenge = authorization.Challenges.FirstOrDefault(x => x.Type == "dns-01");
 
