@@ -228,7 +228,7 @@ public class SharedActivity : ISharedActivity
             var authorization = await acmeProtocolClient.GetAuthorizationDetailsAsync(authorizationUrl);
 
             // ignore authorizations that are already valid 
-            if (authorization.Status == "valid") 
+            if (authorization.Status == "valid")
             {
                 continue;
             }
