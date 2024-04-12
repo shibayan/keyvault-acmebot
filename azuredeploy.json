@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.26.54.24096",
-      "templateHash": "2201744482523837982"
+      "templateHash": "2724628433207629896"
     }
   },
   "parameters": {
@@ -36,7 +36,8 @@
         "https://acme-v02.api.letsencrypt.org/directory",
         "https://api.buypass.com/acme/directory",
         "https://acme.zerossl.com/v2/DV90/",
-        "https://dv.acme-v02.api.pki.goog/directory"
+        "https://dv.acme-v02.api.pki.goog/directory",
+        "https://acme.entrust.net/acme2/directory"
       ],
       "metadata": {
         "description": "Certification authority ACME Endpoint."
