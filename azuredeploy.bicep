@@ -97,7 +97,7 @@ var acmebotAppSettings = [
   }
 ]
 
-resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: storageAccountName
   location: location
   kind: 'Storage'
@@ -111,7 +111,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   }
 }
 
-resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   name: appServicePlanName
   location: location
   sku: {
@@ -121,7 +121,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   properties: {}
 }
 
-resource workspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+resource workspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: workspaceName
   location: location
   properties: {
@@ -145,7 +145,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
+resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
   name: functionAppName
   location: location
   kind: 'functionapp'
@@ -162,11 +162,15 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
       scmMinTlsVersion: '1.2'
+      cors: {
+        allowedOrigins: ['https://portal.azure.com']
+        supportCredentials: false
+      }
     }
   }
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = if (createWithKeyVault) {
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = if (createWithKeyVault) {
   name: keyVaultName
   location: location
   properties: {
