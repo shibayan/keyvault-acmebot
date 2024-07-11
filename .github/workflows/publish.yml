@@ -11,6 +11,10 @@ env:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x84, x64]
+        os: [linux, win]
     outputs:
       version: ${{ steps.setup_version.outputs.version }}
     steps:
@@ -28,18 +32,59 @@ jobs:
       run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_OUTPUT
 
     - name: Publish Function app
-      run: dotnet publish -c Release -r win-x86 --no-self-contained -o ./dist -p:Version=${{ steps.setup_version.outputs.version }} KeyVault.Acmebot
+      run: dotnet publish -c Release --os ${{ matrix.os }} -a ${{ matrix.arch }} --no-self-contained -o ./dist/${{ matrix.os }}/${{ matrix.arch }} -p:Version=${{ steps.setup_version.outputs.version }} KeyVault.Acmebot
 
     - name: Zip Function app
-      run: 7z a -mx=9 latest.zip ./dist/*
+      run: 7z a -mx=9 latest_${{ matrix.os }}_${{ matrix.arch }}.zip ./dist/${{ matrix.os }}/${{ matrix.arch }}/*
+
+    - name: Zip Function app backwards compatibility
+      if: ${{ (matrix.os == 'win') && (matrix.arch == 'x32') }}
+      run: 7z a -mx=9 latest.zip ./dist/${{ matrix.os }}/${{ matrix.arch }}/*
 
     - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist_${{ matrix.os }}_${{ matrix.arch }}
+        path: |
+          latest_${{ matrix.os }}_${{ matrix.arch }}.zip
+
+    - name: Upload artifacts backwards compatibility
+      if: ${{ (matrix.os == 'win') && (matrix.arch == 'x32') }}
       uses: actions/upload-artifact@v4
       with:
         name: dist
         path: |
           latest.zip
           azuredeploy.bicep
+
+  deploy-multi-os:
+    environment: production
+    needs: publish
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x84, x64]
+        os: [linux, win]
+    steps:
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: dist_${{ matrix.os }}_${{ matrix.arch }}
+
+    - name: Upload to Blob
+      run: |
+        az storage blob upload --auth-mode login -f latest_${{ matrix.os }}_${{ matrix.arch }}.zip --account-name stacmebotprod -c keyvault-acmebot -n v4/latest_${{ matrix.os }}_${{ matrix.arch }}.zip --overwrite
+        az storage blob upload --auth-mode login -f latest_${{ matrix.os }}_${{ matrix.arch }}.zip --account-name stacmebotprod -c keyvault-acmebot -n v4/${{ needs.publish.outputs.version }}_${{ matrix.os }}_${{ matrix.arch }}.zip --overwrite
 
   deploy:
     environment: production
