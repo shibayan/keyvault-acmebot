@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.26.170.59819",
-      "templateHash": "5662418896052070318"
+      "version": "0.28.1.47646",
+      "templateHash": "14872192790547142580"
     }
   },
   "parameters": {
@@ -97,7 +97,7 @@
   "resources": [
     {
       "type": "Microsoft.Storage/storageAccounts",
-      "apiVersion": "2023-01-01",
+      "apiVersion": "2023-05-01",
       "name": "[variables('storageAccountName')]",
       "location": "[parameters('location')]",
       "kind": "Storage",
@@ -112,7 +112,7 @@
     },
     {
       "type": "Microsoft.Web/serverfarms",
-      "apiVersion": "2023-01-01",
+      "apiVersion": "2023-12-01",
       "name": "[variables('appServicePlanName')]",
       "location": "[parameters('location')]",
       "sku": {
@@ -152,7 +152,7 @@
     },
     {
       "type": "Microsoft.Web/sites",
-      "apiVersion": "2023-01-01",
+      "apiVersion": "2023-12-01",
       "name": "[variables('functionAppName')]",
       "location": "[parameters('location')]",
       "kind": "functionapp",
@@ -164,8 +164,8 @@
         "httpsOnly": true,
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
         "siteConfig": {
-          "appSettings": "[concat(createArray(createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'value', format('InstrumentationKey={0};EndpointSuffix={1}', reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02').InstrumentationKey, variables('appInsightsEndpoints')[environment().name])), createObject('name', 'AzureWebJobsStorage', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', variables('storageAccountName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2023-01-01').keys[0].value, environment().suffixes.storage)), createObject('name', 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', variables('storageAccountName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2023-01-01').keys[0].value, environment().suffixes.storage)), createObject('name', 'WEBSITE_CONTENTSHARE', 'value', toLower(variables('functionAppName'))), createObject('name', 'WEBSITE_RUN_FROM_PACKAGE', 'value', 'https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v4/latest.zip'), createObject('name', 'FUNCTIONS_EXTENSION_VERSION', 'value', '~4'), createObject('name', 'FUNCTIONS_WORKER_RUNTIME', 'value', 'dotnet'), createObject('name', 'Acmebot:Contacts', 'value', parameters('mailAddress')), createObject('name', 'Acmebot:Endpoint', 'value', parameters('acmeEndpoint')), createObject('name', 'Acmebot:VaultBaseUrl', 'value', if(parameters('createWithKeyVault'), format('https://{0}{1}', variables('keyVaultName'), environment().suffixes.keyvaultDns), parameters('keyVaultBaseUrl'))), createObject('name', 'Acmebot:Environment', 'value', environment().name)), parameters('additionalAppSettings'))]",
-          "netFrameworkVersion": "v6.0",
+          "appSettings": "[concat(createArray(createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'value', format('InstrumentationKey={0};EndpointSuffix={1}', reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02').InstrumentationKey, variables('appInsightsEndpoints')[environment().name])), createObject('name', 'AzureWebJobsStorage', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', variables('storageAccountName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2023-05-01').keys[0].value, environment().suffixes.storage)), createObject('name', 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING', 'value', format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', variables('storageAccountName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2023-05-01').keys[0].value, environment().suffixes.storage)), createObject('name', 'WEBSITE_CONTENTSHARE', 'value', toLower(variables('functionAppName'))), createObject('name', 'WEBSITE_RUN_FROM_PACKAGE', 'value', 'https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v4/latest.zip'), createObject('name', 'FUNCTIONS_EXTENSION_VERSION', 'value', '~4'), createObject('name', 'FUNCTIONS_INPROC_NET8_ENABLED', 'value', '1'), createObject('name', 'FUNCTIONS_WORKER_RUNTIME', 'value', 'dotnet'), createObject('name', 'Acmebot:Contacts', 'value', parameters('mailAddress')), createObject('name', 'Acmebot:Endpoint', 'value', parameters('acmeEndpoint')), createObject('name', 'Acmebot:VaultBaseUrl', 'value', if(parameters('createWithKeyVault'), format('https://{0}{1}', variables('keyVaultName'), environment().suffixes.keyvaultDns), parameters('keyVaultBaseUrl'))), createObject('name', 'Acmebot:Environment', 'value', environment().name)), parameters('additionalAppSettings'))]",
+          "netFrameworkVersion": "v8.0",
           "ftpsState": "Disabled",
           "minTlsVersion": "1.2",
           "scmMinTlsVersion": "1.2",
@@ -206,7 +206,7 @@
       "name": "[guid(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), variables('functionAppName'), variables('roleDefinitionId'))]",
       "properties": {
         "roleDefinitionId": "[variables('roleDefinitionId')]",
-        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2023-01-01', 'full').identity.principalId]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2023-12-01', 'full').identity.principalId]",
         "principalType": "ServicePrincipal"
       },
       "dependsOn": [
@@ -222,11 +222,11 @@
     },
     "principalId": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2023-01-01', 'full').identity.principalId]"
+      "value": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2023-12-01', 'full').identity.principalId]"
     },
     "tenantId": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2023-01-01', 'full').identity.tenantId]"
+      "value": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2023-12-01', 'full').identity.tenantId]"
     },
     "keyVaultName": {
       "type": "string",
