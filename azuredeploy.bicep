@@ -76,6 +76,10 @@ var acmebotAppSettings = [
     value: '~4'
   }
   {
+    name: 'FUNCTIONS_INPROC_NET8_ENABLED'
+    value: '1'
+  }
+  {
     name: 'FUNCTIONS_WORKER_RUNTIME'
     value: 'dotnet'
   }
@@ -97,7 +101,7 @@ var acmebotAppSettings = [
   }
 ]
 
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
   location: location
   kind: 'Storage'
@@ -111,7 +115,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   }
 }
 
-resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: appServicePlanName
   location: location
   sku: {
@@ -145,7 +149,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
+resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
   name: functionAppName
   location: location
   kind: 'functionapp'
@@ -158,7 +162,7 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
     serverFarmId: appServicePlan.id
     siteConfig: {
       appSettings: concat(acmebotAppSettings, additionalAppSettings)
-      netFrameworkVersion: 'v6.0'
+      netFrameworkVersion: 'v8.0'
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
       scmMinTlsVersion: '1.2'
