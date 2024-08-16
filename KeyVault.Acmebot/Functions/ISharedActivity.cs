@@ -16,7 +16,7 @@ public interface ISharedActivity
 
     Task<IReadOnlyList<CertificateItem>> GetAllCertificates(object input = null);
 
-    Task<IReadOnlyList<DnsZoneItem>> GetAllDnsZones(object input = null);
+    Task<IReadOnlyList<DnsZoneGroup>> GetAllDnsZones(object input = null);
 
     Task<CertificatePolicyItem> GetCertificatePolicy(string certificateName);
 

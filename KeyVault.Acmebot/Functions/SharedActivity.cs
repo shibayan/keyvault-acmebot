@@ -96,17 +96,21 @@ public class SharedActivity : ISharedActivity
     }
 
     [FunctionName(nameof(GetAllDnsZones))]
-    public async Task<IReadOnlyList<DnsZoneItem>> GetAllDnsZones([ActivityTrigger] object input = null)
+    public async Task<IReadOnlyList<DnsZoneGroup>> GetAllDnsZones([ActivityTrigger] object input = null)
     {
         try
         {
             var zones = await _dnsProviders.ListAllZonesAsync();
 
-            return zones.OrderBy(x => x.DnsProvider.Name).Select(x => x.ToDnsZoneItem()).ToArray();
+            return zones.Select(x => new DnsZoneGroup
+            {
+                DnsProviderName = x.Item1,
+                DnsZones = x.Item2?.Select(xs => xs.ToDnsZoneItem()).OrderBy(xs => xs.Name).ToArray()
+            }).ToArray();
         }
         catch
         {
-            return Array.Empty<DnsZoneItem>();
+            return Array.Empty<DnsZoneGroup>();
         }
     }
 
@@ -142,7 +146,7 @@ public class SharedActivity : ISharedActivity
         var (dnsProviderName, dnsNames) = input;
 
         // DNS zone の一覧を各 Provider から取得
-        var zones = await _dnsProviders.ListAllZonesAsync();
+        var zones = await _dnsProviders.FlattenAllZonesAsync();
 
         // DNS zone が存在するか確認
         var foundZones = new HashSet<DnsZone>();
@@ -253,7 +257,7 @@ public class SharedActivity : ISharedActivity
         }
 
         // DNS zone の一覧を各 Provider から取得
-        var zones = await (string.IsNullOrEmpty(dnsProviderName) ? _dnsProviders.ListAllZonesAsync() : _dnsProviders.ListZonesAsync(dnsProviderName));
+        var zones = (await (string.IsNullOrEmpty(dnsProviderName) ? _dnsProviders.FlattenAllZonesAsync() : _dnsProviders.ListZonesAsync(dnsProviderName)));
 
         var propagationSeconds = 0;
 
@@ -455,7 +459,7 @@ public class SharedActivity : ISharedActivity
         var (dnsProviderName, challengeResults) = input;
 
         // DNS zone の一覧を各 Provider から取得
-        var zones = await (string.IsNullOrEmpty(dnsProviderName) ? _dnsProviders.ListAllZonesAsync() : _dnsProviders.ListZonesAsync(dnsProviderName));
+        var zones = (await (string.IsNullOrEmpty(dnsProviderName) ? _dnsProviders.FlattenAllZonesAsync() : _dnsProviders.ListZonesAsync(dnsProviderName)));
 
         // DNS-01 の検証レコード名毎に DNS から TXT レコードを削除
         foreach (var lookup in challengeResults.ToLookup(x => x.DnsRecordName))

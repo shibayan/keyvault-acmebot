@@ -156,8 +156,10 @@
                       <div class="select" :class="{ 'is-loading': add.loading }">
                         <select v-model="add.zone">
                           <option disabled :value="null">Please select one</option>
-                          <optgroup v-for="(zones, dnsProviderName) in add.zones" :label="dnsProviderName">
-                            <option v-for="zone in zones" :value="zone">{{ toUnicode(zone.name) }}</option>
+                          <optgroup v-for="zones in add.zones" :label="zones.dnsProviderName">
+                            <option v-if="zones.dnsZones === null" disabled :value="null">fetch error</option>
+                            <option v-else-if="!zones.dnsZones.length" disabled :value="null">not found</option>
+                            <option v-else v-for="zone in zones.dnsZones" :value="zone">{{ toUnicode(zone.name) }}</option>
                           </optgroup>
                         </select>
                       </div>
@@ -546,17 +548,7 @@
             const response = await axios.get("/api/dns-zones");
 
             if (response.status === 200) {
-              this.add.zones = {};
-
-              for (var i = 0; i < response.data.length; i++) {
-                const item = response.data[i];
-
-                if (!this.add.zones[item.dnsProviderName]) {
-                  this.add.zones[item.dnsProviderName] = [];
-                }
-
-                this.add.zones[item.dnsProviderName].push(item);
-              }
+              this.add.zones = response.data;
             }
           } catch (error) {
             this.handleHttpError(error);
@@ -631,6 +623,10 @@
           await this.refresh();
         },
         async openAdd() {
+          this.add.recordName = "";
+          this.add.dnsNames = [];
+          this.add.dnsProviderName = "";
+          this.add.certificateName = "";
           this.add.modalActive = true;
 
           await this.loadDnsZones();
