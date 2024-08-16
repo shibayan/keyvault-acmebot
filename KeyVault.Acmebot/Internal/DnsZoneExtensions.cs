@@ -11,7 +11,7 @@ internal static class DnsZoneExtensions
 {
     public static DnsZoneItem ToDnsZoneItem(this DnsZone dnsZone)
     {
-        return new DnsZoneItem { Name = dnsZone.Name, DnsProviderName = dnsZone.DnsProvider.Name };
+        return new DnsZoneItem { Name = dnsZone.Name };
     }
 
     public static DnsZone FindDnsZone(this IEnumerable<DnsZone> dnsZones, string dnsName)

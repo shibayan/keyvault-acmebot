@@ -25,7 +25,7 @@ public class GetDnsZones : HttpFunctionBase
     }
 
     [FunctionName($"{nameof(GetDnsZones)}_{nameof(Orchestrator)}")]
-    public Task<IReadOnlyList<DnsZoneItem>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
+    public Task<IReadOnlyList<DnsZoneGroup>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
     {
         var activity = context.CreateActivityProxy<ISharedActivity>();
 
