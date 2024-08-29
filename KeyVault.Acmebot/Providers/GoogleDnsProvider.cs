@@ -35,10 +35,23 @@ public class GoogleDnsProvider : IDnsProvider
 
     public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
     {
-        var zones = await _dnsService.ManagedZones.List(_credsParameters.ProjectId).ExecuteAsync();
+        var zones = new List<ManagedZone>();
 
-        return zones.ManagedZones
-                    .Select(x => new DnsZone(this) { Id = x.Name, Name = x.DnsName.TrimEnd('.'), NameServers = x.NameServers.ToArray() })
+        ManagedZonesListResponse response = null;
+
+        do
+        {
+            var request = _dnsService.ManagedZones.List(_credsParameters.ProjectId);
+
+            request.PageToken = response?.NextPageToken;
+
+            response = await request.ExecuteAsync();
+
+            zones.AddRange(response.ManagedZones);
+
+        } while (!string.IsNullOrEmpty(response.NextPageToken));
+
+        return zones.Select(x => new DnsZone(this) { Id = x.Name, Name = x.DnsName.TrimEnd('.'), NameServers = x.NameServers.ToArray() })
                     .ToArray();
     }
 
