@@ -28,9 +28,22 @@ public class Route53Provider : IDnsProvider
 
     public async Task<IReadOnlyList<DnsZone>> ListZonesAsync()
     {
-        var zones = await _amazonRoute53Client.ListHostedZonesAsync();
+        var zones = new List<HostedZone>();
 
-        return zones.HostedZones.Select(x => new DnsZone(this) { Id = x.Id, Name = x.Name.TrimEnd('.') }).ToArray();
+        ListHostedZonesResponse response = null;
+
+        do
+        {
+            response = await _amazonRoute53Client.ListHostedZonesAsync(new ListHostedZonesRequest
+            {
+                Marker = response?.NextMarker
+            });
+
+            zones.AddRange(response.HostedZones);
+
+        } while (response.IsTruncated);
+
+        return zones.Select(x => new DnsZone(this) { Id = x.Id, Name = x.Name.TrimEnd('.') }).ToArray();
     }
 
     public Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
