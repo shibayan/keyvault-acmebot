@@ -2,7 +2,7 @@
   Key Vault Acmebot
 </h1>
 <p align="center">
-  Automated ACME SSL/TLS certificates issuer for Azure Key Vault (App Gateway / Front Door / CDN / others)
+  Automated ACME SSL/TLS certificates issuer for Azure Key Vault (App Service / Container Apps / App Gateway / Front Door / CDN / others)
 </p>
 <p align="center">
   <a href="https://github.com/shibayan/keyvault-acmebot/actions/workflows/build.yml" rel="nofollow"><img src="https://github.com/shibayan/keyvault-acmebot/workflows/Build/badge.svg" alt="Build" style="max-width: 100%;"></a>
@@ -41,8 +41,10 @@ Key Vault Acmebot provides secure and centralized management of ACME certificate
   - [Google Trust Services](https://pki.goog/) (Requires EAB Credentials)
   - [SSL.com](https://www.ssl.com/how-to/order-free-90-day-ssl-tls-certificates-with-acme/) (Requires EAB Credentials)
   - [Entrust](https://www.entrust.com/) (Requires EAB Credentials)
-- Azure App Services (Web Apps / Functions / Containers, regardless of OS)
-- Azure CDN / Front Door / Application Gateway v2 / etc
+- Certificates can be used with many Azure services
+  - Azure App Services (Web Apps / Functions / Containers, regardless of OS)
+  - Azure Container Apps
+  - Azure CDN / Front Door / Application Gateway v2
 
 ## Deployment
 
