@@ -4,8 +4,8 @@
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Route53" Version="3.7.402.11" />
-    <PackageReference Include="Azure.Identity" Version="1.12.0" />
+    <PackageReference Include="AWSSDK.Route53" Version="3.7.402.15" />
+    <PackageReference Include="Azure.Identity" Version="1.12.1" />
     <PackageReference Include="Azure.ResourceManager.Dns" Version="1.1.1" />
     <PackageReference Include="Azure.ResourceManager.PrivateDns" Version="1.2.0" />
     <PackageReference Include="Azure.Security.KeyVault.Certificates" Version="4.6.0" />
