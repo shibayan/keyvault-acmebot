@@ -55,13 +55,15 @@ internal static class CertificateExtensions
             KeyType = certificate.Policy.KeyType?.ToString(),
             KeySize = certificate.Policy.KeySize,
             KeyCurveName = certificate.Policy.KeyCurveName?.ToString(),
-            ReuseKey = certificate.Policy.ReuseKey
+            ReuseKey = certificate.Policy.ReuseKey,
+            DnsAlias = certificate.Properties.Tags.TryGetDnsAlias(out var dnsAlias) ? dnsAlias : ""
         };
     }
 
     private const string IssuerKey = "Issuer";
     private const string EndpointKey = "Endpoint";
     private const string DnsProviderKey = "DnsProvider";
+    private const string DnsAliasKey = "DnsAlias";
 
     private const string IssuerValue = "Acmebot";
 
@@ -70,6 +72,9 @@ internal static class CertificateExtensions
     private static bool TryGetEndpoint(this IDictionary<string, string> tags, out string endpoint) => tags.TryGetValue(EndpointKey, out endpoint);
 
     private static bool TryGetDnsProvider(this IDictionary<string, string> tags, out string dnsProviderName) => tags.TryGetValue(DnsProviderKey, out dnsProviderName);
+
+    private static bool TryGetDnsAlias(this IDictionary<string, string> tags, out string dnsAlias) => tags.TryGetValue(DnsAliasKey, out dnsAlias);
+
 
     private static string ToHexString(byte[] bytes)
     {

@@ -391,7 +391,8 @@ public class SharedActivity : ISharedActivity
             {
                 { "Issuer", "Acmebot" },
                 { "Endpoint", _options.Endpoint.Host },
-                { "DnsProvider", certificatePolicyItem.DnsProviderName }
+                { "DnsProvider", certificatePolicyItem.DnsProviderName },
+                { "DnsAlias", certificatePolicyItem.DnsAlias }
             });
 
             csr = certificateOperation.Properties.Csr;
