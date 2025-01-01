@@ -24,9 +24,9 @@ public interface ISharedActivity
 
     Task<OrderDetails> Order(IReadOnlyList<string> dnsNames);
 
-    Task<string> Dns01Precondition((string, IReadOnlyList<string>) input);
+    Task<string> Dns01Precondition(CertificatePolicyItem certificatePolicyItem);
 
-    Task<(IReadOnlyList<AcmeChallengeResult>, int)> Dns01Authorization((string, IReadOnlyList<string>) input);
+    Task<(IReadOnlyList<AcmeChallengeResult>, int)> Dns01Authorization((string, string, IReadOnlyList<string>) input);
 
     [RetryOptions("00:00:10", 12, HandlerType = typeof(ExceptionRetryStrategy<RetriableActivityException>))]
     Task CheckDnsChallenge(IReadOnlyList<AcmeChallengeResult> challengeResults);

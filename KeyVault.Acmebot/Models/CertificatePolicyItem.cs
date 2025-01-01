@@ -31,6 +31,11 @@ public class CertificatePolicyItem : IValidatableObject
     [JsonProperty("reuseKey")]
     public bool? ReuseKey { get; set; }
 
+    [JsonProperty("dnsAlias")]
+    public string DnsAlias { get; set; }
+
+    public IEnumerable<string> AliasedDnsNames => string.IsNullOrEmpty(DnsAlias) ? DnsNames : new[] { DnsAlias };
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (DnsNames is null || DnsNames.Length == 0)
