@@ -141,10 +141,8 @@ public class SharedActivity : ISharedActivity
     }
 
     [FunctionName(nameof(Dns01Precondition))]
-    public async Task<string> Dns01Precondition([ActivityTrigger] (string, IReadOnlyList<string>) input)
+    public async Task<string> Dns01Precondition([ActivityTrigger] CertificatePolicyItem certificatePolicyItem)
     {
-        var (dnsProviderName, dnsNames) = input;
-
         // DNS zone の一覧を各 Provider から取得
         var zones = await _dnsProviders.FlattenAllZonesAsync();
 
@@ -152,7 +150,7 @@ public class SharedActivity : ISharedActivity
         var foundZones = new HashSet<DnsZone>();
         var notFoundZoneDnsNames = new List<string>();
 
-        foreach (var dnsName in dnsNames)
+        foreach (var dnsName in certificatePolicyItem.AliasedDnsNames)
         {
             var zone = zones.FindDnsZone(dnsName);
 
@@ -195,7 +193,7 @@ public class SharedActivity : ISharedActivity
         }
 
         // 指定された DNS Provider に属する DNS zone を優先する
-        var dnsProvider = foundZones.Select(x => x.DnsProvider).FirstOrDefault(x => x.Name == dnsProviderName);
+        var dnsProvider = foundZones.Select(x => x.DnsProvider).FirstOrDefault(x => x.Name == certificatePolicyItem.DnsProviderName);
 
         // DNS zone の属する Provider が変わった可能性があるのでフォールバック
         if (dnsProvider is null)
@@ -218,9 +216,9 @@ public class SharedActivity : ISharedActivity
     }
 
     [FunctionName(nameof(Dns01Authorization))]
-    public async Task<(IReadOnlyList<AcmeChallengeResult>, int)> Dns01Authorization([ActivityTrigger] (string, IReadOnlyList<string>) input)
+    public async Task<(IReadOnlyList<AcmeChallengeResult>, int)> Dns01Authorization([ActivityTrigger] (string, string, IReadOnlyList<string>) input)
     {
-        var (dnsProviderName, authorizationUrls) = input;
+        var (dnsProviderName, dnsAlias, authorizationUrls) = input;
 
         var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
@@ -251,7 +249,7 @@ public class SharedActivity : ISharedActivity
             challengeResults.Add(new AcmeChallengeResult
             {
                 Url = challenge.Url,
-                DnsRecordName = challengeValidationDetails.DnsRecordName,
+                DnsRecordName = string.IsNullOrEmpty(dnsAlias) ? challengeValidationDetails.DnsRecordName : $"_acme-challenge.{dnsAlias}",
                 DnsRecordValue = challengeValidationDetails.DnsRecordValue
             });
         }
@@ -393,7 +391,8 @@ public class SharedActivity : ISharedActivity
             {
                 { "Issuer", "Acmebot" },
                 { "Endpoint", _options.Endpoint.Host },
-                { "DnsProvider", certificatePolicyItem.DnsProviderName }
+                { "DnsProvider", certificatePolicyItem.DnsProviderName },
+                { "DnsAlias", certificatePolicyItem.DnsAlias }
             });
 
             csr = certificateOperation.Properties.Csr;
