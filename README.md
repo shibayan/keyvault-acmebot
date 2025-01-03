@@ -42,9 +42,13 @@ Key Vault Acmebot provides secure and centralized management of ACME certificate
   - [SSL.com](https://www.ssl.com/how-to/order-free-90-day-ssl-tls-certificates-with-acme/) (Requires EAB Credentials)
   - [Entrust](https://www.entrust.com/) (Requires EAB Credentials)
 - Certificates can be used with many Azure services
-  - Azure App Services (Web Apps / Functions / Containers, regardless of OS)
-  - Azure Container Apps
-  - Azure CDN / Front Door / Application Gateway v2
+  - Azure App Services (Web Apps / Functions / Containers)
+  - Azure Container Apps (Include custom DNS suffix)
+  - Front Door (Standard / Premium)
+  - Application Gateway v2
+  - API Management
+  - SignalR Service (Premium)
+  - Virtual Machine
 
 ## Deployment
 
