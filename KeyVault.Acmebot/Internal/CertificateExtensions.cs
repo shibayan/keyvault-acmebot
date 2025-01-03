@@ -60,6 +60,23 @@ internal static class CertificateExtensions
         };
     }
 
+    public static IDictionary<string, string> ToCertificateMetadata(this CertificatePolicyItem certificatePolicyItem, Uri endpoint)
+    {
+        var metadata = new Dictionary<string, string>
+        {
+            { IssuerKey, IssuerValue },
+            { EndpointKey, endpoint.Host },
+            { DnsProviderKey, certificatePolicyItem.DnsProviderName }
+        };
+
+        if (!string.IsNullOrEmpty(certificatePolicyItem.DnsAlias))
+        {
+            metadata.Add(DnsAliasKey, certificatePolicyItem.DnsAlias);
+        }
+
+        return metadata;
+    }
+
     private const string IssuerKey = "Issuer";
     private const string EndpointKey = "Endpoint";
     private const string DnsProviderKey = "DnsProvider";
@@ -74,7 +91,6 @@ internal static class CertificateExtensions
     private static bool TryGetDnsProvider(this IDictionary<string, string> tags, out string dnsProviderName) => tags.TryGetValue(DnsProviderKey, out dnsProviderName);
 
     private static bool TryGetDnsAlias(this IDictionary<string, string> tags, out string dnsAlias) => tags.TryGetValue(DnsAliasKey, out dnsAlias);
-
 
     private static string ToHexString(byte[] bytes)
     {

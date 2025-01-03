@@ -386,14 +386,9 @@ public class SharedActivity : ISharedActivity
         try
         {
             var certificatePolicy = certificatePolicyItem.ToCertificatePolicy();
+            var metadata = certificatePolicyItem.ToCertificateMetadata(_options.Endpoint);
 
-            var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificatePolicyItem.CertificateName, certificatePolicy, tags: new Dictionary<string, string>
-            {
-                { "Issuer", "Acmebot" },
-                { "Endpoint", _options.Endpoint.Host },
-                { "DnsProvider", certificatePolicyItem.DnsProviderName },
-                { "DnsAlias", certificatePolicyItem.DnsAlias }
-            });
+            var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificatePolicyItem.CertificateName, certificatePolicy, tags: metadata);
 
             csr = certificateOperation.Properties.Csr;
         }
