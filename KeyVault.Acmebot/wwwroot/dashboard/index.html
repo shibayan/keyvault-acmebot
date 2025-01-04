@@ -439,6 +439,16 @@
                     </div>
                   </div>
                 </div>
+                <div v-if="details.certificate.dnsAlias !== ''" class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">DNS Alias</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      {{ details.certificate.dnsAlias }}
+                    </div>
+                  </div>
+                </div>
                 <div v-if="details.certificate.dnsProviderName !== ''" class="field is-horizontal">
                   <div class="field-label">
                     <label class="label">DNS Provider Name</label>
