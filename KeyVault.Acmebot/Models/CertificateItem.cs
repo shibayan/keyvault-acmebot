@@ -51,4 +51,7 @@ public class CertificateItem
 
     [JsonProperty("acmeEndpoint")]
     public string AcmeEndpoint { get; set; }
+
+    [JsonProperty("dnsAlias")]
+    public string DnsAlias { get; set; }
 }
