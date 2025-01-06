@@ -89,7 +89,7 @@ public class Startup : FunctionsStartup
 
             if (options.Webhook is null)
             {
-                return new GenericPayloadBuilder();
+                return new GenericPayloadBuilder(options);
             }
 
             if (options.Webhook.Host.EndsWith("hooks.slack.com", StringComparison.OrdinalIgnoreCase))
@@ -102,7 +102,7 @@ public class Startup : FunctionsStartup
                 return new TeamsPayloadBuilder();
             }
 
-            return new GenericPayloadBuilder();
+            return new GenericPayloadBuilder(options);
         });
 
         // Add DNS Providers

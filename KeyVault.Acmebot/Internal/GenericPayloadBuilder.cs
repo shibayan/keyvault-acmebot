@@ -1,10 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using KeyVault.Acmebot.Options;
+
 namespace KeyVault.Acmebot.Internal;
 
 internal class GenericPayloadBuilder : IWebhookPayloadBuilder
 {
+    public GenericPayloadBuilder(AcmebotOptions options)
+    {
+        _options = options;
+    }
+
+    private readonly AcmebotOptions _options;
+
     public object BuildCompleted(string certificateName, DateTimeOffset? expirationDate, IEnumerable<string> dnsNames, string acmeEndpoint)
     {
         return new
@@ -12,7 +21,9 @@ internal class GenericPayloadBuilder : IWebhookPayloadBuilder
             certificateName,
             expirationDate,
             dnsNames,
-            acmeEndpoint
+            acmeEndpoint,
+            keyVaultName = new Uri(_options.VaultBaseUrl).Host,
+            functionAppName = Constants.FunctionAppName
         };
     }
 
@@ -21,7 +32,9 @@ internal class GenericPayloadBuilder : IWebhookPayloadBuilder
         return new
         {
             functionName,
-            reason
+            reason,
+            keyVaultName = new Uri(_options.VaultBaseUrl).Host,
+            functionAppName = Constants.FunctionAppName
         };
     }
 }
