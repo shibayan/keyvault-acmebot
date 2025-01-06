@@ -9,17 +9,53 @@ internal class TeamsPayloadBuilder : IWebhookPayloadBuilder
     {
         return new
         {
-            title = "Acmebot",
-            text = @$"A new certificate has been issued.
-
-**Certificate Name**: {certificateName}
-
-**Expiration Date**: {expirationDate}
-
-**ACME Endpoint**: {acmeEndpoint}
-
-**DNS Names**: {string.Join(", ", dnsNames)}",
-            themeColor = "2EB886"
+            type = "message",
+            attachments = new[]
+            {
+                new
+                {
+                    contentType = "application/vnd.microsoft.card.adaptive",
+                    content = new
+                    {
+                        type = "AdaptiveCard",
+                        body = new object[]
+                        {
+                            new
+                            {
+                                type = "TextBlock",
+                                text = "A new certificate has been issued.",
+                                wrap = true
+                            },
+                            new{
+                                type = "FactSet",
+                                facts = new object[]
+                                {
+                                    new
+                                    {
+                                        title = "Certificate Name",
+                                        value = certificateName
+                                    },
+                                    new
+                                    {
+                                        title = "Expiration Date",
+                                        value = expirationDate
+                                    },
+                                    new
+                                    {
+                                        title = "ACME Endpoint",
+                                        value = acmeEndpoint
+                                    },
+                                    new
+                                    {
+                                        title = "DNS Names",
+                                        value = string.Join("\n", dnsNames)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         };
     }
 
@@ -27,13 +63,36 @@ internal class TeamsPayloadBuilder : IWebhookPayloadBuilder
     {
         return new
         {
-            title = "Acmebot",
-            text = @$"**{functionName}**
-
-**Reason**
-
-{reason}",
-            themeColor = "A30200"
+            type = "message",
+            attachments = new[]
+            {
+                new
+                {
+                    contentType = "application/vnd.microsoft.card.adaptive",
+                    content = new
+                    {
+                        type = "AdaptiveCard",
+                        body = new object[]
+                        {
+                            new
+                            {
+                                type = "TextBlock",
+                                size = "Medium",
+                                weight = "Bolder",
+                                text = functionName,
+                                style = "heading",
+                                wrap = true
+                            },
+                            new
+                            {
+                                type = "TextBlock",
+                                text = reason,
+                                wrap = true
+                            }
+                        }
+                    }
+                }
+            }
         };
     }
 }
