@@ -97,9 +97,14 @@ public class Startup : FunctionsStartup
                 return new SlackPayloadBuilder();
             }
 
-            if (options.Webhook.Host.EndsWith(".office.com", StringComparison.OrdinalIgnoreCase))
+            if (options.Webhook.Host.EndsWith(".logic.azure.com", StringComparison.OrdinalIgnoreCase))
             {
                 return new TeamsPayloadBuilder();
+            }
+
+            if (options.Webhook.Host.EndsWith(".office.com", StringComparison.OrdinalIgnoreCase))
+            {
+                return new LegacyTeamsPayloadBuilder();
             }
 
             return new GenericPayloadBuilder(options);
