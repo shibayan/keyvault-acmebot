@@ -106,15 +106,13 @@ public class AcmeProtocolClientFactory
         {
             var hmacKeyBytes = CryptoHelper.Base64.UrlDecode(_options.ExternalAccountBinding.HmacKey);
 
-            var hmac = (HMAC)(_options.ExternalAccountBinding.Algorithm switch
+            return _options.ExternalAccountBinding.Algorithm switch
             {
-                "HS256" => new HMACSHA256(hmacKeyBytes),
-                "HS384" => new HMACSHA384(hmacKeyBytes),
-                "HS512" => new HMACSHA512(hmacKeyBytes),
+                "HS256" => HMACSHA256.HashData(hmacKeyBytes, x),
+                "HS384" => HMACSHA384.HashData(hmacKeyBytes, x),
+                "HS512" => HMACSHA512.HashData(hmacKeyBytes, x),
                 _ => throw new NotSupportedException($"The signature algorithm {_options.ExternalAccountBinding.Algorithm} is not supported. (supported values are HS256 / HS384 / HS512)")
-            });
-
-            return hmac.ComputeHash(x);
+            };
         }
 
         var payload = JsonConvert.SerializeObject(acmeProtocolClient.Signer.ExportJwk());

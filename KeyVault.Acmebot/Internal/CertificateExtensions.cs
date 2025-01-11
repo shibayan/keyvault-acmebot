@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 using Azure.Security.KeyVault.Certificates;
 
@@ -33,7 +32,7 @@ internal static class CertificateExtensions
             DnsProviderName = certificate.Properties.Tags.TryGetDnsProvider(out var dnsProviderName) ? dnsProviderName : "",
             CreatedOn = certificate.Properties.CreatedOn.Value,
             ExpiresOn = certificate.Properties.ExpiresOn.Value,
-            X509Thumbprint = ToHexString(certificate.Properties.X509Thumbprint),
+            X509Thumbprint = Convert.ToHexString(certificate.Properties.X509Thumbprint),
             KeyType = certificate.Policy.KeyType?.ToString(),
             KeySize = certificate.Policy.KeySize,
             KeyCurveName = certificate.Policy.KeyCurveName?.ToString(),
@@ -92,20 +91,6 @@ internal static class CertificateExtensions
     private static bool TryGetDnsProvider(this IDictionary<string, string> tags, out string dnsProviderName) => tags.TryGetValue(DnsProviderKey, out dnsProviderName);
 
     private static bool TryGetDnsAlias(this IDictionary<string, string> tags, out string dnsAlias) => tags.TryGetValue(DnsAliasKey, out dnsAlias);
-
-    private static string ToHexString(byte[] bytes)
-    {
-        ArgumentNullException.ThrowIfNull(bytes);
-
-        var result = new StringBuilder();
-
-        foreach (var b in bytes)
-        {
-            result.Append(b.ToString("x2"));
-        }
-
-        return result.ToString();
-    }
 
     private static string NormalizeEndpoint(string endpoint) => Uri.TryCreate(endpoint, UriKind.Absolute, out var legacyEndpoint) ? legacyEndpoint.Host : endpoint;
 }
