@@ -44,16 +44,11 @@ var appInsightsName = 'appi-${appNamePrefix}-${substring(uniqueString(resourceGr
 var workspaceName = 'log-${appNamePrefix}-${substring(uniqueString(resourceGroup().id, deployment().name), 0, 4)}'
 var storageAccountName = 'st${uniqueString(resourceGroup().id, deployment().name)}func'
 var keyVaultName = 'kv-${appNamePrefix}-${substring(uniqueString(resourceGroup().id, deployment().name), 0, 4)}'
-var appInsightsEndpoints = {
-  AzureCloud: 'applicationinsights.azure.com'
-  AzureChinaCloud: 'applicationinsights.azure.cn'
-  AzureUSGovernment: 'applicationinsights.us'
-}
 var roleDefinitionId = resourceId('Microsoft.Authorization/roleDefinitions/', 'a4417e6f-fecd-4de8-b567-7b0420556985')
 var acmebotAppSettings = [
   {
     name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-    value: 'InstrumentationKey=${appInsights.properties.InstrumentationKey};EndpointSuffix=${appInsightsEndpoints[environment().name]}'
+    value: appInsights.properties.ConnectionString
   }
   {
     name: 'AzureWebJobsStorage'
@@ -115,7 +110,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   }
 }
 
-resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: appServicePlanName
   location: location
   sku: {
@@ -149,7 +144,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
+resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
   name: functionAppName
   location: location
   kind: 'functionapp'
