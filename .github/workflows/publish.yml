@@ -6,7 +6,7 @@ on:
 
 env:
   DOTNET_VERSION: 6.0.x
-  BICEP_VERSION: 0.28.1
+  BICEP_VERSION: 0.33.93
 
 jobs:
   publish:
