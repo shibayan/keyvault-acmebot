@@ -45,7 +45,7 @@ internal class AzurePrivateDnsProvider : IDnsProvider
     public Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
     {
         // TXT レコードに値をセットする
-        var txtRecordData = new PrivateDnsTxtRecordData();
+        var txtRecordData = new PrivateDnsTxtRecordData() { TtlInSeconds = 3600 };
 
         foreach (var value in values)
         {
