@@ -11,6 +11,8 @@ env:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       version: ${{ steps.setup_version.outputs.version }}
     steps:
@@ -42,12 +44,12 @@ jobs:
           azuredeploy.bicep
 
   deploy:
-    environment: production
+    runs-on: ubuntu-latest
     needs: publish
     permissions:
-      id-token: write
       contents: read
-    runs-on: ubuntu-latest
+      id-token: write
+    environment: production
     steps:
     - name: Azure Login
       uses: azure/login@v2
