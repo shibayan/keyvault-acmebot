@@ -8,6 +8,9 @@
 *tfstate*
 *tfplan*
 
+# VSC
+.vscode
+
 # User-specific files
 *.rsuser
 *.suo
