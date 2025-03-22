@@ -4,6 +4,8 @@ name: Deploy DotNet project to Azure Function App
 on:
   push:
     branches: ["master"]
+    paths:
+      - "IaC/**"
 
 permissions:
   id-token: write # Require write permission to Fetch an OIDC token.
