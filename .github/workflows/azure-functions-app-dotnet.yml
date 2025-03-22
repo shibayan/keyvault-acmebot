@@ -10,7 +10,6 @@ jobs:
     permissions:
       id-token: write # Require write permission to Fetch an OIDC token.
     runs-on: ubuntu-latest # For Linux, use ubuntu-latest
-    environment: dev
     steps:
     - name: 'Checkout GitHub Action'
       uses: actions/checkout@v4
