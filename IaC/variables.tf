@@ -1,6 +1,6 @@
 variable "sub_client_id" {
   type = string
-  
+
 }
 
 variable "app_base_name" {
