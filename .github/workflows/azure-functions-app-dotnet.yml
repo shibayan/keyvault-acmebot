@@ -41,7 +41,7 @@ jobs:
 
     # Generates an execution plan for Terraform
     - name: Terraform Plan
-      run: terraform plan -input=false
+      run: terraform plan -input=false -var=cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}
       working-directory: ./IaC
 
     #   # On push to "master", build or change infrastructure according to Terraform configuration files
