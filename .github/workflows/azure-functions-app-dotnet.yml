@@ -26,6 +26,8 @@ jobs:
 
     - run: sudo ip link set up dev wg0
 
+    - run: ifconfig
+
     - run: curl -vvv https://ipinfo.io/ip
 
     # - name: 'Checkout GitHub Action'
