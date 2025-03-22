@@ -26,7 +26,7 @@ jobs:
 
     - run: sudo ip link set up dev wg0
 
-    - run: curl -vvv google.com
+    - run: curl -vvv https://ipinfo.io/ip
 
     # - name: 'Checkout GitHub Action'
     #   uses: actions/checkout@v4
