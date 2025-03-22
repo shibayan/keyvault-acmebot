@@ -14,18 +14,6 @@ jobs:
     runs-on: ubuntu-latest # For Linux, use ubuntu-latest
     environment: 'dev'
     steps:
-    # - run: sudo apt install wireguard
-
-    # - run: echo "${{ secrets.WIREGUARD_PRIVATE_KEY }}" > privatekey
-
-    # - run: sudo ip link add dev wg0 type wireguard
-
-    # - run: sudo ip address add dev wg0 10.11.0.7 peer 10.11.0.1
-
-    # - run: sudo wg set wg0 listen-port 48123 private-key privatekey peer ${{ secrets.WIREGUARD_PUBLIC_KEY }} allowed-ips 0.0.0.0/0 endpoint ${{ secrets.WIREGUARD_ENDPOINT }}
-
-    # - run: sudo ip link set up dev wg0
-
     - name: Set up WireGuard Connection
       uses: niklaskeerl/easy-wireguard-action@v2
       with:
@@ -41,36 +29,36 @@ jobs:
 
     - run: curl -vvv https://ipinfo.io/ip
 
-    # - name: 'Checkout GitHub Action'
-    #   uses: actions/checkout@v4
+    - name: 'Checkout GitHub Action'
+      uses: actions/checkout@v4
 
-    # - name: Azure CLI Login
-    #   uses: azure/login@v2
-    #   with:
-    #     client-id: ${{ vars.AZURE_CLIENT_ID }}
-    #     tenant-id: ${{ vars.AZURE_TENANT_ID }}
-    #     subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+    - name: Azure CLI Login
+      uses: azure/login@v2
+      with:
+        client-id: ${{ vars.AZURE_CLIENT_ID }}
+        tenant-id: ${{ vars.AZURE_TENANT_ID }}
+        subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-    # # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
-    # - name: Setup Terraform
-    #   uses: hashicorp/setup-terraform@v3
-    #   with:
-    #     cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
-    # # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-    # - name: Terraform Init
-    #   run: terraform init
-    #   working-directory: ./IaC
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      run: terraform init
+      working-directory: ./IaC
 
-    # # Checks that all Terraform configuration files adhere to a canonical format
-    # - name: Terraform Format
-    #   run: terraform fmt -check
-    #   working-directory: ./IaC
+    # Checks that all Terraform configuration files adhere to a canonical format
+    - name: Terraform Format
+      run: terraform fmt -check
+      working-directory: ./IaC
 
-    # # Generates an execution plan for Terraform
-    # - name: Terraform Plan
-    #   run: terraform plan -out tf_plan.tfplan -input=false -var "cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}"
-    #   working-directory: ./IaC
+    # Generates an execution plan for Terraform
+    - name: Terraform Plan
+      run: terraform plan -out tf_plan.tfplan -input=false -var "cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}"
+      working-directory: ./IaC
 
     # #   # On push to "master", build or change infrastructure according to Terraform configuration files
     # #   # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
