@@ -26,20 +26,20 @@ jobs:
 
     # - run: sudo ip link set up dev wg0
 
-    # - run: ifconfig
-
-    # - run: sudo wg show
-
-    # - run: sudo wg showconf
-
-    # - run: traceroute 10.33.0.6
-
-    # - run: curl -vvv https://ipinfo.io/ip
-
     - name: Set up WireGuard Connection
       uses: niklaskeerl/easy-wireguard-action@v2
       with:
         WG_CONFIG_FILE: ${{ secrets.WG_CONFIG_FILE }}
+
+    - run: ifconfig
+
+    - run: sudo wg show
+
+    - run: sudo wg showconf
+
+    - run: traceroute 10.33.0.6
+
+    - run: curl -vvv https://ipinfo.io/ip
 
     # - name: 'Checkout GitHub Action'
     #   uses: actions/checkout@v4
