@@ -28,6 +28,10 @@ jobs:
 
     - run: ifconfig
 
+    - run: ping 10.11.0.1
+
+    - run: traceroute 10.33.0.6
+
     - run: curl -vvv https://ipinfo.io/ip
 
     # - name: 'Checkout GitHub Action'
