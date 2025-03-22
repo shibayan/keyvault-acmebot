@@ -9,6 +9,10 @@ permissions:
   id-token: write # Require write permission to Fetch an OIDC token.
   contents: read
 
+env:
+  additional_tf_vars: '"-var "cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}" -var "sub_client_id=${{ secrets.AZURE_CLIENT_ID }}"'
+  ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+
 jobs:
   TerraformDeploy:
     runs-on: ubuntu-latest # For Linux, use ubuntu-latest
@@ -57,11 +61,11 @@ jobs:
 
     # Generates an execution plan for Terraform
     - name: Terraform Plan
-      run: terraform plan -out tf_plan.tfplan -input=false -var "cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}" -var "sub_client_id=${{ secrets.AZURE_CLIENT_ID }}"
+      run: terraform plan -out tf_plan.tfplan -input=false ${{ env.additional_tf_vars }}
       working-directory: ./IaC
 
     # #   # On push to "master", build or change infrastructure according to Terraform configuration files
     # #   # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
     # # - name: Terraform Apply
     # #   if: github.ref == 'refs/heads/"master"' && github.event_name == 'push'
-    # #   run: terraform apply "tf_plan.tfplan" -auto-approve -input=false
+    # #   run: terraform apply "tf_plan.tfplan" -auto-approve -input=false ${{ env.additional_tf_vars }}
