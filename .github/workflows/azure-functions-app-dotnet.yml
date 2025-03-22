@@ -1,11 +1,11 @@
 
-name: Deploy DotNet project to Azure Function App
+name: Deploy Keyvault ACME Cert Bot
 
 on:
   push:
     branches: ["master"]
-    paths:
-      - "IaC/**"
+    paths-ignore:
+      - '.github/workflows/**'
 
 permissions:
   id-token: write # Require write permission to Fetch an OIDC token.
