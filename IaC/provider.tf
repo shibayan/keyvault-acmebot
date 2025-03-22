@@ -11,6 +11,17 @@ terraform {
       version = "5.1.0"
     }
   }
+  backend "azurerm" {
+    resource_group_name  = "rg-wus2-base-infra-01"                       # Can be passed via `-backend-config=`"resource_group_name=<resource group name>"` in the `init` command.
+    storage_account_name = "stgwus2baseinfra01"                          # Can be passed via `-backend-config=`"storage_account_name=<storage account name>"` in the `init` command.
+    container_name       = "terraform-workload-tfstate"                  # Can be passed via `-backend-config=`"container_name=<container name>"` in the `init` command.
+    key                  = "WUS2-DEV-keyvault-acmebot.terraform.tfstate" # Can be passed via `-backend-config=`"key=<blob key name>"` in the `init` command.
+    use_oidc             = true                                          # Can also be set via `ARM_USE_OIDC` environment variable.
+    client_id            = "ceba5876-6c50-4a1c-962d-a9eca969dace"        # Can also be set via `ARM_CLIENT_ID` environment variable.
+    subscription_id      = "1ac7d30e-1440-4f30-9544-3fb860f07736"        # Can also be set via `ARM_SUBSCRIPTION_ID` environment variable.
+    tenant_id            = "d312c5af-612c-4812-b977-2b95c20f7182"        # Can also be set via `ARM_TENANT_ID` environment variable.
+    use_azuread_auth     = true                                          # Can also be set via `ARM_USE_AZUREAD` environment variable.
+  }
 }
 
 # Configure the Microsoft Azure Provider
