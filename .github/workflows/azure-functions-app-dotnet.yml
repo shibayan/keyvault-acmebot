@@ -19,19 +19,15 @@ jobs:
     environment: 'dev'
     steps:
     - name: Set up WireGuard Connection
-      uses: niklaskeerl/easy-wireguard-action@v2
-      with:
-        WG_CONFIG_FILE: ${{ secrets.WG_CONFIG_FILE }}
-
-    - run: ifconfig
-
-    - run: sudo wg show
-
-    # - run: sudo wg showconf
-
-    - run: curl -vvv http://pi.hole/admin/login
-
-    - run: curl -vvv https://ipinfo.io/ip
+      # uses: niklaskeerl/easy-wireguard-action@v2
+      run: |
+        sudo apt install resolvconf
+        sudo apt install wireguard
+        echo "${{ secrets.WG_CONFIG_FILE }}" > wg0.conf
+        sudo chmod 600 wg0.conf
+        echo "setting config"
+        sudo wg-quick up ./wg0.conf
+      shell: bash
 
     - name: 'Checkout GitHub Action'
       uses: actions/checkout@v4
@@ -42,13 +38,7 @@ jobs:
         client-id: ${{ vars.AZURE_CLIENT_ID }}
         tenant-id: ${{ vars.AZURE_TENANT_ID }}
         subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-
-    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-
+        
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
       run: terraform init
