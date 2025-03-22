@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  additional_tf_vars: '-var "cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}" -var "sub_client_id=${{ secrets.AZURE_CLIENT_ID }}"'
+  additional_tf_vars: '-var "cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}"'
   ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
 
 jobs:
