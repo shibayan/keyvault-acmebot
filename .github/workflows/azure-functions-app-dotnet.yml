@@ -14,27 +14,32 @@ jobs:
     runs-on: ubuntu-latest # For Linux, use ubuntu-latest
     environment: 'dev'
     steps:
-    - run: sudo apt install wireguard
+    # - run: sudo apt install wireguard
 
-    - run: echo "${{ secrets.WIREGUARD_PRIVATE_KEY }}" > privatekey
+    # - run: echo "${{ secrets.WIREGUARD_PRIVATE_KEY }}" > privatekey
 
-    - run: sudo ip link add dev wg0 type wireguard
+    # - run: sudo ip link add dev wg0 type wireguard
 
-    - run: sudo ip address add dev wg0 10.11.0.7 peer 10.11.0.1
+    # - run: sudo ip address add dev wg0 10.11.0.7 peer 10.11.0.1
 
-    - run: sudo wg set wg0 listen-port 48123 private-key privatekey peer ${{ secrets.WIREGUARD_PUBLIC_KEY }} allowed-ips 0.0.0.0/0 endpoint ${{ secrets.WIREGUARD_ENDPOINT }}
+    # - run: sudo wg set wg0 listen-port 48123 private-key privatekey peer ${{ secrets.WIREGUARD_PUBLIC_KEY }} allowed-ips 0.0.0.0/0 endpoint ${{ secrets.WIREGUARD_ENDPOINT }}
 
-    - run: sudo ip link set up dev wg0
+    # - run: sudo ip link set up dev wg0
 
-    - run: ifconfig
+    # - run: ifconfig
 
-    - run: sudo wg show
+    # - run: sudo wg show
 
-    - run: sudo wg showconf
+    # - run: sudo wg showconf
 
-    - run: traceroute 10.33.0.6
+    # - run: traceroute 10.33.0.6
 
-    - run: curl -vvv https://ipinfo.io/ip
+    # - run: curl -vvv https://ipinfo.io/ip
+
+    - name: Set up WireGuard Connection
+      uses: niklaskeerl/easy-wireguard-action@v2
+      with:
+        WG_CONFIG_FILE: ${{ secrets.WG_CONFIG_FILE }}
 
     # - name: 'Checkout GitHub Action'
     #   uses: actions/checkout@v4
