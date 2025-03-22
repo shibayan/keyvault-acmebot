@@ -1,3 +1,8 @@
+variable "sub_client_id" {
+  type = string
+  
+}
+
 variable "app_base_name" {
   type    = string
   default = "wus2-dev-01-cert-bot"

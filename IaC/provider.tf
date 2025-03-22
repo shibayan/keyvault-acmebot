@@ -17,7 +17,7 @@ terraform {
     container_name       = "terraform-workload-tfstate"                  # Can be passed via `-backend-config=`"container_name=<container name>"` in the `init` command.
     key                  = "WUS2-DEV-keyvault-acmebot.terraform.tfstate" # Can be passed via `-backend-config=`"key=<blob key name>"` in the `init` command.
     use_oidc             = true                                          # Can also be set via `ARM_USE_OIDC` environment variable.
-    client_id            = "c47cde2d-82e1-492b-b270-c0cdb8d5f460"        # Can also be set via `ARM_CLIENT_ID` environment variable.
+    client_id            = var.sub_client_id       # Can also be set via `ARM_CLIENT_ID` environment variable.
     subscription_id      = "1ac7d30e-1440-4f30-9544-3fb860f07736"        # Can also be set via `ARM_SUBSCRIPTION_ID` environment variable.
     tenant_id            = "d312c5af-612c-4812-b977-2b95c20f7182"        # Can also be set via `ARM_TENANT_ID` environment variable.
     use_azuread_auth     = true                                          # Can also be set via `ARM_USE_AZUREAD` environment variable.
