@@ -22,7 +22,7 @@ jobs:
 
     - run: sudo ip address add dev wg0 10.11.0.7 peer 10.11.0.1
 
-    - run: sudo wg set wg0 listen-port 48123 private-key privatekey peer "${{ secrets.WIREGUARD_PUBLIC_KEY }}" allowed-ips 0.0.0.0/0 endpoint "${{ secrets.WIREGUARD_ENDPOINT }}"
+    - run: sudo wg set wg0 listen-port 48123 private-key privatekey peer privatekey allowed-ips 0.0.0.0/0 endpoint "${{ secrets.WIREGUARD_ENDPOINT }}"
 
     - run: sudo ip link set up dev wg0
 
