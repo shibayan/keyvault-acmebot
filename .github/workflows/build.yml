@@ -1,38 +1,37 @@
-# name: Build
+name: Build
 
-# on:
-#   push:
-#     branches: [ master ]
-#   pull_request:
-#     branches: [ master ]
+on:
+    push:
+      branches:
+        - dummy
 
-# env:
-#   DOTNET_VERSION: 6.0.x
-#   BICEP_VERSION: 0.33.93
+env:
+  DOTNET_VERSION: 6.0.x
+  BICEP_VERSION: 0.33.93
 
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
-#     steps:
-#     - uses: actions/checkout@v4
-#       with:
-#         submodules: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
 
-#     - name: Use .NET ${{ env.DOTNET_VERSION }}
-#       uses: actions/setup-dotnet@v4
-#       with:
-#         dotnet-version: ${{ env.DOTNET_VERSION }}
+    - name: Use .NET ${{ env.DOTNET_VERSION }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
 
-#     - name: Use Bicep ${{ env.BICEP_VERSION }}
-#       run: |
-#         az config set bicep.use_binary_from_path=false
-#         az bicep install --version v${{ env.BICEP_VERSION }}
+    - name: Use Bicep ${{ env.BICEP_VERSION }}
+      run: |
+        az config set bicep.use_binary_from_path=false
+        az bicep install --version v${{ env.BICEP_VERSION }}
 
-#     - name: Build project
-#       run: dotnet build -c Release
+    - name: Build project
+      run: dotnet build -c Release
 
-#     - name: Lint C# code
-#       run: dotnet format --verify-no-changes --exclude ACMESharpCore --verbosity detailed --no-restore
+    - name: Lint C# code
+      run: dotnet format --verify-no-changes --exclude ACMESharpCore --verbosity detailed --no-restore
 
-#     - name: Lint Bicep template
-#       run: az bicep build -f azuredeploy.bicep && git diff --exit-code --quiet
+    - name: Lint Bicep template
+      run: az bicep build -f azuredeploy.bicep && git diff --exit-code --quiet
