@@ -58,16 +58,11 @@ jobs:
       run: terraform plan -out tf_plan.tfplan -input=false ${{ env.additional_tf_vars }}
       working-directory: ./IaC
 
-    # #   # On push to "master", build or change infrastructure according to Terraform configuration files
-    # #   # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
-    # # - name: Terraform Apply
-    # #   if: github.ref == 'refs/heads/"master"' && github.event_name == 'push'
-    # #   run: terraform apply "tf_plan.tfplan" -auto-approve -input=false ${{ env.additional_tf_vars }}
-
   TerraformDeploy:
-    runs-on: ubuntu-latest # For Linux, use ubuntu-latest
+    runs-on: ubuntu-latest
     environment: 'deploy'
     needs: TerraformPlan
+    if: needs.TerraformPlan.result == 'success'
     steps:
     - name: Terraform Apply
       if: github.ref == 'refs/heads/"master"' && github.event_name == 'push'
