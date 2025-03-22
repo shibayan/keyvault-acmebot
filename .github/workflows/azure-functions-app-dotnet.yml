@@ -67,6 +67,7 @@ jobs:
   TerraformDeploy:
     runs-on: ubuntu-latest # For Linux, use ubuntu-latest
     environment: 'deploy'
+    needs: TerraformPlan
     steps:
     - name: Terraform Apply
       if: github.ref == 'refs/heads/"master"' && github.event_name == 'push'
