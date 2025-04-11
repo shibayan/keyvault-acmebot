@@ -15,6 +15,7 @@ param mailAddress string
   'https://acme.zerossl.com/v2/DV90/'
   'https://dv.acme-v02.api.pki.goog/directory'
   'https://acme.entrust.net/acme2/directory'
+  'https://emea.acme.atlas.globalsign.com/directory'
 ])
 param acmeEndpoint string = 'https://acme-v02.api.letsencrypt.org/directory'
 
