@@ -41,7 +41,7 @@ public class Route53Provider : IDnsProvider
 
             zones.AddRange(response.HostedZones);
 
-        } while (response.IsTruncated);
+        } while (response.IsTruncated ?? false);
 
         return zones.Select(x => new DnsZone(this) { Id = x.Id, Name = x.Name.TrimEnd('.') }).ToArray();
     }
