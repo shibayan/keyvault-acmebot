@@ -1,0 +1,98 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ master ]
+    tags: [ v* ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: 6.0.x
+  BICEP_VERSION: 0.34.44
+  AZURE_FUNCTIONAPP_NAME: 'func-hp-cert-bot-m7zl'
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.setup_version.outputs.version }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: Setup Version
+      id: setup_version
+      run: |
+        if [[ $GITHUB_REF == refs/tags/v* ]]; then
+          echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_OUTPUT
+        else
+          echo "VERSION=0.0.0-dev" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Use .NET ${{ env.DOTNET_VERSION }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Use Bicep ${{ env.BICEP_VERSION }}
+      run: |
+        az config set bicep.use_binary_from_path=false
+        az bicep install --version v${{ env.BICEP_VERSION }}
+
+    - name: Build project
+      run: dotnet build -c Release -p:Version=${{ steps.setup_version.outputs.version }}
+
+    - name: Run tests
+      run: dotnet test -c Release --no-build
+
+    - name: Lint C# code
+      if: github.event_name == 'pull_request'
+      run: dotnet format --verify-no-changes --exclude ACMESharpCore --verbosity detailed --no-restore
+
+    - name: Lint Bicep template
+      if: github.event_name == 'pull_request'
+      run: az bicep build -f azuredeploy.bicep && git diff --exit-code --quiet
+
+    - name: Publish Function app
+      if: github.event_name == 'push' || startsWith(github.ref, 'refs/tags/v')
+      run: |
+        dotnet publish -c Release -r win-x86 --no-self-contained -o ./dist -p:Version=${{ steps.setup_version.outputs.version }} KeyVault.Acmebot
+
+    - name: Upload build artifacts
+      if: github.event_name == 'push' || startsWith(github.ref, 'refs/tags/v')
+      uses: actions/upload-artifact@v4
+      with:
+        name: function-app
+        path: ./dist
+        retention-days: 1
+
+  deploy:
+    needs: build
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+    - name: Download build artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: function-app
+        path: ./dist
+
+    - name: Use .NET ${{ env.DOTNET_VERSION }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: 'Deploy to Azure Function App'
+      uses: Azure/functions-action@v1
+      with:
+        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+        package: './dist'
+        publish-profile: ${{ secrets.AZURE_FUNCTION_PUBLISH_PROFILE }}
+        respect-funcignore: true
