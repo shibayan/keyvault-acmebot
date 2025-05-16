@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Extensions.Timer;
 using Microsoft.DurableTask;
 using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
@@ -19,7 +18,7 @@ public class PurgeInstanceHistory
     }
 
     [Function($"{nameof(PurgeInstanceHistory)}_{nameof(Timer)}")]
-    public Task Timer([TimerTrigger("0 0 0 1 * *")] FunctionContext context, [DurableClient] DurableTaskClient starter)
+    public Task Timer([TimerTrigger("0 0 0 1 * *")] object timerInfo, [DurableClient] DurableTaskClient starter)
     {
         _logger.LogInformation("Purging instance history for completed and failed orchestrations older than one month");
         

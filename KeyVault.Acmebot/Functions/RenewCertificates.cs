@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using DurableTask.TypedProxy;
 
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Extensions.Timer;
 using Microsoft.DurableTask;
 using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
@@ -57,14 +56,13 @@ public class RenewCertificates
     }
 
     [Function($"{nameof(RenewCertificates)}_{nameof(Timer)}")]
-    public async Task Timer([TimerTrigger("0 0 0 * * *")] FunctionContext context, [DurableClient] DurableTaskClient starter)
+    public async Task Timer([TimerTrigger("0 0 0 * * *")] object timerInfo, [DurableClient] DurableTaskClient starter)
     {
-        var logger = context.GetLogger<RenewCertificates>();
         
         // Function input comes from the request content.
         var instanceId = await starter.ScheduleNewOrchestrationInstanceAsync($"{nameof(RenewCertificates)}_{nameof(Orchestrator)}");
 
-        logger.LogInformation($"Started orchestration with ID = '{instanceId}'.");
+        _logger.LogInformation($"Started orchestration with ID = '{instanceId}'.");
     }
 
     private readonly TaskOptions _retryOptions = new TaskOptions(TimeSpan.FromHours(3), 2)
