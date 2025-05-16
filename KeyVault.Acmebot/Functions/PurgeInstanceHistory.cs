@@ -1,25 +1,33 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using DurableTask.Core;
-
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.DurableTask;
+using Microsoft.DurableTask.Client;
+using Microsoft.Extensions.Logging;
 
 namespace KeyVault.Acmebot.Functions;
 
 public class PurgeInstanceHistory
 {
-    [FunctionName($"{nameof(PurgeInstanceHistory)}_{nameof(Timer)}")]
-    public Task Timer([TimerTrigger("0 0 0 1 * *")] TimerInfo timer, [DurableClient] IDurableClient starter)
+    private readonly ILogger _logger;
+
+    public PurgeInstanceHistory(ILoggerFactory loggerFactory)
     {
-        return starter.PurgeInstanceHistoryAsync(
-            DateTime.MinValue,
-            DateTime.UtcNow.AddMonths(-1),
-            new[]
+        _logger = loggerFactory.CreateLogger<PurgeInstanceHistory>();
+    }
+
+    [Function($"{nameof(PurgeInstanceHistory)}_{nameof(Timer)}")]
+    public Task Timer([TimerTrigger("0 0 0 1 * *")] FunctionContext context, [DurableClient] DurableTaskClient starter)
+    {
+        _logger.LogInformation("Purging instance history for completed and failed orchestrations older than one month");
+        
+        return starter.PurgeInstancesAsync(
+            new PurgeInstancesOptions
             {
-                OrchestrationStatus.Completed,
-                OrchestrationStatus.Failed
+                CreatedTimeFrom = DateTime.MinValue,
+                CreatedTimeTo = DateTime.UtcNow.AddMonths(-1),
+                RuntimeStatusFilter = { OrchestrationRuntimeStatus.Completed, OrchestrationRuntimeStatus.Failed }
             });
     }
 }

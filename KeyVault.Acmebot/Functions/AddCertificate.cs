@@ -1,45 +1,58 @@
-﻿using System.Threading.Tasks;
-
-using Azure.WebJobs.Extensions.HttpApi;
+﻿using System.Net;
+using System.Threading.Tasks;
 
 using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Models;
 
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
 
 namespace KeyVault.Acmebot.Functions;
 
-public class AddCertificate : HttpFunctionBase
+public class AddCertificate
 {
-    public AddCertificate(IHttpContextAccessor httpContextAccessor)
-        : base(httpContextAccessor)
+    private readonly ILogger _logger;
+
+    public AddCertificate(ILoggerFactory loggerFactory)
     {
+        _logger = loggerFactory.CreateLogger<AddCertificate>();
     }
 
-    [FunctionName($"{nameof(AddCertificate)}_{nameof(HttpStart)}")]
-    public async Task<IActionResult> HttpStart(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/certificate")] CertificatePolicyItem certificatePolicyItem,
-        [DurableClient] IDurableClient starter,
-        ILogger log)
+    [Function($"{nameof(AddCertificate)}_{nameof(HttpStart)}")]
+    public async Task<HttpResponseData> HttpStart(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/certificate")] HttpRequestData req,
+        [DurableClient] DurableTaskClient starter)
     {
-        if (!User.Identity.IsAuthenticated)
+        if (!req.IsAuthenticated())
         {
-            return Unauthorized();
+            return req.CreateResponse(HttpStatusCode.Unauthorized);
         }
 
-        if (!User.HasIssueCertificateRole())
+        if (!req.HasIssueCertificateRole())
         {
-            return Forbid();
+            return req.CreateResponse(HttpStatusCode.Forbidden);
         }
 
-        if (!TryValidateModel(certificatePolicyItem))
+        // Parse the JSON input
+        CertificatePolicyItem certificatePolicyItem;
+        try
         {
-            return ValidationProblem(ModelState);
+            certificatePolicyItem = await req.ReadFromJsonAsync<CertificatePolicyItem>();
+            
+            if (certificatePolicyItem == null)
+            {
+                var response = req.CreateResponse(HttpStatusCode.BadRequest);
+                response.WriteString("Invalid certificate policy data");
+                return response;
+            }
+        }
+        catch
+        {
+            var response = req.CreateResponse(HttpStatusCode.BadRequest);
+            response.WriteString("Failed to parse request body as CertificatePolicyItem");
+            return response;
         }
 
         if (string.IsNullOrEmpty(certificatePolicyItem.CertificateName))
@@ -48,10 +61,14 @@ public class AddCertificate : HttpFunctionBase
         }
 
         // Function input comes from the request content.
-        var instanceId = await starter.StartNewAsync(nameof(SharedOrchestrator.IssueCertificate), certificatePolicyItem);
+        var instanceId = await starter.ScheduleNewOrchestrationInstanceAsync(
+            nameof(SharedOrchestrator.IssueCertificate), certificatePolicyItem);
 
-        log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
+        _logger.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
-        return AcceptedAtFunction($"{nameof(GetInstanceState)}_{nameof(GetInstanceState.HttpStart)}", new { instanceId }, null);
+        // Create a response that redirects to the status endpoint
+        var response = req.CreateResponse(HttpStatusCode.Accepted);
+        response.Headers.Add("Location", $"/api/instance/{instanceId}");
+        return response;
     }
 }

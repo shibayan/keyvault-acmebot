@@ -1,45 +1,65 @@
-﻿using System.Threading.Tasks;
+﻿using System.Net;
+using System.Threading.Tasks;
 
-using Azure.WebJobs.Extensions.HttpApi;
+using KeyVault.Acmebot.Internal;
 
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.DurableTask;
+using Microsoft.DurableTask.Client;
+using Microsoft.Extensions.Logging;
 
 namespace KeyVault.Acmebot.Functions;
 
-public class GetInstanceState : HttpFunctionBase
+public class GetInstanceState
 {
-    public GetInstanceState(IHttpContextAccessor httpContextAccessor)
-        : base(httpContextAccessor)
+    private readonly ILogger _logger;
+
+    public GetInstanceState(ILoggerFactory loggerFactory)
     {
+        _logger = loggerFactory.CreateLogger<GetInstanceState>();
+    }
+    
+    private HttpResponseData CreateProblemResponse(HttpRequestData req, string detail)
+    {
+        var response = req.CreateResponse(HttpStatusCode.InternalServerError);
+        response.Headers.Add("Content-Type", "application/problem+json");
+        response.WriteString($"{{\"detail\":\"{detail}\"}}");
+        return response;
+    }
+    
+    private HttpResponseData CreateAcceptedResponse(HttpRequestData req, string instanceId)
+    {
+        var response = req.CreateResponse(HttpStatusCode.Accepted);
+        response.Headers.Add("Location", $"/api/state/{instanceId}");
+        return response;
     }
 
-    [FunctionName($"{nameof(GetInstanceState)}_{nameof(HttpStart)}")]
-    public async Task<IActionResult> HttpStart(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/state/{instanceId}")] HttpRequest req,
+    [Function($"{nameof(GetInstanceState)}_{nameof(HttpStart)}")]
+    public async Task<HttpResponseData> HttpStart(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/state/{instanceId}")] HttpRequestData req,
         string instanceId,
-        [DurableClient] IDurableClient starter)
+        [DurableClient] DurableTaskClient starter)
     {
-        if (!User.Identity.IsAuthenticated)
+        if (!req.IsAuthenticated())
         {
-            return Unauthorized();
+            return req.CreateResponse(HttpStatusCode.Unauthorized);
         }
 
-        var status = await starter.GetStatusAsync(instanceId);
+        var status = await starter.GetInstanceAsync(instanceId);
 
         if (status is null)
         {
-            return BadRequest();
+            return req.CreateResponse(HttpStatusCode.BadRequest);
         }
 
-        return status.RuntimeStatus switch
+        var response = status.RuntimeStatus switch
         {
-            OrchestrationRuntimeStatus.Failed => Problem(status.Output.ToString()),
-            OrchestrationRuntimeStatus.Running or OrchestrationRuntimeStatus.Pending or OrchestrationRuntimeStatus.ContinuedAsNew => AcceptedAtFunction($"{nameof(GetInstanceState)}_{nameof(HttpStart)}", new { instanceId }, null),
-            _ => Ok()
+            OrchestrationRuntimeStatus.Failed => CreateProblemResponse(req, status.Output?.ToString() ?? "Orchestration failed"),
+            OrchestrationRuntimeStatus.Running or OrchestrationRuntimeStatus.Pending or OrchestrationRuntimeStatus.ContinuedAsNew => CreateAcceptedResponse(req, instanceId),
+            _ => req.CreateResponse(HttpStatusCode.OK)
         };
+        
+        return response;
     }
 }

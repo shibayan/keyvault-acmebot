@@ -1,30 +1,30 @@
 ﻿using System;
+using System.Net;
 using System.Threading.Tasks;
-
-using Azure.WebJobs.Extensions.HttpApi;
 
 using DurableTask.TypedProxy;
 
 using KeyVault.Acmebot.Internal;
 
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.DurableTask;
+using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
 
 namespace KeyVault.Acmebot.Functions;
 
-public class RevokeCertificate : HttpFunctionBase
+public class RevokeCertificate
 {
-    public RevokeCertificate(IHttpContextAccessor httpContextAccessor)
-        : base(httpContextAccessor)
+    private readonly ILogger _logger;
+
+    public RevokeCertificate(ILoggerFactory loggerFactory)
     {
+        _logger = loggerFactory.CreateLogger<RevokeCertificate>();
     }
 
-    [FunctionName($"{nameof(RevokeCertificate)}_{nameof(Orchestrator)}")]
-    public async Task Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
+    [Function($"{nameof(RevokeCertificate)}_{nameof(Orchestrator)}")]
+    public async Task Orchestrator([OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var certificateName = context.GetInput<string>();
 
@@ -33,28 +33,28 @@ public class RevokeCertificate : HttpFunctionBase
         await activity.RevokeCertificate(certificateName);
     }
 
-    [FunctionName($"{nameof(RevokeCertificate)}_{nameof(HttpStart)}")]
-    public async Task<IActionResult> HttpStart(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/certificate/{certificateName}/revoke")] HttpRequest req,
+    [Function($"{nameof(RevokeCertificate)}_{nameof(HttpStart)}")]
+    public async Task<HttpResponseData> HttpStart(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/certificate/{certificateName}/revoke")] HttpRequestData req,
         string certificateName,
-        [DurableClient] IDurableClient starter,
-        ILogger log)
+        [DurableClient] DurableTaskClient starter)
     {
-        if (!User.Identity.IsAuthenticated)
+        if (!req.IsAuthenticated())
         {
-            return Unauthorized();
+            return req.CreateResponse(HttpStatusCode.Unauthorized);
         }
 
-        if (!User.HasRevokeCertificateRole())
+        if (!req.HasRevokeCertificateRole())
         {
-            return Forbid();
+            return req.CreateResponse(HttpStatusCode.Forbidden);
         }
 
         // Function input comes from the request content.
-        var instanceId = await starter.StartNewAsync($"{nameof(RevokeCertificate)}_{nameof(Orchestrator)}", null, certificateName);
+        var instanceId = await starter.ScheduleNewOrchestrationInstanceAsync(
+            $"{nameof(RevokeCertificate)}_{nameof(Orchestrator)}", certificateName);
 
-        log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
+        _logger.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
-        return await starter.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromMinutes(1), returnInternalServerErrorOnFailure: true);
+        return await starter.CreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromMinutes(1));
     }
 }

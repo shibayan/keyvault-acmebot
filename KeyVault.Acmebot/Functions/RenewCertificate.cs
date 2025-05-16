@@ -1,29 +1,29 @@
-﻿using System.Threading.Tasks;
-
-using Azure.WebJobs.Extensions.HttpApi;
+﻿using System.Net;
+using System.Threading.Tasks;
 
 using DurableTask.TypedProxy;
 
 using KeyVault.Acmebot.Internal;
 
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.DurableTask;
+using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
 
 namespace KeyVault.Acmebot.Functions;
 
-public class RenewCertificate : HttpFunctionBase
+public class RenewCertificate
 {
-    public RenewCertificate(IHttpContextAccessor httpContextAccessor)
-        : base(httpContextAccessor)
+    private readonly ILogger _logger;
+
+    public RenewCertificate(ILoggerFactory loggerFactory)
     {
+        _logger = loggerFactory.CreateLogger<RenewCertificate>();
     }
 
-    [FunctionName($"{nameof(RenewCertificate)}_{nameof(Orchestrator)}")]
-    public async Task Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
+    [Function($"{nameof(RenewCertificate)}_{nameof(Orchestrator)}")]
+    public async Task Orchestrator([OrchestrationTrigger] TaskOrchestrationContext context)
     {
         var certificateName = context.GetInput<string>();
 
@@ -35,28 +35,31 @@ public class RenewCertificate : HttpFunctionBase
         await context.CallSubOrchestratorAsync(nameof(SharedOrchestrator.IssueCertificate), certificatePolicyItem);
     }
 
-    [FunctionName($"{nameof(RenewCertificate)}_{nameof(HttpStart)}")]
-    public async Task<IActionResult> HttpStart(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/certificate/{certificateName}/renew")] HttpRequest req,
+    [Function($"{nameof(RenewCertificate)}_{nameof(HttpStart)}")]
+    public async Task<HttpResponseData> HttpStart(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/certificate/{certificateName}/renew")] HttpRequestData req,
         string certificateName,
-        [DurableClient] IDurableClient starter,
-        ILogger log)
+        [DurableClient] DurableTaskClient starter)
     {
-        if (!User.Identity.IsAuthenticated)
+        if (!req.IsAuthenticated())
         {
-            return Unauthorized();
+            return req.CreateResponse(HttpStatusCode.Unauthorized);
         }
 
-        if (!User.HasIssueCertificateRole())
+        if (!req.HasIssueCertificateRole())
         {
-            return Forbid();
+            return req.CreateResponse(HttpStatusCode.Forbidden);
         }
 
         // Function input comes from the request content.
-        var instanceId = await starter.StartNewAsync($"{nameof(RenewCertificate)}_{nameof(Orchestrator)}", null, certificateName);
+        var instanceId = await starter.ScheduleNewOrchestrationInstanceAsync(
+            $"{nameof(RenewCertificate)}_{nameof(Orchestrator)}", certificateName);
 
-        log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
+        _logger.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
-        return AcceptedAtFunction($"{nameof(GetInstanceState)}_{nameof(GetInstanceState.HttpStart)}", new { instanceId }, null);
+        // Create a response that redirects to the status endpoint
+        var response = req.CreateResponse(HttpStatusCode.Accepted);
+        response.Headers.Add("Location", $"/api/state/{instanceId}");
+        return response;
     }
 }
