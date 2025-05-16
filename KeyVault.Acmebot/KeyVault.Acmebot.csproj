@@ -3,11 +3,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
     <OutputType>Exe</OutputType>
-  </PropertyGroup>
-  
-  <!-- Package override settings to handle dependency conflicts -->
-  <PropertyGroup>
-    <FunctionsAutoRegisterDependencies>false</FunctionsAutoRegisterDependencies>
+    <NoWarn>NU1107</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.Route53" Version="4.0.0" />
