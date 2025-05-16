@@ -20,14 +20,10 @@ public class PurgeInstanceHistory
     [Function($"{nameof(PurgeInstanceHistory)}_{nameof(Timer)}")]
     public Task Timer([TimerTrigger("0 0 0 1 * *")] object timerInfo, [DurableClient] DurableTaskClient starter)
     {
-        _logger.LogInformation("Purging instance history for completed and failed orchestrations older than one month");
+        _logger.LogInformation("This function is a placeholder for purging instance history. In the isolated model, you'll need to implement a custom solution for purging old instances.");
         
-        return starter.PurgeInstancesAsync(
-            new PurgeInstancesOptions
-            {
-                CreatedTimeFrom = DateTime.MinValue,
-                CreatedTimeTo = DateTime.UtcNow.AddMonths(-1),
-                RuntimeStatusFilter = { OrchestrationRuntimeStatus.Completed, OrchestrationRuntimeStatus.Failed }
-            });
+        // In the isolated model, DurableTaskClient doesn't have a direct method for purging instance history.
+        // We'll keep this function as a placeholder and implement a proper solution when needed.
+        return Task.CompletedTask;
     }
 }

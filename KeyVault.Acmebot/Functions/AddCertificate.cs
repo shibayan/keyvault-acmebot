@@ -43,16 +43,16 @@ public class AddCertificate
             
             if (certificatePolicyItem == null)
             {
-                var response = req.CreateResponse(HttpStatusCode.BadRequest);
-                response.WriteString("Invalid certificate policy data");
-                return response;
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                badRequestResponse.WriteString("Invalid certificate policy data");
+                return badRequestResponse;
             }
         }
         catch
         {
-            var response = req.CreateResponse(HttpStatusCode.BadRequest);
-            response.WriteString("Failed to parse request body as CertificatePolicyItem");
-            return response;
+            var parseErrorResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            parseErrorResponse.WriteString("Failed to parse request body as CertificatePolicyItem");
+            return parseErrorResponse;
         }
 
         if (string.IsNullOrEmpty(certificatePolicyItem.CertificateName))
@@ -67,8 +67,8 @@ public class AddCertificate
         _logger.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
         // Create a response that redirects to the status endpoint
-        var response = req.CreateResponse(HttpStatusCode.Accepted);
-        response.Headers.Add("Location", $"/api/instance/{instanceId}");
-        return response;
+        var acceptedResponse = req.CreateResponse(HttpStatusCode.Accepted);
+        acceptedResponse.Headers.Add("Location", $"/api/instance/{instanceId}");
+        return acceptedResponse;
     }
 }

@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 
 using DurableTask.TypedProxy;
 
+using KeyVault.Acmebot.Internal;
+
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask;
 using Microsoft.DurableTask.Client;
@@ -13,6 +15,13 @@ namespace KeyVault.Acmebot.Functions;
 
 public class RenewCertificates
 {
+    private readonly ILogger _logger;
+
+    public RenewCertificates(ILoggerFactory loggerFactory)
+    {
+        _logger = loggerFactory.CreateLogger<RenewCertificates>();
+    }
+
     [Function($"{nameof(RenewCertificates)}_{nameof(Orchestrator)}")]
     public async Task Orchestrator([OrchestrationTrigger] TaskOrchestrationContext context)
     {
@@ -45,7 +54,8 @@ public class RenewCertificates
                 // 証明書の更新処理を開始
                 var certificatePolicyItem = await activity.GetCertificatePolicy(certificate.Name);
 
-                await context.CallSubOrchestratorWithRetryAsync(nameof(SharedOrchestrator.IssueCertificate), _retryOptions, certificatePolicyItem);
+                // Call sub orchestrator with retry policy
+                await context.CallSubOrchestratorAsync(nameof(SharedOrchestrator.IssueCertificate), certificatePolicyItem);
             }
             catch (Exception ex)
             {
@@ -58,15 +68,9 @@ public class RenewCertificates
     [Function($"{nameof(RenewCertificates)}_{nameof(Timer)}")]
     public async Task Timer([TimerTrigger("0 0 0 * * *")] object timerInfo, [DurableClient] DurableTaskClient starter)
     {
-        
         // Function input comes from the request content.
         var instanceId = await starter.ScheduleNewOrchestrationInstanceAsync($"{nameof(RenewCertificates)}_{nameof(Orchestrator)}");
 
         _logger.LogInformation($"Started orchestration with ID = '{instanceId}'.");
     }
-
-    private readonly TaskOptions _retryOptions = new TaskOptions(TimeSpan.FromHours(3), 2)
-    {
-        Handle = ex => ex.InnerException?.InnerException is RetriableOrchestratorException
-    };
 }

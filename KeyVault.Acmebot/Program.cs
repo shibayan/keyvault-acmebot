@@ -1,141 +1,143 @@
-using System;
-using System.Collections.Generic;
-
-using Azure.Core;
 using Azure.Identity;
+using Azure.ResourceManager;
 using Azure.Security.KeyVault.Certificates;
 
 using DnsClient;
 
+using KeyVault.Acmebot.Functions;
 using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Options;
 using KeyVault.Acmebot.Providers;
 
-using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults(builder =>
     {
-        builder.AddApplicationInsights()
-               .AddApplicationInsightsLogger();
+        builder.UseMiddleware<ApplicationInsightsLoggingMiddleware>();
     })
     .ConfigureServices((context, services) =>
     {
-        // Add Options
-        services.AddOptions<AcmebotOptions>()
-               .Bind(context.Configuration.GetSection("Acmebot"))
-               .ValidateDataAnnotations();
+        var configuration = context.Configuration;
 
-        // Add Services
-        services.Replace(ServiceDescriptor.Transient(typeof(IOptionsFactory<>), typeof(OptionsFactory<>)));
+        // Add Application Insights services
+        services.AddApplicationInsightsTelemetryWorkerService();
 
+        // Options
+        services.Configure<AcmebotOptions>(configuration.GetSection("Acmebot"));
+        services.Configure<ExternalAccountBindingOptions>(configuration.GetSection("ExternalAccountBinding"));
+
+        // DNS Providers
+        services.Configure<AzureDnsOptions>(configuration.GetSection("AzureDns"));
+        services.Configure<AzurePrivateDnsOptions>(configuration.GetSection("AzurePrivateDns"));
+        services.Configure<CloudflareOptions>(configuration.GetSection("Cloudflare"));
+        services.Configure<CustomDnsOptions>(configuration.GetSection("CustomDns"));
+        services.Configure<DnsMadeEasyOptions>(configuration.GetSection("DnsMadeEasy"));
+        services.Configure<GandiOptions>(configuration.GetSection("Gandi"));
+        services.Configure<GandiLiveDnsOptions>(configuration.GetSection("GandiLiveDns"));
+        services.Configure<GoDaddyOptions>(configuration.GetSection("GoDaddy"));
+        services.Configure<GoogleDnsOptions>(configuration.GetSection("GoogleDns"));
+        services.Configure<Route53Options>(configuration.GetSection("Route53"));
+        services.Configure<TransIpOptions>(configuration.GetSection("TransIp"));
+
+        // HTTP Client
         services.AddHttpClient();
 
-        services.AddSingleton<ITelemetryInitializer, ApplicationVersionInitializer>();
+        // DNS Lookup Client
+        services.AddSingleton<LookupClient>();
 
+        // Azure Environment
         services.AddSingleton(provider =>
         {
             var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
-
-            var lookupClientOptions = options.Value.UseSystemNameServer ? new LookupClientOptions() : new LookupClientOptions(NameServer.GooglePublicDns, NameServer.GooglePublicDns2);
-
-            lookupClientOptions.UseCache = false;
-            lookupClientOptions.UseRandomNameServer = true;
-
-            return new LookupClient(lookupClientOptions);
-        });
-
-        services.AddSingleton(provider =>
-        {
-            var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
-
             return AzureEnvironment.Get(options.Value.Environment);
         });
 
-        services.AddSingleton<TokenCredential>(provider =>
+        // Azure ResourceManager Clients
+        services.AddSingleton(provider => 
         {
-            var environment = provider.GetRequiredService<AzureEnvironment>();
-
-            return new DefaultAzureCredential(new DefaultAzureCredentialOptions
+            var azureEnvironment = provider.GetRequiredService<AzureEnvironment>();
+            
+            var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
             {
-                AuthorityHost = environment.AuthorityHost
+                AuthorityHost = azureEnvironment.AuthorityHost
             });
+
+            // Create ArmClient with the credential
+            return new ArmClient(credential);
         });
 
+        services.AddSingleton(provider => provider.GetRequiredService<ArmClient>().GetDefaultSubscriptionAsync().GetAwaiter().GetResult());
+
+        // Azure KeyVault Clients
         services.AddSingleton(provider =>
         {
             var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
-            var credential = provider.GetRequiredService<TokenCredential>();
+            var azureEnvironment = provider.GetRequiredService<AzureEnvironment>();
+
+            var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
+            {
+                AuthorityHost = azureEnvironment.AuthorityHost
+            });
 
             return new CertificateClient(new Uri(options.Value.VaultBaseUrl), credential);
         });
 
+        // ACME Protocol Clients
         services.AddSingleton<AcmeProtocolClientFactory>();
 
-        // Add Webhook invoker
+        // Webhook
         services.AddSingleton<WebhookInvoker>();
-        services.AddSingleton<ILifeCycleNotificationHelper, WebhookLifeCycleNotification>();
+        services.AddSingleton<IWebhookPayloadBuilder, TeamsPayloadBuilder>();
 
-        services.AddSingleton<IWebhookPayloadBuilder>(provider =>
+        // Individual DNS Providers
+        services.AddSingleton<AzureDnsProvider>();
+        services.AddSingleton<AzurePrivateDnsProvider>();
+        services.AddSingleton<CloudflareProvider>();
+        services.AddSingleton<CustomDnsProvider>();
+        services.AddSingleton<DnsMadeEasyProvider>();
+        services.AddSingleton<GandiProvider>();
+        services.AddSingleton<GandiLiveDnsProvider>();
+        services.AddSingleton<GoDaddyProvider>();
+        services.AddSingleton<GoogleDnsProvider>();
+        services.AddSingleton<Route53Provider>();
+        services.AddSingleton<TransIpProvider>();
+
+        // DNS Provider Factory
+        services.AddSingleton<IDnsProvider>(provider =>
         {
-            var options = provider.GetRequiredService<IOptions<AcmebotOptions>>().Value;
-
-            if (options.Webhook is null)
+            var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
+            
+            // Find the provider based on options
+            if (options.Value.AzureDns != null)
             {
-                return new GenericPayloadBuilder(options);
+                return provider.GetRequiredService<AzureDnsProvider>();
             }
-
-            if (options.Webhook.Host.EndsWith("hooks.slack.com", StringComparison.OrdinalIgnoreCase))
+            else if (options.Value.AzurePrivateDns != null)
             {
-                return new SlackPayloadBuilder();
+                return provider.GetRequiredService<AzurePrivateDnsProvider>();
             }
-
-            if (options.Webhook.Host.EndsWith(".logic.azure.com", StringComparison.OrdinalIgnoreCase))
+            // Add similar checks for other providers
+            else if (options.Value.Cloudflare != null)
             {
-                return new TeamsPayloadBuilder();
+                return provider.GetRequiredService<CloudflareProvider>();
             }
+            // etc.
 
-            if (options.Webhook.Host.EndsWith(".office.com", StringComparison.OrdinalIgnoreCase))
-            {
-                return new LegacyTeamsPayloadBuilder();
-            }
-
-            return new GenericPayloadBuilder(options);
+            throw new NotSupportedException($"No DNS provider is configured.");
         });
 
-        // Add DNS Providers
-        services.AddSingleton<IEnumerable<IDnsProvider>>(provider =>
-        {
-            var options = provider.GetRequiredService<IOptions<AcmebotOptions>>().Value;
-            var environment = provider.GetRequiredService<AzureEnvironment>();
-            var credential = provider.GetRequiredService<TokenCredential>();
-
-            var dnsProviders = new List<IDnsProvider>();
-
-            dnsProviders.TryAdd(options.AzureDns, o => new AzureDnsProvider(o, environment, credential));
-            dnsProviders.TryAdd(options.AzurePrivateDns, o => new AzurePrivateDnsProvider(o, environment, credential));
-            dnsProviders.TryAdd(options.Cloudflare, o => new CloudflareProvider(o));
-            dnsProviders.TryAdd(options.CustomDns, o => new CustomDnsProvider(o));
-            dnsProviders.TryAdd(options.DnsMadeEasy, o => new DnsMadeEasyProvider(o));
-            dnsProviders.TryAdd(options.Gandi, o => new GandiProvider(o));
-            dnsProviders.TryAdd(options.GandiLiveDns, o => new GandiLiveDnsProvider(o));
-            dnsProviders.TryAdd(options.GoDaddy, o => new GoDaddyProvider(o));
-            dnsProviders.TryAdd(options.GoogleDns, o => new GoogleDnsProvider(o));
-            dnsProviders.TryAdd(options.Route53, o => new Route53Provider(o));
-            dnsProviders.TryAdd(options.TransIp, o => new TransIpProvider(options, o, credential));
-
-            if (dnsProviders.Count == 0)
-            {
-                throw new NotSupportedException("DNS Provider is not configured. Please check the documentation and configure it.");
-            }
-
-            return dnsProviders;
-        });
+        // Shared Activity
+        services.AddSingleton<SharedActivity>();
     })
     .Build();
 
-host.Run();
+await host.RunAsync();

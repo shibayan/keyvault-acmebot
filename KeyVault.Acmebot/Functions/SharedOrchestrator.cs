@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 
 using DurableTask.TypedProxy;
 
+using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Models;
 
 using Microsoft.Azure.Functions.Worker;
@@ -62,5 +63,15 @@ public class SharedOrchestrator
 
         // 証明書の更新が完了後に Webhook を送信する
         await activity.SendCompletedEvent((certificate.Name, certificate.ExpiresOn, certificatePolicyItem.DnsNames));
+    }
+    
+    [Function(nameof(RevokeCertificate))]
+    public async Task RevokeCertificate([OrchestrationTrigger] TaskOrchestrationContext context)
+    {
+        var certificateName = context.GetInput<string>();
+        
+        var activity = context.CreateActivityProxy<ISharedActivity>();
+        
+        await activity.RevokeCertificate(certificateName);
     }
 }

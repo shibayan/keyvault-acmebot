@@ -55,8 +55,8 @@ public class GetInstanceState
 
         var response = status.RuntimeStatus switch
         {
-            OrchestrationRuntimeStatus.Failed => CreateProblemResponse(req, status.Output?.ToString() ?? "Orchestration failed"),
-            OrchestrationRuntimeStatus.Running or OrchestrationRuntimeStatus.Pending or OrchestrationRuntimeStatus.ContinuedAsNew => CreateAcceptedResponse(req, instanceId),
+            OrchestrationRuntimeStatus.Failed => CreateProblemResponse(req, "Orchestration failed"),
+            OrchestrationRuntimeStatus.Running or OrchestrationRuntimeStatus.Pending => CreateAcceptedResponse(req, instanceId),
             _ => req.CreateResponse(HttpStatusCode.OK)
         };
         
