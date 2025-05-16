@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  DOTNET_VERSION: 6.0.x
+  DOTNET_VERSION: 8.0.x
   BICEP_VERSION: 0.34.44
   AZURE_FUNCTIONAPP_NAME: 'func-hp-cert-bot-m7zl'
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
