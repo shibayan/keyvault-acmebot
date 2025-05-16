@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using DurableTask.TypedProxy;
 
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Extensions.Timer;
 using Microsoft.DurableTask;
 using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
@@ -66,7 +67,7 @@ public class RenewCertificates
         logger.LogInformation($"Started orchestration with ID = '{instanceId}'.");
     }
 
-    private readonly RetryOptions _retryOptions = new(TimeSpan.FromHours(3), 2)
+    private readonly TaskOptions _retryOptions = new TaskOptions(TimeSpan.FromHours(3), 2)
     {
         Handle = ex => ex.InnerException?.InnerException is RetriableOrchestratorException
     };

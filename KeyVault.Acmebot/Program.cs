@@ -11,7 +11,9 @@ using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Options;
 using KeyVault.Acmebot.Providers;
 
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
