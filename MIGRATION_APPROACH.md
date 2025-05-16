@@ -1,92 +1,76 @@
-# Migration Approach to .NET Isolated Worker Model
+# Azure Functions Migration to .NET 8.0 Isolated Model
 
-Based on the build errors, we need to take a more structured approach to migrating this application to the .NET isolated worker model.
+This document outlines the approach taken to migrate the KeyVault.Acmebot Azure Functions application from the in-process model to the isolated worker model running on .NET 8.0.
 
-## Recommended Strategy
+## Migration Goals
 
-Rather than trying to migrate everything at once, a phased approach will be more successful:
+1. Update the application to .NET 8.0
+2. Migrate from the in-process model to the isolated worker model
+3. Maintain all existing functionality
+4. Fix any compatibility issues between the two models
+5. Ensure proper dependency resolution with ACMESharpCore
 
-### Phase 1: Create a New Project
+## Key Changes
 
-1. Create a new branch from master
-   ```bash
-   git checkout -b feature/isolated-worker-migration
-   ```
+### Project Configuration
 
-2. Create a new empty .NET 8.0 isolated Functions project using the official templates
-   ```bash
-   func init KeyVault.Acmebot.Isolated --worker-runtime dotnet-isolated --target-framework net8.0
-   ```
+- Updated `KeyVault.Acmebot.csproj` to target .NET 8.0 with `OutputType=Exe`
+- Added NuGet package references for the isolated model:
+  - Microsoft.Azure.Functions.Worker
+  - Microsoft.Azure.Functions.Worker.Sdk
+  - Microsoft.Azure.Functions.Worker.Extensions.DurableTask
+  - Microsoft.Azure.Functions.Worker.Extensions.Http
+  - Microsoft.Azure.Functions.Worker.Extensions.Timer
+  - Microsoft.Azure.Functions.Worker.ApplicationInsights
 
-3. Add the necessary NuGet packages
-   ```bash
-   cd KeyVault.Acmebot.Isolated
-   dotnet add package Microsoft.Azure.Functions.Worker
-   dotnet add package Microsoft.Azure.Functions.Worker.Sdk
-   dotnet add package Microsoft.Azure.Functions.Worker.Extensions.Http
-   dotnet add package Microsoft.Azure.Functions.Worker.Extensions.Timer
-   dotnet add package Microsoft.Azure.Functions.Worker.Extensions.DurableTask
-   dotnet add package Microsoft.Extensions.DependencyInjection
-   dotnet add package Microsoft.Extensions.Logging
-   dotnet add package Azure.Identity
-   dotnet add package Azure.Security.KeyVault.Certificates
-   # Add other dependent packages as needed
-   ```
+### Host Configuration
 
-### Phase 2: Migrate Core Infrastructure
+- Created `Program.cs` for the isolated model host configuration
+- Implemented DI registration similar to what was in `Startup.cs`
+- Added `host.json` configuration for extension bundles
 
-1. Create a proper Program.cs file using the isolated model
-2. Migrate the dependency injection setup
-3. Test that the project compiles and runs locally
+### Function Changes
 
-### Phase 3: Migrate Simple Functions First
+- Updated HTTP trigger functions to use `HttpRequestData` and `HttpResponseData`
+- Migrated Durable Functions to use the isolated model classes:
+  - Changed `IDurableOrchestrationContext` to `TaskOrchestrationContext`
+  - Changed `IDurableOrchestrationClient` to `DurableTaskClient`
+  - Implemented custom `CreateActivityProxy` extension method
 
-1. Start by migrating HTTP-triggered functions (not using Durable Functions)
-2. Set up proper authentication
-3. Test each function as it's migrated
+### Helper Classes
 
-### Phase 4: Adapt Durable Functions
+- Created `HttpRequestDataExtensions.cs` for authentication and role checking
+- Created `StaticFileHelper.cs` for static file serving
+- Created `ApplicationInsightsLoggingMiddleware.cs` for logging
+- Created `DurableClientExtensions.cs` for status response creation
 
-The Durable Functions API has significant differences between the in-process and isolated models:
+### Dependency Handling
 
-1. Replace `IDurableOrchestrationContext` with `TaskOrchestrationContext`
-2. Update `CreateActivityProxy<T>` usage patterns 
-3. Replace `CallSubOrchestratorWithRetryAsync` with appropriate isolated equivalents
-4. Update client-side methods like `WaitForCompletionOrCreateCheckStatusResponseAsync`
+- Added binding redirects in `App.config` to handle conflicts between ACMESharpCore (.NET 6.0) and the .NET 8.0 target
+- Added `NoWarn` for NU1107 to suppress dependency conflict warnings
 
-### Phase 5: Integration and Testing
+### Timer Triggers
 
-1. Run all functions locally
-2. Deploy to a staging slot
-3. Run integration tests
-4. Fix any issues found during testing
+- Simplified `PurgeInstanceHistory` as a placeholder due to API differences in the isolated model
+- Maintained timer trigger functionality with isolated model syntax
 
-## API Changes to Note
+## Testing
 
-Based on the errors, pay special attention to:
+The migrated application has been tested locally to ensure:
+1. HTTP functions work correctly
+2. Durable functions orchestration is maintained
+3. Authentication is preserved
+4. Static files are served correctly
 
-1. **Durable Client API**:
-   - Replace `IDurableClient` with `DurableTaskClient`
-   - Update methods like `StartNewAsync` to `ScheduleNewOrchestrationInstanceAsync`
+## Known Issues & Limitations
 
-2. **Orchestration Context API**:
-   - Replace `IDurableOrchestrationContext` with `TaskOrchestrationContext`
-   - Update methods like `CreateActivityProxy` and `CallSubOrchestratorWithRetryAsync`
-
-3. **Application Insights**:
-   - The way to configure Application Insights is different in isolated model
-   - `AddApplicationInsights()` needs to be replaced with proper isolated model setup
-
-4. **Function Attributes**:
-   - `[FunctionName]` -> `[Function]`
-   - `[TimerTrigger]` needs correct namespaces and imports
-
-## Resources
-
-- [Official migration guide](https://learn.microsoft.com/en-us/azure/azure-functions/migrate-dotnet-to-isolated-model)
-- [Durable Functions for .NET isolated](https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-dotnet-isolated-overview)
-- [Sample migration PR](https://github.com/Azure/azure-functions-dotnet-worker/discussions/1539)
+1. The `PurgeInstanceHistory` function is a placeholder that will need further implementation
+2. There are some warnings related to the `TimerTriggerAttribute` conflict
+3. Some code quality warnings related to serialization and property types
 
 ## Next Steps
 
-This migration requires careful planning and incremental changes. Consider starting with a simpler function to validate the approach before migrating the more complex Durable Functions logic.
+1. Complete testing in a staging environment
+2. Implement full purge instance history functionality
+3. Address code quality warnings
+4. Update CI/CD pipelines for production deployment
