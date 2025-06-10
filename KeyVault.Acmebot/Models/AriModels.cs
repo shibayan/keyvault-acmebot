@@ -58,29 +58,5 @@ namespace KeyVault.Acmebot.Models
         /// Base64url encoded certificate identifier for ARI requests
         /// </summary>
         public string CertificateId { get; set; }
-    }
-
-    /// <summary>
-    /// Error response from ARI endpoint
-    /// </summary>
-    public class AriErrorResponse
-    {
-        /// <summary>
-        /// Error type identifier
-        /// </summary>
-        [JsonPropertyName("type")]
-        public string Type { get; set; }
-
-        /// <summary>
-        /// Human-readable error message
-        /// </summary>
-        [JsonPropertyName("detail")]
-        public string Detail { get; set; }
-
-        /// <summary>
-        /// HTTP status code
-        /// </summary>
-        [JsonPropertyName("status")]
-        public int Status { get; set; }
-    }
+    }    
 }

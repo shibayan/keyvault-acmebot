@@ -69,7 +69,7 @@ internal static class AcmeProtocolClientExtensions
     /// </summary>
     /// <param name="acmeProtocolClient">The ACME protocol client</param>
     /// <returns>True if ARI is supported, false otherwise</returns>
-    public static bool HasRenewalInfoSupport(this AcmeProtocolClient acmeProtocolClient)
+    public static bool SupportsARI(this AcmeProtocolClient acmeProtocolClient)
     {
         return !string.IsNullOrEmpty(GetRenewalInfoUrl(acmeProtocolClient));
     }
@@ -145,35 +145,5 @@ internal static class AcmeProtocolClientExtensions
             System.Diagnostics.Debug.WriteLine($"Failed to create ACME order: {ex.Message}");
             throw;
         }
-    }
-
-    /// <summary>
-    /// Validates that a certificate ID is suitable for use in the 'replaces' field
-    /// </summary>
-    /// <param name="certificateId">The certificate ID to validate</param>
-    /// <returns>True if the certificate ID is valid for ARI replacement</returns>
-    public static bool IsValidReplacementCertificateId(string certificateId)
-    {
-        if (string.IsNullOrEmpty(certificateId))
-        {
-            return false;
-        }
-
-        try
-        {
-            // Basic validation - should be base64url encoded
-            // Check length and characters
-            if (certificateId.Length < 10 || certificateId.Length > 200)
-            {
-                return false;                
-            }
-
-            // Should only contain base64url characters
-            return certificateId.All(c => char.IsLetterOrDigit(c) || c == '-' || c == '_');
-        }
-        catch
-        {
-            return false;
-        }
-    }
+    }    
 }

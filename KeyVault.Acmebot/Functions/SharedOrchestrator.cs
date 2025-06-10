@@ -23,7 +23,7 @@ public class SharedOrchestrator
         certificatePolicyItem.DnsProviderName = await activity.Dns01Precondition(certificatePolicyItem);
 
         // 新しく ACME Order を作成する
-        var orderDetails = await activity.Order(certificatePolicyItem.DnsNames);
+        var orderDetails = await activity.Order(certificatePolicyItem);
 
         // 既に確認済みの場合は Challenge をスキップする
         if (orderDetails.Payload.Status != "ready")
