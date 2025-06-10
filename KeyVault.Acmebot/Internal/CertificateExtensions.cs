@@ -39,7 +39,9 @@ internal static class CertificateExtensions
             ReuseKey = certificate.Policy.ReuseKey,
             IsExpired = DateTimeOffset.UtcNow > certificate.Properties.ExpiresOn.Value,
             AcmeEndpoint = certificate.Properties.Tags.TryGetEndpoint(out var acmeEndpoint) ? NormalizeEndpoint(acmeEndpoint) : "",
-            DnsAlias = certificate.Properties.Tags.TryGetDnsAlias(out var dnsAlias) ? dnsAlias : ""
+            DnsAlias = certificate.Properties.Tags.TryGetDnsAlias(out var dnsAlias) ? dnsAlias : "",
+            AriDecisionSource = certificate.Properties.Tags.TryGetValue("ariDecisionSource", out var ariDecisionSource) ? ariDecisionSource : "",
+            AriReason = certificate.Properties.Tags.TryGetValue("ariReason", out var ariReason) ? ariReason : "",
         };
     }
 

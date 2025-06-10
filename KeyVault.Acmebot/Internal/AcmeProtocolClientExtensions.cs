@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 using ACMESharp.Protocol;
+using ACMESharp.Protocol.Resources;
 
 namespace KeyVault.Acmebot.Internal;
 
@@ -79,20 +81,8 @@ internal static class AcmeProtocolClientExtensions
     /// <returns>The renewal info URL if available, null otherwise</returns>
     public static string GetRenewalInfoUrl(this AcmeProtocolClient acmeProtocolClient)
     {
-        // Check if directory and its metadata contain renewalInfo
-        var directory = acmeProtocolClient.Directory;
-        if (directory?.Directory == null)
-            return null;
-
-        // Try to get renewalInfo from the directory object
-        // ACMESharp ServiceDirectory uses a Dictionary for directory entries
-        if (directory.Directory is IDictionary<string, object> directoryDict &&
-            directoryDict.TryGetValue("renewalInfo", out var renewalInfoObj))
-        {
-            return renewalInfoObj?.ToString();
-        }
-
-        return null;
+        // Use the new RenewalInfo property directly from ServiceDirectory
+        return acmeProtocolClient?.Directory?.RenewalInfo;
     }
 
     /// <summary>
@@ -105,10 +95,85 @@ internal static class AcmeProtocolClientExtensions
     {
         var baseUrl = GetRenewalInfoUrl(acmeProtocolClient);
         if (string.IsNullOrEmpty(baseUrl) || string.IsNullOrEmpty(certificateId))
+        {
             return null;
+        }
 
         // Ensure proper URL construction
         var trimmedBaseUrl = baseUrl.TrimEnd('/');
         return $"{trimmedBaseUrl}/{certificateId}";
+    }
+
+    /// <summary>
+    /// Creates an ACME order with optional certificate replacement support for ARI
+    /// </summary>
+    /// <param name="acmeProtocolClient">The ACME protocol client</param>
+    /// <param name="identifiers">List of domain identifiers for the certificate</param>
+    /// <param name="replacesCertificateId">Optional certificate ID that this order replaces (for ARI)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Order details</returns>
+    public static async Task<OrderDetails> CreateOrderWithReplacementAsync(this AcmeProtocolClient acmeProtocolClient,
+        IReadOnlyList<string> identifiers, string replacesCertificateId = null, CancellationToken cancellationToken = default)
+    {
+        if (identifiers == null || !identifiers.Any())
+        {
+            throw new ArgumentException("At least one identifier is required", nameof(identifiers));
+        }
+
+        try
+        {
+            // Prepare the order request with standard identifiers
+            var orderIdentifiers = identifiers.Select(id => new Identifier 
+            { 
+                Type = "dns",
+                Value = id
+            });
+
+            var orderDetails = await acmeProtocolClient.CreateOrderAsync(orderIdentifiers,
+                replacesCertificateId: replacesCertificateId,  null, null, cancellationToken);       
+
+            return orderDetails;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Handle cancellation properly even though we can't pass the token to PostAsync
+            throw;
+        }
+        catch (Exception ex)
+        {
+            // Log error if possible, but don't break if logging fails
+            System.Diagnostics.Debug.WriteLine($"Failed to create ACME order: {ex.Message}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Validates that a certificate ID is suitable for use in the 'replaces' field
+    /// </summary>
+    /// <param name="certificateId">The certificate ID to validate</param>
+    /// <returns>True if the certificate ID is valid for ARI replacement</returns>
+    public static bool IsValidReplacementCertificateId(string certificateId)
+    {
+        if (string.IsNullOrEmpty(certificateId))
+        {
+            return false;
+        }
+
+        try
+        {
+            // Basic validation - should be base64url encoded
+            // Check length and characters
+            if (certificateId.Length < 10 || certificateId.Length > 200)
+            {
+                return false;                
+            }
+
+            // Should only contain base64url characters
+            return certificateId.All(c => char.IsLetterOrDigit(c) || c == '-' || c == '_');
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

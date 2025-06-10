@@ -54,4 +54,10 @@ public class CertificateItem
 
     [JsonProperty("dnsAlias")]
     public string DnsAlias { get; set; }
+
+    [JsonProperty("ariDecisionSource")]
+    public string AriDecisionSource { get; set; }
+
+    [JsonProperty("ariReason")]
+    public string AriReason { get; set; }
 }

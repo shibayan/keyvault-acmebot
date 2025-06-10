@@ -236,14 +236,15 @@ namespace KeyVault.Acmebot.Internal
         public static bool IsValidAriUrl(string ariUrl)
         {
             if (string.IsNullOrEmpty(ariUrl))
+            {
                 return false;
+            }
 
             try
             {
                 var uri = new Uri(ariUrl);
-                return uri.Scheme == "https" && 
-                       !string.IsNullOrEmpty(uri.Host) && 
-                       uri.AbsolutePath.Contains("/renewalInfo/");
+                return uri.Scheme == "https" &&
+                       !string.IsNullOrEmpty(uri.Host);
             }
             catch
             {

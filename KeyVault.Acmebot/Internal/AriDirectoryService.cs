@@ -24,15 +24,18 @@ namespace KeyVault.Acmebot.Internal
         public bool IsAriSupported(AcmeProtocolClient acmeProtocolClient)
         {
             if (acmeProtocolClient == null)
+            {
                 return false;
+            }
 
             try
             {
-                var hasSupport = acmeProtocolClient.HasRenewalInfoSupport();
+                // Use the direct RenewalInfo property from ServiceDirectory
+                var renewalInfoUrl = acmeProtocolClient.Directory?.RenewalInfo;
+                var hasSupport = !string.IsNullOrEmpty(renewalInfoUrl);
                 
                 if (hasSupport)
                 {
-                    var renewalInfoUrl = acmeProtocolClient.GetRenewalInfoUrl();
                     _logger.LogInformation("ACME server supports ARI with endpoint: {RenewalInfoUrl}", renewalInfoUrl);
                 }
                 else
@@ -58,12 +61,19 @@ namespace KeyVault.Acmebot.Internal
         public string GetRenewalInfoEndpoint(AcmeProtocolClient acmeProtocolClient, string certificateId)
         {
             if (acmeProtocolClient == null || string.IsNullOrEmpty(certificateId))
+            {
                 return null;
+            }
 
             try
             {
-                if (!IsAriSupported(acmeProtocolClient))
+                // Use the direct RenewalInfo property
+                var baseUrl = acmeProtocolClient.Directory?.RenewalInfo;
+                if (string.IsNullOrEmpty(baseUrl))
+                {
+                    _logger.LogDebug("ACME server does not support ARI");
                     return null;
+                }
 
                 var url = acmeProtocolClient.GetRenewalInfoUrlForCertificate(certificateId);
                 
@@ -87,7 +97,9 @@ namespace KeyVault.Acmebot.Internal
         public bool IsValidAriUrl(string ariUrl)
         {
             if (string.IsNullOrEmpty(ariUrl))
+            {
                 return false;
+            }
 
             try
             {

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using System.Threading;
 
 using ACMESharp.Authorizations;
 using ACMESharp.Protocol;
@@ -31,7 +32,8 @@ public class SharedActivity : ISharedActivity
 {
     public SharedActivity(LookupClient lookupClient, AcmeProtocolClientFactory acmeProtocolClientFactory,
                           IEnumerable<IDnsProvider> dnsProviders, CertificateClient certificateClient,
-                          WebhookInvoker webhookInvoker, IOptions<AcmebotOptions> options, ILogger<SharedActivity> logger)
+                          WebhookInvoker webhookInvoker, IOptions<AcmebotOptions> options, ILogger<SharedActivity> logger,
+                          AriIntegrationService ariIntegrationService)
     {
         _lookupClient = lookupClient;
         _acmeProtocolClientFactory = acmeProtocolClientFactory;
@@ -40,6 +42,7 @@ public class SharedActivity : ISharedActivity
         _webhookInvoker = webhookInvoker;
         _options = options.Value;
         _logger = logger;
+        _ariIntegrationService = ariIntegrationService;
     }
 
     private readonly LookupClient _lookupClient;
@@ -49,31 +52,177 @@ public class SharedActivity : ISharedActivity
     private readonly WebhookInvoker _webhookInvoker;
     private readonly AcmebotOptions _options;
     private readonly ILogger<SharedActivity> _logger;
+    private readonly AriIntegrationService _ariIntegrationService;
 
     [FunctionName(nameof(GetExpiringCertificates))]
     public async Task<IReadOnlyList<CertificateItem>> GetExpiringCertificates([ActivityTrigger] DateTime currentDateTime)
     {
         var certificates = _certificateClient.GetPropertiesOfCertificatesAsync();
-
         var result = new List<CertificateItem>();
+
+        // Initialize ARI client if enabled
+        var acmeProtocolClient = await InitializeAcmeClientForAriAsync();
 
         await foreach (var certificate in certificates)
         {
-            if (!certificate.IsIssuedByAcmebot() || !certificate.IsSameEndpoint(_options.Endpoint))
+            if (!ShouldProcessCertificate(certificate))
             {
                 continue;
             }
 
-            if ((certificate.ExpiresOn.Value - currentDateTime).TotalDays > _options.RenewBeforeExpiry)
+            var certificateItem = await EvaluateCertificateForRenewalAsync(certificate, currentDateTime, acmeProtocolClient);
+            if (certificateItem != null)
             {
-                continue;
+                result.Add(certificateItem);
             }
-
-            result.Add((await _certificateClient.GetCertificateAsync(certificate.Name)).Value.ToCertificateItem());
         }
 
         return result;
     }
+
+    /// <summary>
+    /// Initializes ACME client for ARI operations if enabled
+    /// </summary>
+    /// <returns>ACME client or null if ARI is disabled or initialization fails</returns>
+    private async Task<AcmeProtocolClient> InitializeAcmeClientForAriAsync()
+    {
+        if (!_options.AriEnabled)
+        {
+            return null;
+        }
+
+        try
+        {
+            return await _acmeProtocolClientFactory.CreateClientAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to create ACME client for ARI operations, falling back to expiry-based logic");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Determines if a certificate should be processed for renewal evaluation
+    /// </summary>
+    /// <param name="certificate">Certificate properties to evaluate</param>
+    /// <returns>True if the certificate should be processed</returns>
+    private bool ShouldProcessCertificate(CertificateProperties certificate)
+    {
+        return certificate.IsIssuedByAcmebot() && certificate.IsSameEndpoint(_options.Endpoint);
+    }
+
+    /// <summary>
+    /// Evaluates a certificate for renewal using ARI or expiry-based logic
+    /// </summary>
+    /// <param name="certificate">Certificate properties</param>
+    /// <param name="currentDateTime">Current date/time for expiry calculations</param>
+    /// <param name="acmeProtocolClient">ACME client for ARI operations (optional)</param>
+    /// <returns>CertificateItem if renewal is needed, null otherwise</returns>
+    private async Task<CertificateItem> EvaluateCertificateForRenewalAsync(
+        CertificateProperties certificate, 
+        DateTime currentDateTime, 
+        AcmeProtocolClient acmeProtocolClient)
+    {
+        try
+        {
+            var fullCertificate = await _certificateClient.GetCertificateAsync(certificate.Name);
+
+            // Try ARI-based evaluation first if available
+            if (acmeProtocolClient != null)
+            {
+                var ariResult = await TryAriEvaluationAsync(certificate.Name, fullCertificate.Value, acmeProtocolClient);
+                if (ariResult != null)
+                {
+                    return ariResult;
+                }
+            }
+
+            // Fall back to expiry-based evaluation
+            return EvaluateExpiryBasedRenewal(certificate, currentDateTime, fullCertificate.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error evaluating certificate {Name} for renewal", certificate.Name);            
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Attempts ARI-based renewal evaluation
+    /// </summary>
+    /// <param name="certificateName">Name of the certificate</param>
+    /// <param name="fullCertificate">Full certificate with policy</param>
+    /// <param name="acmeProtocolClient">ACME client for ARI operations</param>
+    /// <returns>CertificateItem if ARI indicates renewal needed, null if ARI unavailable or no renewal needed</returns>
+    private async Task<CertificateItem> TryAriEvaluationAsync(
+        string certificateName, 
+        KeyVaultCertificateWithPolicy fullCertificate, 
+        AcmeProtocolClient acmeProtocolClient)
+    {
+        try
+        {
+            var renewalDecision = await _ariIntegrationService.EvaluateRenewalAsync(
+                acmeProtocolClient, fullCertificate, CancellationToken.None);
+
+            _logger.LogDebug("ARI renewal decision for certificate {Name}: {ShouldRenew} ({DecisionSource}) - {Reason}",
+                certificateName, renewalDecision.ShouldRenew, renewalDecision.DecisionSource, renewalDecision.Reason);
+
+            if (renewalDecision.ShouldRenew)
+            {
+                return CreateCertificateItemWithAriMetadata(fullCertificate, renewalDecision);
+            }
+
+            return null; // ARI says no renewal needed
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "ARI evaluation failed for certificate {Name}, falling back to expiry-based logic", certificateName);
+            return null; // Let caller handle fallback
+        }
+    }
+
+    /// <summary>
+    /// Creates a certificate item with ARI metadata
+    /// </summary>
+    /// <param name="fullCertificate">Full certificate with policy</param>
+    /// <param name="renewalDecision">ARI renewal decision</param>
+    /// <returns>CertificateItem with ARI metadata</returns>
+    private static CertificateItem CreateCertificateItemWithAriMetadata(
+        KeyVaultCertificateWithPolicy fullCertificate, 
+        RenewalDecision renewalDecision)
+    {
+        var certificateItem = fullCertificate.ToCertificateItem();
+        certificateItem.AriDecisionSource = renewalDecision.DecisionSource.ToString();
+        certificateItem.AriReason = renewalDecision.Reason;
+        return certificateItem;
+    }
+
+    /// <summary>
+    /// Evaluates certificate renewal based on expiry date
+    /// </summary>
+    /// <param name="certificate">Certificate properties</param>
+    /// <param name="currentDateTime">Current date/time</param>
+    /// <param name="fullCertificate">Full certificate with policy</param>
+    /// <returns>CertificateItem if renewal needed, null otherwise</returns>
+    private CertificateItem EvaluateExpiryBasedRenewal(
+        CertificateProperties certificate, 
+        DateTime currentDateTime, 
+        KeyVaultCertificateWithPolicy fullCertificate)
+    {
+        var shouldRenew = (certificate.ExpiresOn.Value - currentDateTime).TotalDays <= _options.RenewBeforeExpiry;
+        
+        if (shouldRenew)
+        {
+            _logger.LogDebug("Expiry-based renewal needed for certificate {Name}: expires {ExpiryDate}", 
+                certificate.Name, certificate.ExpiresOn);
+            return fullCertificate.ToCertificateItem();
+        }
+
+        return null;
+    }
+
+   
 
     [FunctionName(nameof(GetAllCertificates))]
     public async Task<IReadOnlyList<CertificateItem>> GetAllCertificates([ActivityTrigger] object input = null)
@@ -135,8 +284,49 @@ public class SharedActivity : ISharedActivity
     [FunctionName(nameof(Order))]
     public async Task<OrderDetails> Order([ActivityTrigger] IReadOnlyList<string> dnsNames)
     {
+        // Use ARI-aware order creation
+        return await OrderWithAriSupport((dnsNames, null));
+    }
+
+    [FunctionName(nameof(OrderWithAriSupport))]
+    public async Task<OrderDetails> OrderWithAriSupport([ActivityTrigger] (IReadOnlyList<string> dnsNames, string existingCertificateName) input)
+    {
+        var (dnsNames, existingCertificateName) = input;
+        
         var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
+        KeyVaultCertificateWithPolicy existingCertificate = null;
+        
+        // Get existing certificate for ARI replacement if provided
+        if (!string.IsNullOrEmpty(existingCertificateName))
+        {
+            try
+            {
+                existingCertificate = await _certificateClient.GetCertificateAsync(existingCertificateName);
+                _logger.LogDebug("Retrieved existing certificate {CertificateName} for potential ARI replacement", existingCertificateName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not retrieve existing certificate {CertificateName} for ARI replacement", existingCertificateName);
+            }
+        }
+
+        // Use ARI integration service for order creation if enabled
+        if (_options.AriEnabled)
+        {
+            try
+            {
+                return await _ariIntegrationService.CreateOrderWithAriSupportAsync(
+                    acmeProtocolClient, dnsNames, existingCertificate, CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "ARI-aware order creation failed, falling back to standard order creation");
+                // Fall through to standard order creation
+            }
+        }
+
+        // Fallback to standard order creation
         return await acmeProtocolClient.CreateOrderAsync(dnsNames);
     }
 
@@ -475,5 +665,71 @@ public class SharedActivity : ISharedActivity
         var (certificateName, expirationDate, dnsNames) = input;
 
         return _webhookInvoker.SendCompletedEventAsync(certificateName, expirationDate, dnsNames, _options.Endpoint.Host);
+    }
+
+    [FunctionName(nameof(EvaluateAriRenewal))]
+    public async Task<bool> EvaluateAriRenewal([ActivityTrigger] string certificateName)
+    {
+        if (!_options.AriEnabled)
+        {
+            _logger.LogDebug("ARI disabled, skipping ARI evaluation for certificate {CertificateName}", certificateName);
+            return false;
+        }
+
+        try
+        {
+            var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
+            var certificate = await _certificateClient.GetCertificateAsync(certificateName);
+            
+            var renewalDecision = await _ariIntegrationService.EvaluateRenewalAsync(
+                acmeProtocolClient, certificate.Value, CancellationToken.None);
+                
+            _logger.LogInformation("ARI renewal evaluation for {CertificateName}: {ShouldRenew} ({DecisionSource}) - {Reason}",
+                certificateName, renewalDecision.ShouldRenew, renewalDecision.DecisionSource, renewalDecision.Reason);
+                
+            return renewalDecision.ShouldRenew;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during ARI renewal evaluation for certificate {CertificateName}", certificateName);
+            return false;
+        }
+    }
+
+    [FunctionName(nameof(GetAriRenewalInfo))]
+    public async Task<RenewalDecision> GetAriRenewalInfo([ActivityTrigger] string certificateName)
+    {
+        if (!_options.AriEnabled)
+        {
+            return new RenewalDecision
+            {
+                CertificateName = certificateName,
+                ShouldRenew = false,
+                DecisionSource = RenewalDecisionSource.Expiry,
+                Reason = "ARI disabled in configuration"
+            };
+        }
+
+        try
+        {
+            var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
+            var certificate = await _certificateClient.GetCertificateAsync(certificateName);
+            
+            return await _ariIntegrationService.EvaluateRenewalAsync(
+                acmeProtocolClient, certificate.Value, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting ARI renewal info for certificate {CertificateName}", certificateName);
+            
+            return new RenewalDecision
+            {
+                CertificateName = certificateName,
+                ShouldRenew = false,
+                DecisionSource = RenewalDecisionSource.Expiry,
+                Reason = $"ARI evaluation failed: {ex.Message}",
+                FallbackUsed = true
+            };
+        }
     }
 }

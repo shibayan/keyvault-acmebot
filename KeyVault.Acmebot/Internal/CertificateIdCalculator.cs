@@ -27,7 +27,9 @@ namespace KeyVault.Acmebot.Internal
         public static CertificateIdentifier ExtractCertificateId(X509Certificate2 certificate)
         {
             if (certificate == null)
+            {
                 throw new ArgumentNullException(nameof(certificate));
+            }
 
             var authorityKeyIdentifier = ExtractAuthorityKeyIdentifier(certificate);
             var serialNumber = ExtractSerialNumber(certificate);
@@ -48,7 +50,9 @@ namespace KeyVault.Acmebot.Internal
         {
             var akiExtension = certificate.Extensions[AuthorityKeyIdentifierOid];
             if (akiExtension == null)
+            {
                 throw new InvalidOperationException("Certificate does not contain Authority Key Identifier extension");
+            }
 
             // Parse AKI extension according to RFC 5280
             // AKI is an OCTET STRING containing a SEQUENCE with optional keyIdentifier [0]
@@ -93,8 +97,10 @@ namespace KeyVault.Acmebot.Internal
                 // Serial number is returned as hex string, convert to bytes
                 // Handle both even and odd length strings
                 if (serialString.Length % 2 != 0)
+                {
                     serialString = "0" + serialString;
-                
+                }
+
                 var serialBytes = new byte[serialString.Length / 2];
                 for (int i = 0; i < serialBytes.Length; i++)
                 {
@@ -136,7 +142,9 @@ namespace KeyVault.Acmebot.Internal
         private static string Base64UrlEncode(byte[] data)
         {
             if (data == null || data.Length == 0)
+            {
                 return string.Empty;
+            }
 
             // Convert to base64 then make it URL-safe
             var base64 = Convert.ToBase64String(data);
@@ -156,18 +164,24 @@ namespace KeyVault.Acmebot.Internal
         public static bool IsValidForAri(X509Certificate2 certificate)
         {
             if (certificate == null)
+            {
                 return false;
+            }
 
             try
             {
                 // Check if certificate has Authority Key Identifier
                 var akiExtension = certificate.Extensions[AuthorityKeyIdentifierOid];
                 if (akiExtension == null)
+                {
                     return false;
+                }
 
                 // Check if we can extract serial number
                 if (string.IsNullOrEmpty(certificate.SerialNumber))
+                {
                     return false;
+                }
 
                 return true;
             }
