@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
 using ACMESharp.Protocol;
 using ACMESharp.Protocol.Resources;
+
 using Azure.Security.KeyVault.Certificates;
 
 using KeyVault.Acmebot.Models;
@@ -24,25 +28,20 @@ namespace KeyVault.Acmebot.Internal
     {
         private readonly ILogger<AriIntegrationService> _logger;
         private readonly AcmebotOptions _options;
-        private readonly AriClient _ariClient;
-        private readonly AriDirectoryService _ariDirectoryService;
+        private readonly HttpClient _httpClient;
         private readonly RenewalWindowService _renewalWindowService;
-        private readonly AriOrderService _ariOrderService;
 
         public AriIntegrationService(
             ILogger<AriIntegrationService> logger,
             IOptions<AcmebotOptions> options,
-            AriClient ariClient,
-            AriDirectoryService ariDirectoryService,
-            RenewalWindowService renewalWindowService,
-            AriOrderService ariOrderService)
+            HttpClient httpClient,
+            RenewalWindowService renewalWindowService
+            )
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-            _ariClient = ariClient ?? throw new ArgumentNullException(nameof(ariClient));
-            _ariDirectoryService = ariDirectoryService ?? throw new ArgumentNullException(nameof(ariDirectoryService));
+            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _renewalWindowService = renewalWindowService ?? throw new ArgumentNullException(nameof(renewalWindowService));
-            _ariOrderService = ariOrderService ?? throw new ArgumentNullException(nameof(ariOrderService));
         }
 
         /// <summary>
@@ -50,7 +49,7 @@ namespace KeyVault.Acmebot.Internal
         /// </summary>
         public async Task<RenewalDecision> EvaluateRenewalAsync(
             AcmeProtocolClient acmeProtocolClient,
-            KeyVaultCertificateWithPolicy certificate, 
+            KeyVaultCertificateWithPolicy certificate,
             CancellationToken cancellationToken = default)
         {
             var decision = new RenewalDecision
@@ -81,13 +80,13 @@ namespace KeyVault.Acmebot.Internal
 
                 // Try ARI evaluation
                 decision = await EvaluateAriBasedRenewalAsync(acmeProtocolClient, certificate, cancellationToken);
-                
+
                 return decision;
             }
             catch (Exception ex) when (!(ex is OperationCanceledException))
             {
                 _logger.LogError(ex, "Error evaluating renewal for certificate {Name}", certificate.Name);
-                
+
                 if (_options.AriFallbackToExpiry)
                 {
                     decision = await EvaluateExpiryBasedRenewalAsync(certificate);
@@ -122,12 +121,158 @@ namespace KeyVault.Acmebot.Internal
             }
 
             // Create order using ARI service
-            var order = await _ariOrderService.CreateOrderAsync(acmeProtocolClient, identifiers, existingCertId, cancellationToken);
-            
-            // Log order creation details
-            _ariOrderService.LogOrderCreation(order, identifiers, existingCertId != null);
-            
+            var order = await CreateOrderAsync(acmeProtocolClient, identifiers, existingCertId, cancellationToken);
+
             return order;
+        }
+
+        /// <summary>
+        /// Gets the renewal info URL for a specific certificate
+        /// </summary>
+        /// <param name="acmeProtocolClient">The ACME protocol client</param>
+        /// <param name="certificateId">The certificate ID</param>
+        /// <returns>The renewal info URL or null if not supported</returns>
+        private string GetRenewalInfoEndpoint(AcmeProtocolClient acmeProtocolClient, string certificateId)
+        {
+            try
+            {
+                // Use the direct RenewalInfo property
+                var baseUrl = acmeProtocolClient.Directory?.RenewalInfo;
+                if (string.IsNullOrEmpty(baseUrl))
+                {
+                    _logger.LogDebug("ACME server does not support ARI");
+                    return null;
+                }
+
+                var url = acmeProtocolClient.GetRenewalInfoUrlForCertificate(certificateId);
+
+                _logger.LogDebug("Constructed ARI URL for certificate {CertId}: {Url}",
+                    certificateId, url);
+
+                return url;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error constructing ARI URL for certificate {CertId}", certificateId);
+                return null;
+            }
+        }
+
+
+        private async Task<RenewalInfoResponse> GetRenewalInfoAsync(string ariUrl, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrEmpty(ariUrl))
+            {
+                _logger.LogWarning("ARI URL is null or empty");
+                return null;
+            }
+
+            try
+            {
+                _logger.LogDebug("Requesting renewal info from ARI endpoint: {AriUrl}", ariUrl);
+
+                using var response = await _httpClient.GetAsync(ariUrl, cancellationToken);
+
+                switch (response.StatusCode)
+                {
+                    case HttpStatusCode.OK:
+                        var renewalInfo = await response.Content.ReadFromJsonAsync<RenewalInfoResponse>(cancellationToken: cancellationToken);
+
+                        if (renewalInfo?.SuggestedWindow != null)
+                        {
+                            _logger.LogInformation("Successfully retrieved ARI data. Renewal window: {Start} to {End}",
+                                renewalInfo.SuggestedWindow.Start, renewalInfo.SuggestedWindow.End);
+                            return renewalInfo;
+                        }
+
+                        _logger.LogWarning("ARI response missing required SuggestedWindow data");
+                        return null;
+
+                    case HttpStatusCode.NotFound:
+                        _logger.LogInformation("Certificate not found in ARI system (404). This is normal for new certificates.");
+                        return null;
+
+                    case HttpStatusCode.BadRequest:
+                        _logger.LogError("Bad request to ARI endpoint. Certificate ID may be invalid: {AriUrl}", ariUrl);
+                        return null;
+
+                    default:
+                        _logger.LogError("Unexpected HTTP status code from ARI endpoint: {StatusCode}", response.StatusCode);
+                        return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error during ARI request to {AriUrl}", ariUrl);
+                return null;
+            }
+        }
+
+        private async Task<OrderDetails> CreateOrderAsync(AcmeProtocolClient acmeProtocolClient,
+           IReadOnlyList<string> identifiers, CertificateIdentifier existingCertificateId = null,
+           CancellationToken cancellationToken = default)
+        {
+            if (acmeProtocolClient == null)
+            {
+                throw new ArgumentNullException(nameof(acmeProtocolClient));
+            }
+
+            if (identifiers == null || !identifiers.Any())
+            {
+                throw new ArgumentException("At least one identifier is required", nameof(identifiers));
+            }
+
+            try
+            {
+                string replacesCertId = null;
+
+                // If we have an existing certificate and ARI is supported, use it for replacement
+                if (existingCertificateId != null && acmeProtocolClient.HasRenewalInfoSupport())
+                {
+                    replacesCertId = existingCertificateId.CertificateId;
+
+                    if (AcmeProtocolClientExtensions.IsValidReplacementCertificateId(replacesCertId))
+                    {
+                        _logger.LogInformation("Creating ARI-aware order to replace certificate: {CertificateId}",
+                            replacesCertId);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Invalid replacement certificate ID: {CertificateId}. Creating standard order.",
+                            replacesCertId);
+                        replacesCertId = null;
+                    }
+                }
+                else if (existingCertificateId != null)
+                {
+                    _logger.LogDebug("ACME server does not support ARI. Creating standard order for renewal.");
+                }
+                else
+                {
+                    _logger.LogDebug("Creating new certificate order (no existing certificate to replace).");
+                }
+
+                // Create the order using the extension method
+                var order = await acmeProtocolClient.CreateOrderWithReplacementAsync(
+                    identifiers, replacesCertId, cancellationToken);
+
+                _logger.LogInformation("Successfully created ACME order {OrderUrl} for domains: {Domains}",
+                    order.OrderUrl, string.Join(", ", identifiers));
+
+                if (!string.IsNullOrEmpty(replacesCertId))
+                {
+                    _logger.LogInformation("Order includes ARI replacement for certificate: {CertificateId}",
+                        replacesCertId);
+                }
+
+                return order;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create ACME order for domains: {Domains}",
+                    string.Join(", ", identifiers));
+                throw;
+            }
         }
 
         // Private helper methods
@@ -146,7 +291,7 @@ namespace KeyVault.Acmebot.Internal
             {
                 // Extract certificate ID for ARI
                 var x509Certificate = new X509Certificate2(certificate.Cer);
-                
+
                 if (!CertificateIdCalculator.IsValidForAri(x509Certificate))
                 {
                     var fallbackDecision = await EvaluateExpiryBasedRenewalAsync(certificate);
@@ -156,8 +301,8 @@ namespace KeyVault.Acmebot.Internal
                 }
 
                 var certId = CertificateIdCalculator.ExtractCertificateId(x509Certificate);
-                var ariUrl = _ariDirectoryService.GetRenewalInfoEndpoint(acmeProtocolClient, certId.CertificateId);
-                
+                var ariUrl = GetRenewalInfoEndpoint(acmeProtocolClient, certId.CertificateId);
+
                 if (string.IsNullOrEmpty(ariUrl))
                 {
                     var fallbackDecision = await EvaluateExpiryBasedRenewalAsync(certificate);
@@ -166,8 +311,8 @@ namespace KeyVault.Acmebot.Internal
                     return fallbackDecision;
                 }
 
-                var renewalInfo = await _ariClient.GetRenewalInfoAsync(ariUrl, cancellationToken);
-                
+                var renewalInfo = await GetRenewalInfoAsync(ariUrl, cancellationToken);
+
                 if (renewalInfo == null)
                 {
                     var fallbackDecision = await EvaluateExpiryBasedRenewalAsync(certificate);
@@ -189,7 +334,7 @@ namespace KeyVault.Acmebot.Internal
                 decision.AriData = renewalInfo;
                 decision.Reason = _renewalWindowService.GetRenewalWindowStatus(renewalInfo);
 
-                _logger.LogInformation("ARI renewal decision for certificate {Name}: {WindowStatus}, ShouldRenew: {ShouldRenew}", 
+                _logger.LogInformation("ARI renewal decision for certificate {Name}: {WindowStatus}, ShouldRenew: {ShouldRenew}",
                     certificate.Name, decision.Reason, decision.ShouldRenew);
 
                 return decision;
@@ -207,8 +352,8 @@ namespace KeyVault.Acmebot.Internal
 
             var renewBeforeExpiry = TimeSpan.FromDays(_options.RenewBeforeExpiry);
             var shouldRenew = certificate.Properties.ExpiresOn < DateTimeOffset.UtcNow.Add(renewBeforeExpiry);
-            
-            _logger.LogDebug("Expiry-based renewal decision for certificate {Name}: Expires {ExpiryDate}, ShouldRenew: {ShouldRenew}", 
+
+            _logger.LogDebug("Expiry-based renewal decision for certificate {Name}: Expires {ExpiryDate}, ShouldRenew: {ShouldRenew}",
                 certificate.Name, certificate.Properties.ExpiresOn, shouldRenew);
 
             return new RenewalDecision
@@ -216,7 +361,7 @@ namespace KeyVault.Acmebot.Internal
                 CertificateName = certificate.Name,
                 ShouldRenew = shouldRenew,
                 DecisionSource = RenewalDecisionSource.Expiry,
-                Reason = shouldRenew 
+                Reason = shouldRenew
                     ? $"Certificate expires within {_options.RenewBeforeExpiry} days"
                     : $"Certificate does not expire within {_options.RenewBeforeExpiry} days",
                 ExpiryDate = certificate.Properties.ExpiresOn

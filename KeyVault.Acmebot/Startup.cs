@@ -140,12 +140,8 @@ public class Startup : FunctionsStartup
         });
 
         // Register ARI services
-        builder.Services.AddSingleton<AriDirectoryService>();
         builder.Services.AddSingleton<RenewalWindowService>();
-        builder.Services.AddSingleton<AriOrderService>();
         builder.Services.AddSingleton<AriIntegrationService>(); // Add this
         
-        // Register AriClient with HttpClient factory
-        builder.Services.AddHttpClient<AriClient>();
     }
 }
