@@ -56,14 +56,5 @@ public class AcmebotOptions
 
     // Add ARI configuration properties
     [JsonPropertyName("ariEnabled")]
-    public bool AriEnabled { get; set; } = true;
-
-    [JsonPropertyName("ariMaxRetries")]
-    public int AriMaxRetries { get; set; } = 3;
-
-    [JsonPropertyName("ariFallbackToExpiry")]
-    public bool AriFallbackToExpiry { get; set; } = true;
-
-    [JsonPropertyName("ariRespectRateLimits")]
-    public bool AriRespectRateLimits { get; set; } = true;
+    public bool AriEnabled { get; set; } = false; 
 }
