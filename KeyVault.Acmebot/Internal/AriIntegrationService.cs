@@ -92,7 +92,7 @@ public class CertificateRenewalEligibilityChecker
 
             _logger.LogDebug("Requesting renewal info from ARI endpoint: {AriUrl}", ariUrl);
 
-            var response = await _httpClient.GetAsync(ariUrl, cancellationToken);
+            using var response = await _httpClient.GetAsync(ariUrl, cancellationToken);
 
             switch (response.StatusCode)
             {
