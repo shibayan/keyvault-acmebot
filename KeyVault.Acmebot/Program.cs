@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 using Azure.Core;
@@ -12,35 +12,32 @@ using KeyVault.Acmebot.Options;
 using KeyVault.Acmebot.Providers;
 
 using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.Azure.Functions.Extensions.DependencyInjection;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
-[assembly: FunctionsStartup(typeof(KeyVault.Acmebot.Startup))]
-
-namespace KeyVault.Acmebot;
-
-public class Startup : FunctionsStartup
-{
-    public override void Configure(IFunctionsHostBuilder builder)
+var host = new HostBuilder()
+    .ConfigureFunctionsWorkerDefaults(builder =>
     {
-        var context = builder.GetContext();
-
+        builder.AddApplicationInsights()
+               .AddApplicationInsightsLogger();
+    })
+    .ConfigureServices((context, services) =>
+    {
         // Add Options
-        builder.Services.AddOptions<AcmebotOptions>()
+        services.AddOptions<AcmebotOptions>()
                .Bind(context.Configuration.GetSection("Acmebot"))
                .ValidateDataAnnotations();
 
         // Add Services
-        builder.Services.Replace(ServiceDescriptor.Transient(typeof(IOptionsFactory<>), typeof(OptionsFactory<>)));
+        services.Replace(ServiceDescriptor.Transient(typeof(IOptionsFactory<>), typeof(OptionsFactory<>)));
 
-        builder.Services.AddHttpClient();
+        services.AddHttpClient();
 
-        builder.Services.AddSingleton<ITelemetryInitializer, ApplicationVersionInitializer>();
+        services.AddSingleton<ITelemetryInitializer, ApplicationVersionInitializer>();
 
-        builder.Services.AddSingleton(provider =>
+        services.AddSingleton(provider =>
         {
             var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
 
@@ -52,14 +49,14 @@ public class Startup : FunctionsStartup
             return new LookupClient(lookupClientOptions);
         });
 
-        builder.Services.AddSingleton(provider =>
+        services.AddSingleton(provider =>
         {
             var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
 
             return AzureEnvironment.Get(options.Value.Environment);
         });
 
-        builder.Services.AddSingleton<TokenCredential>(provider =>
+        services.AddSingleton<TokenCredential>(provider =>
         {
             var environment = provider.GetRequiredService<AzureEnvironment>();
 
@@ -69,7 +66,7 @@ public class Startup : FunctionsStartup
             });
         });
 
-        builder.Services.AddSingleton(provider =>
+        services.AddSingleton(provider =>
         {
             var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
             var credential = provider.GetRequiredService<TokenCredential>();
@@ -77,13 +74,13 @@ public class Startup : FunctionsStartup
             return new CertificateClient(new Uri(options.Value.VaultBaseUrl), credential);
         });
 
-        builder.Services.AddSingleton<AcmeProtocolClientFactory>();
+        services.AddSingleton<AcmeProtocolClientFactory>();
 
         // Add Webhook invoker
-        builder.Services.AddSingleton<WebhookInvoker>();
-        builder.Services.AddSingleton<ILifeCycleNotificationHelper, WebhookLifeCycleNotification>();
+        services.AddSingleton<WebhookInvoker>();
+        services.AddSingleton<ILifeCycleNotificationHelper, WebhookLifeCycleNotification>();
 
-        builder.Services.AddSingleton<IWebhookPayloadBuilder>(provider =>
+        services.AddSingleton<IWebhookPayloadBuilder>(provider =>
         {
             var options = provider.GetRequiredService<IOptions<AcmebotOptions>>().Value;
 
@@ -111,7 +108,7 @@ public class Startup : FunctionsStartup
         });
 
         // Add DNS Providers
-        builder.Services.AddSingleton<IEnumerable<IDnsProvider>>(provider =>
+        services.AddSingleton<IEnumerable<IDnsProvider>>(provider =>
         {
             var options = provider.GetRequiredService<IOptions<AcmebotOptions>>().Value;
             var environment = provider.GetRequiredService<AzureEnvironment>();
@@ -138,5 +135,7 @@ public class Startup : FunctionsStartup
 
             return dnsProviders;
         });
-    }
-}
+    })
+    .Build();
+
+host.Run();

@@ -18,8 +18,8 @@ using KeyVault.Acmebot.Models;
 using KeyVault.Acmebot.Options;
 using KeyVault.Acmebot.Providers;
 
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.DurableTask;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -50,7 +50,7 @@ public class SharedActivity : ISharedActivity
     private readonly AcmebotOptions _options;
     private readonly ILogger<SharedActivity> _logger;
 
-    [FunctionName(nameof(GetExpiringCertificates))]
+    [Function(nameof(GetExpiringCertificates))]
     public async Task<IReadOnlyList<CertificateItem>> GetExpiringCertificates([ActivityTrigger] DateTime currentDateTime)
     {
         var certificates = _certificateClient.GetPropertiesOfCertificatesAsync();
@@ -75,7 +75,7 @@ public class SharedActivity : ISharedActivity
         return result;
     }
 
-    [FunctionName(nameof(GetAllCertificates))]
+    [Function(nameof(GetAllCertificates))]
     public async Task<IReadOnlyList<CertificateItem>> GetAllCertificates([ActivityTrigger] object input = null)
     {
         var certificates = _certificateClient.GetPropertiesOfCertificatesAsync();
@@ -95,7 +95,7 @@ public class SharedActivity : ISharedActivity
         return result;
     }
 
-    [FunctionName(nameof(GetAllDnsZones))]
+    [Function(nameof(GetAllDnsZones))]
     public async Task<IReadOnlyList<DnsZoneGroup>> GetAllDnsZones([ActivityTrigger] object input = null)
     {
         try
@@ -114,7 +114,7 @@ public class SharedActivity : ISharedActivity
         }
     }
 
-    [FunctionName(nameof(GetCertificatePolicy))]
+    [Function(nameof(GetCertificatePolicy))]
     public async Task<CertificatePolicyItem> GetCertificatePolicy([ActivityTrigger] string certificateName)
     {
         KeyVaultCertificateWithPolicy certificate = await _certificateClient.GetCertificateAsync(certificateName);
@@ -122,7 +122,7 @@ public class SharedActivity : ISharedActivity
         return certificate.ToCertificatePolicyItem();
     }
 
-    [FunctionName(nameof(RevokeCertificate))]
+    [Function(nameof(RevokeCertificate))]
     public async Task RevokeCertificate([ActivityTrigger] string certificateName)
     {
         var response = await _certificateClient.GetCertificateAsync(certificateName);
@@ -132,7 +132,7 @@ public class SharedActivity : ISharedActivity
         await acmeProtocolClient.RevokeCertificateAsync(response.Value.Cer);
     }
 
-    [FunctionName(nameof(Order))]
+    [Function(nameof(Order))]
     public async Task<OrderDetails> Order([ActivityTrigger] IReadOnlyList<string> dnsNames)
     {
         var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
@@ -140,7 +140,7 @@ public class SharedActivity : ISharedActivity
         return await acmeProtocolClient.CreateOrderAsync(dnsNames);
     }
 
-    [FunctionName(nameof(Dns01Precondition))]
+    [Function(nameof(Dns01Precondition))]
     public async Task<string> Dns01Precondition([ActivityTrigger] CertificatePolicyItem certificatePolicyItem)
     {
         // DNS zone の一覧を各 Provider から取得
@@ -215,7 +215,7 @@ public class SharedActivity : ISharedActivity
         return dnsProvider.Name;
     }
 
-    [FunctionName(nameof(Dns01Authorization))]
+    [Function(nameof(Dns01Authorization))]
     public async Task<(IReadOnlyList<AcmeChallengeResult>, int)> Dns01Authorization([ActivityTrigger] (string, string, IReadOnlyList<string>) input)
     {
         var (dnsProviderName, dnsAlias, authorizationUrls) = input;
@@ -284,7 +284,7 @@ public class SharedActivity : ISharedActivity
         return (challengeResults, propagationSeconds);
     }
 
-    [FunctionName(nameof(CheckDnsChallenge))]
+    [Function(nameof(CheckDnsChallenge))]
     public async Task CheckDnsChallenge([ActivityTrigger] IReadOnlyList<AcmeChallengeResult> challengeResults)
     {
         foreach (var challengeResult in challengeResults)
@@ -320,7 +320,7 @@ public class SharedActivity : ISharedActivity
         }
     }
 
-    [FunctionName(nameof(AnswerChallenges))]
+    [Function(nameof(AnswerChallenges))]
     public async Task AnswerChallenges([ActivityTrigger] IReadOnlyList<AcmeChallengeResult> challengeResults)
     {
         var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
@@ -332,7 +332,7 @@ public class SharedActivity : ISharedActivity
         }
     }
 
-    [FunctionName(nameof(CheckIsReady))]
+    [Function(nameof(CheckIsReady))]
     public async Task CheckIsReady([ActivityTrigger] (OrderDetails, IReadOnlyList<AcmeChallengeResult>) input)
     {
         var (orderDetails, challengeResults) = input;
@@ -376,7 +376,7 @@ public class SharedActivity : ISharedActivity
         }
     }
 
-    [FunctionName(nameof(FinalizeOrder))]
+    [Function(nameof(FinalizeOrder))]
     public async Task<OrderDetails> FinalizeOrder([ActivityTrigger] (CertificatePolicyItem, OrderDetails) input)
     {
         var (certificatePolicyItem, orderDetails) = input;
@@ -405,7 +405,7 @@ public class SharedActivity : ISharedActivity
         return await acmeProtocolClient.FinalizeOrderAsync(orderDetails.Payload.Finalize, csr);
     }
 
-    [FunctionName(nameof(CheckIsValid))]
+    [Function(nameof(CheckIsValid))]
     public async Task<OrderDetails> CheckIsValid([ActivityTrigger] OrderDetails orderDetails)
     {
         var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
@@ -427,7 +427,7 @@ public class SharedActivity : ISharedActivity
         return orderDetails;
     }
 
-    [FunctionName(nameof(MergeCertificate))]
+    [Function(nameof(MergeCertificate))]
     public async Task<CertificateItem> MergeCertificate([ActivityTrigger] (string, OrderDetails) input)
     {
         var (certificateName, orderDetails) = input;
@@ -447,7 +447,7 @@ public class SharedActivity : ISharedActivity
         return (await _certificateClient.MergeCertificateAsync(mergeCertificateOptions)).Value.ToCertificateItem();
     }
 
-    [FunctionName(nameof(CleanupDnsChallenge))]
+    [Function(nameof(CleanupDnsChallenge))]
     public async Task CleanupDnsChallenge([ActivityTrigger] (string, IReadOnlyList<AcmeChallengeResult>) input)
     {
         var (dnsProviderName, challengeResults) = input;
@@ -469,7 +469,7 @@ public class SharedActivity : ISharedActivity
         }
     }
 
-    [FunctionName(nameof(SendCompletedEvent))]
+    [Function(nameof(SendCompletedEvent))]
     public Task SendCompletedEvent([ActivityTrigger] (string, DateTimeOffset?, IReadOnlyList<string>) input)
     {
         var (certificateName, expirationDate, dnsNames) = input;

@@ -1,30 +1,32 @@
-﻿using Azure.WebJobs.Extensions.HttpApi;
+﻿using System.Net;
 
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
+using KeyVault.Acmebot.Internal;
+
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 
 namespace KeyVault.Acmebot.Functions;
 
-public class StaticPage : HttpFunctionBase
+public class StaticPage
 {
-    public StaticPage(IHttpContextAccessor httpContextAccessor)
-        : base(httpContextAccessor)
+    private readonly ILogger _logger;
+
+    public StaticPage(ILoggerFactory loggerFactory)
     {
+        _logger = loggerFactory.CreateLogger<StaticPage>();
     }
 
-    [FunctionName($"{nameof(StaticPage)}_{nameof(Serve)}")]
-    public IActionResult Serve(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "{*path}")] HttpRequest req,
-        ILogger log)
+    [Function($"{nameof(StaticPage)}_{nameof(Serve)}")]
+    public HttpResponseData Serve(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "{*path}")] HttpRequestData req)
     {
-        if (!IsAuthenticationEnabled || !User.Identity.IsAuthenticated)
+        if (!req.IsAuthenticated())
         {
-            return Unauthorized();
+            return req.CreateResponse(HttpStatusCode.Unauthorized);
         }
 
-        return LocalStaticApp();
+        string path = req.Url.LocalPath.TrimStart('/');
+        return StaticFileHelper.ServeStaticFile(req, path);
     }
 }
