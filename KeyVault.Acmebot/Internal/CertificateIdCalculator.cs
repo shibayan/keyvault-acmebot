@@ -113,22 +113,20 @@ namespace KeyVault.Acmebot.Internal
             {
                 throw new InvalidOperationException("Failed to extract serial number from certificate", ex);
             }
-        }
-
-        /// <summary>
+        }        /// <summary>
         /// Generates certificate ID by combining AKI and serial number per ARI specification
+        /// Format: base64url(AKI) + "." + base64url(SerialNumber)
         /// </summary>
         private static string GenerateCertificateId(byte[] authorityKeyIdentifier, byte[] serialNumber)
         {
             try
             {
-                // Combine AKI and serial number as per ARI specification
-                var combined = new byte[authorityKeyIdentifier.Length + serialNumber.Length];
-                Array.Copy(authorityKeyIdentifier, 0, combined, 0, authorityKeyIdentifier.Length);
-                Array.Copy(serialNumber, 0, combined, authorityKeyIdentifier.Length, serialNumber.Length);
+                // Encode each component separately per RFC draft specification
+                var akiEncoded = Base64UrlEncode(authorityKeyIdentifier);
+                var serialEncoded = Base64UrlEncode(serialNumber);
                 
-                // Encode using base64url (RFC 4648 Section 5)
-                return Base64UrlEncode(combined);
+                // Concatenate with dot separator as per ARI specification
+                return $"{akiEncoded}.{serialEncoded}";
             }
             catch (Exception ex)
             {
