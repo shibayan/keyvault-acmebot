@@ -1,24 +1,15 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-
 using ACMESharp.Protocol;
-using ACMESharp.Protocol.Resources;
-
 using Azure.Security.KeyVault.Certificates;
-
 using KeyVault.Acmebot.Models;
 using KeyVault.Acmebot.Options;
-
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.VisualBasic;
 
 namespace KeyVault.Acmebot.Internal;
 
@@ -110,8 +101,8 @@ public class CertificateRenewalEligibilityChecker
 
                     if (renewalInfo?.SuggestedWindow != null)
                     {
-                        _logger.LogInformation("Successfully retrieved ARI data. Renewal window: {Start} to {End}",
-                            renewalInfo.SuggestedWindow.Start, renewalInfo.SuggestedWindow.End);
+                        _logger.LogInformation("Successfully retrieved ARI data. Renewal window: {Start} to {End}. Reason: {ExplanationUrl}",
+                            renewalInfo.SuggestedWindow.Start, renewalInfo.SuggestedWindow.End, renewalInfo.ExplanationUrl);
 
                         return DateTime.UtcNow >= renewalInfo.SuggestedWindow.Start;
                     }
