@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  keyvault-acmebot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80" # Map host port 8080 to container port 80 (Azure Functions default HTTP port)
+    environment:
+      # Common Azure Functions settings
+      - AzureWebJobsStorage= # Specify your Azure Storage connection string here if needed by functions
+      - FUNCTIONS_WORKER_RUNTIME=dotnet
+      # KeyVault.Acmebot specific settings - users will need to fill these in
+      - KeyVault:VaultUri= # e.g., https://yourkeyvault.vault.azure.net/
+      - Acmebot:SubscriptionId= # Your Azure Subscription ID
+      - Acmebot:TenantId= # Your Azure Tenant ID
+      # Authentication - choose one method
+      # For Managed Identity (recommended if running in Azure services that support it)
+      # - Azul:ManagedIdentity=system # or user-assigned client ID: Azul:ManagedIdentity=your-client-id
+      # For Service Principal
+      # - Azul:ServicePrincipal:ClientId=
+      # - Azul:ServicePrincipal:ClientSecret=
+      # - Azul:ServicePrincipal:TenantId=
+      # Example for local development using Azure CLI credentials (ensure you are logged in via `az login`)
+      # This requires mounting the Azure CLI token directory.
+      # This is NOT recommended for production.
+      # - Azul:AuthenticationMode=AzureCLI
+    # volumes: # Uncomment and adjust if using Azure CLI authentication locally
+      # - ~/.azure:/root/.azure:ro
+
+    # Add any other necessary environment variables based on local.settings.json
+    # or application requirements. For example:
+    # - Acmebot:Contacts=mailto:admin@example.com
+    # - Acmebot:AcmeEndpoint=https://acme-v02.api.letsencrypt.org/directory
+    # - Acmebot:Webhook=
+    # - etc.
+
+# Notes for users:
+# 1. AzureWebJobsStorage: Some Azure Functions triggers (like TimerTrigger by default) require an Azure Storage account.
+#    If your functions use such triggers, provide a connection string for 'AzureWebJobsStorage'.
+#    For local development, you can use the Azurite emulator.
+# 2. Key Vault Access: Ensure the identity used by the container (Managed Identity or Service Principal)
+#    has appropriate access policies (e.g., Get, List for secrets and certificates) in the target Azure Key Vault.
+# 3. DNS Provider Configuration: Depending on the DNS providers you intend to use with KeyVault-Acmebot,
+#    you will need to set additional environment variables for those providers.
+#    For example, for Azure DNS:
+#    - Acmebot:AzureDns:SubscriptionId=
+#    - Acmebot:AzureDns:ResourceGroup=
+#    - Acmebot:AzureDns:TenantId=
+#    Refer to the KeyVault-Acmebot documentation for specific environment variables for each DNS provider.

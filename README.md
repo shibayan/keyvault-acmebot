@@ -50,6 +50,104 @@ Key Vault Acmebot provides secure and centralized management of ACME certificate
   - SignalR Service (Premium)
   - Virtual Machine
 
+## Running with Docker Compose
+
+You can build and run KeyVault.Acmebot using Docker Compose. This is useful for local development and testing, or for deploying in containerized environments.
+
+**Prerequisites:**
+
+*   Docker Desktop installed and running.
+*   Azure CLI installed and configured (if you plan to use Azure CLI for authentication locally).
+
+**Steps:**
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/shibayan/keyvault-acmebot.git
+    cd keyvault-acmebot
+    ```
+    If you have forked the repository, clone your fork instead.
+
+2.  **Configure Environment Variables:**
+    Before running the application, you need to set up the necessary environment variables. The `docker-compose.yml` file contains placeholders for these variables. You can either:
+    *   Modify the `docker-compose.yml` file directly (not recommended for sensitive data).
+    *   Create a `.env` file in the root of the project. Docker Compose automatically loads variables from a `.env` file.
+
+    **Example `.env` file:**
+    ```env
+    # Azure Storage Connection String (required for some function triggers, e.g., timers)
+    # For local development, you can use Azurite (Azure Storage Emulator)
+    AzureWebJobsStorage=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;
+
+    # Key Vault URI
+    KeyVault:VaultUri=https://your-key-vault-name.vault.azure.net/
+
+    # Azure Subscription and Tenant ID
+    Acmebot:SubscriptionId=your-azure-subscription-id
+    Acmebot:TenantId=your-azure-tenant-id
+
+    # Authentication Method
+    # Choose ONE of the following methods:
+
+    # 1. Managed Identity (recommended for Azure hosted environments)
+    # If using system-assigned managed identity:
+    # Azul:ManagedIdentity=system
+    # If using user-assigned managed identity (provide the Client ID):
+    # Azul:ManagedIdentity=your-user-assigned-identity-client-id
+
+    # 2. Service Principal
+    # Azul:ServicePrincipal:ClientId=your-service-principal-client-id
+    # Azul:ServicePrincipal:ClientSecret=your-service-principal-client-secret
+    # Azul:ServicePrincipal:TenantId=your-azure-tenant-id # Often same as Acmebot:TenantId
+
+    # 3. Azure CLI (for local development ONLY - ensure you are logged in via `az login`)
+    # Azul:AuthenticationMode=AzureCLI
+
+    # General Acmebot settings
+    Acmebot:Contacts=mailto:youremail@example.com # Required by Let's Encrypt
+    # Acmebot:AcmeEndpoint=https://acme-v02.api.letsencrypt.org/directory # Default is Let's Encrypt production
+    # Acmebot:Webhook=your-webhook-url # Optional: For notifications
+
+    # DNS Provider specific settings (example for Azure DNS)
+    # Ensure the identity being used has "DNS Zone Contributor" role on the DNS zone(s)
+    # Acmebot:AzureDns:SubscriptionId=your-dns-zone-subscription-id
+    # Acmebot:AzureDns:ResourceGroup=your-dns-zone-resource-group
+    # Acmebot:AzureDns:TenantId=your-dns-zone-tenant-id # Often same as Acmebot:TenantId
+    ```
+    **Important:**
+    *   Replace placeholder values with your actual configuration.
+    *   For `AzureWebJobsStorage` in local development, you can use the Azurite emulator. The example above shows a common Azurite connection string.
+    *   Ensure the identity used (Managed Identity or Service Principal) has the necessary permissions (e.g., `Get` and `List` for secrets and certificates) on your Azure Key Vault.
+    *   Configure the specific environment variables for your chosen DNS provider(s). Refer to the official KeyVault-Acmebot documentation for details on each provider.
+
+3.  **Build and Run the Container:**
+    Open a terminal in the root of the project and run:
+    ```bash
+    docker-compose up --build
+    ```
+    This command will:
+    *   Build the Docker image for KeyVault.Acmebot based on the `Dockerfile`.
+    *   Start the container.
+    *   The Functions host will start, and you should see output indicating the available HTTP endpoints if any are HTTP triggered.
+
+4.  **Accessing the Functions:**
+    If your functions are HTTP triggered, they will typically be available at `http://localhost:8080/api/FunctionName`. For example, the dashboard might be at `http://localhost:8080/api/Dashboard`.
+
+5.  **Stopping the Container:**
+    Press `Ctrl+C` in the terminal where `docker-compose up` is running. To remove the container (and network if created solely for this), you can run:
+    ```bash
+    docker-compose down
+    ```
+
+**Local Development with Azure CLI Authentication:**
+
+If you set `Azul:AuthenticationMode=AzureCLI` in your environment variables, Docker Compose will attempt to use your local Azure CLI login. For this to work from within the container, the `docker-compose.yml` file has a commented-out `volumes` section:
+```yaml
+    # volumes:
+      # - ~/.azure:/root/.azure:ro
+```
+Uncomment this section to mount your local Azure CLI configuration directory into the container as read-only. **This method is for local development convenience and should not be used for production deployments.**
+
 ## Deployment
 
 | Azure (Public) | Azure China | Azure Government |
