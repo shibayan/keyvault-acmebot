@@ -11,6 +11,7 @@ using ACMESharp.Protocol;
 using ACMESharp.Protocol.Resources;
 
 using Azure.Security.KeyVault.Certificates;
+using Azure;
 
 using DnsClient;
 
@@ -143,13 +144,31 @@ public class SharedActivity : ISharedActivity
     {
         var dnsNames = certificatePolicyItem.DnsNames;
         var existingCertificateName = certificatePolicyItem.CertificateName;
-
         var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
-
-        KeyVaultCertificateWithPolicy existingCertificate = await _certificateClient.GetCertificateAsync(existingCertificateName);
+        string replacesCertId = null;
+        
+        if (_options.AriEnabled)
+        {
+            try
+            {
+                // Attempt to get existing certificate for ARI replacement ID
+                var certificateForAri = await _certificateClient.GetCertificateAsync(existingCertificateName);
+                replacesCertId = certificateForAri.Value.ExtractARICertificateId();
+            }
+            catch (RequestFailedException ex) when (ex.Status == 404)
+            {
+                // Cert does not exist in KV. New Order
+                _logger.LogInformation("Certificate {CertificateName} does not exist yet - creating new certificate", existingCertificateName);
+            }
+            catch (Exception ex)
+            {
+                // Cert Exists but ARI extraction failed. For now, let's fallback to ordering without ARI.
+                _logger.LogWarning(ex, "Failed to extract ARI certificate ID for {CertificateName}, ordering without ARI", existingCertificateName);
+            }
+        }
 
         return await acmeProtocolClient.CreateOrderAsync(
-            dnsNames, _options.AriEnabled ? existingCertificate.Name : null, null, null, CancellationToken.None);
+            dnsNames, replacesCertId, null, null, CancellationToken.None);
     }
 
     [FunctionName(nameof(Dns01Precondition))]

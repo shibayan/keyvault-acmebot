@@ -89,16 +89,11 @@ internal static class CertificateExtensions
     /// <exception cref="InvalidOperationException">Thrown when required certificate components cannot be extracted</exception>
     public static string ExtractARICertificateId(this KeyVaultCertificateWithPolicy certificate)
     {
-        if (certificate == null)
-        {
-            throw new ArgumentNullException(nameof(certificate));
-        }
-         var x509Certificate = new X509Certificate2(certificate.Cer); 
+        var x509Certificate = new X509Certificate2(certificate.Cer);
         var certificateId = x509Certificate.GenerateCertificateId();
-
         return certificateId;
-    } 
-    
+    }
+
     private const string IssuerKey = "Issuer";
     private const string EndpointKey = "Endpoint";
     private const string DnsProviderKey = "DnsProvider";
