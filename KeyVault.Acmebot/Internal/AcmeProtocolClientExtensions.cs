@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using ACMESharp.Protocol;
-using ACMESharp.Protocol.Resources;
 
 namespace KeyVault.Acmebot.Internal;
 
@@ -62,6 +61,5 @@ internal static class AcmeProtocolClientExtensions
 
         // マッチする証明書チェーンが存在しない場合はデフォルトを返す
         return defaultX509Certificates;
-    }
-   
+    }   
 }
