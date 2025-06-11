@@ -4,10 +4,14 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
 using ACMESharp.Protocol;
+
 using Azure.Security.KeyVault.Certificates;
+
 using KeyVault.Acmebot.Models;
 using KeyVault.Acmebot.Options;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -61,7 +65,7 @@ public class CertificateRenewalEligibilityChecker
             }
 
             _logger.LogDebug("Certificate {Name} does not require renewal based on ARI or expiry checks", certificate.Name);
-            return (false, certificateItem);                
+            return (false, certificateItem);
         }
         catch (Exception ex)
         {
@@ -77,7 +81,7 @@ public class CertificateRenewalEligibilityChecker
         AcmeProtocolClient acmeProtocolClient,
         KeyVaultCertificateWithPolicy certificate,
         CancellationToken cancellationToken = default)
-    {           
+    {
         try
         {
             // Check ARI configuration
@@ -85,7 +89,7 @@ public class CertificateRenewalEligibilityChecker
             {
                 _logger.LogDebug("ARI is not enabled or RenewalInfo is not configured.");
                 return false;
-            }              
+            }
 
             var certificateId = certificate.ExtractARICertificateId();
             var ariUrl = $"{acmeProtocolClient?.Directory?.RenewalInfo.TrimEnd('/')}/{certificateId}";
@@ -104,12 +108,25 @@ public class CertificateRenewalEligibilityChecker
                         _logger.LogInformation("Successfully retrieved ARI data. Renewal window: {Start} to {End}. Reason: {ExplanationUrl}",
                             renewalInfo.SuggestedWindow.Start, renewalInfo.SuggestedWindow.End, renewalInfo.ExplanationUrl);
 
-                        return DateTime.UtcNow >= renewalInfo.SuggestedWindow.Start;
+                        // Check if the current date is >= 2/3 of the suggested renewal window duration                        
+
+                        var windowDuration = renewalInfo.SuggestedWindow.End - renewalInfo.SuggestedWindow.Start;
+                        if (windowDuration.TotalDays <= 0)
+                        {
+                            _logger.LogWarning("Invalid ARI suggested window duration: {Duration} days", windowDuration.TotalDays);
+                            return false;
+                        }
+                        var twoThirdsOfWindow = renewalInfo.SuggestedWindow.Start + (windowDuration * 2 / 3);
+
+                        _logger.LogDebug("Certificate : {Name}, Current time: {CurrentTime}, 2/3 window: {TwoThirdsOfWindow}", certificate.Name, DateTime.UtcNow, twoThirdsOfWindow);
+
+                        return DateTime.UtcNow >= twoThirdsOfWindow;
+
                     }
 
                     _logger.LogWarning("ARI response missing required SuggestedWindow data");
                     return false;
-               
+
                 default:
                     _logger.LogError("Unexpected HTTP status code from ARI endpoint: {StatusCode}", response.StatusCode);
                     return false;
@@ -121,7 +138,7 @@ public class CertificateRenewalEligibilityChecker
             _logger.LogError(ex, "Error evaluating ARI renewal for certificate {Name}", certificate.Name);
             throw;
         }
-    }       
+    }
 
     /// <summary>
     /// Evaluates certificate renewal based on expiry date 
@@ -135,10 +152,10 @@ public class CertificateRenewalEligibilityChecker
         DateTime currentDateTime
         )
     {
-        var shouldRenew = (certificate.ExpiresOn.Value - currentDateTime).TotalDays <= _options.RenewBeforeExpiry;            
+        var shouldRenew = (certificate.ExpiresOn.Value - currentDateTime).TotalDays <= _options.RenewBeforeExpiry;
         return shouldRenew;
-        
+
     }
 
 
-}    
+}
