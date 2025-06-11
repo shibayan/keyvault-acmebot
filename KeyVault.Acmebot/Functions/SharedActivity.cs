@@ -33,7 +33,7 @@ public class SharedActivity : ISharedActivity
     public SharedActivity(LookupClient lookupClient, AcmeProtocolClientFactory acmeProtocolClientFactory,
                           IEnumerable<IDnsProvider> dnsProviders, CertificateClient certificateClient,
                           WebhookInvoker webhookInvoker, IOptions<AcmebotOptions> options, ILogger<SharedActivity> logger,
-                          AriIntegrationService ariIntegrationService)
+                          CertificateRenewalEligibilityChecker CertificateRenewalEligibilityChecker)
     {
         _lookupClient = lookupClient;
         _acmeProtocolClientFactory = acmeProtocolClientFactory;
@@ -42,7 +42,7 @@ public class SharedActivity : ISharedActivity
         _webhookInvoker = webhookInvoker;
         _options = options.Value;
         _logger = logger;
-        _ariIntegrationService = ariIntegrationService;
+        _CertificateRenewalEligibilityChecker = CertificateRenewalEligibilityChecker;
     }
 
     private readonly LookupClient _lookupClient;
@@ -52,7 +52,7 @@ public class SharedActivity : ISharedActivity
     private readonly WebhookInvoker _webhookInvoker;
     private readonly AcmebotOptions _options;
     private readonly ILogger<SharedActivity> _logger;
-    private readonly AriIntegrationService _ariIntegrationService;
+    private readonly CertificateRenewalEligibilityChecker _CertificateRenewalEligibilityChecker;
 
     [FunctionName(nameof(GetExpiringCertificates))]
     public async Task<IReadOnlyList<CertificateItem>> GetExpiringCertificates([ActivityTrigger] DateTime currentDateTime)
@@ -70,9 +70,10 @@ public class SharedActivity : ISharedActivity
                 continue;
             }
 
-            var certificateItem = await _ariIntegrationService.IsCertificateDueForRenewal(
-            certificate, currentDateTime, acmeProtocolClient, _certificateClient);
-            if (certificateItem != null)
+            var (shouldRenew, certificateItem) = await _CertificateRenewalEligibilityChecker.IsCertificateDueForRenewalAsync(
+                certificate, currentDateTime, acmeProtocolClient, _certificateClient);
+
+            if (shouldRenew)
             {
                 result.Add(certificateItem);
             }
@@ -136,35 +137,19 @@ public class SharedActivity : ISharedActivity
 
         await acmeProtocolClient.RevokeCertificateAsync(response.Value.Cer);
     }
-   
+
     [FunctionName(nameof(Order))]
-    public async Task<OrderDetails> Order([ActivityTrigger]CertificatePolicyItem certificatePolicyItem)
+    public async Task<OrderDetails> Order([ActivityTrigger] CertificatePolicyItem certificatePolicyItem)
     {
         var dnsNames = certificatePolicyItem.DnsNames;
         var existingCertificateName = certificatePolicyItem.CertificateName;
 
         var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
-        KeyVaultCertificateWithPolicy existingCertificate = null;
+        KeyVaultCertificateWithPolicy existingCertificate = await _certificateClient.GetCertificateAsync(existingCertificateName);
 
-        // Use ARI integration service for order creation if enabled
-        if (_options.AriEnabled)
-        {
-            try
-            {
-                existingCertificate = await _certificateClient.GetCertificateAsync(existingCertificateName);
-                return await acmeProtocolClient.CreateOrderWithReplacementAsync(
-                    dnsNames, existingCertificate.Name, CancellationToken.None);              
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "ARI-aware order creation failed, falling back to standard order creation");
-                // Fall through to standard order creation
-            }
-        }
-
-        // Fallback to standard order creation
-        return await acmeProtocolClient.CreateOrderAsync(dnsNames);
+        return await acmeProtocolClient.CreateOrderAsync(
+            dnsNames, _options.AriEnabled ? existingCertificate.Name : null, null, null, CancellationToken.None);
     }
 
     [FunctionName(nameof(Dns01Precondition))]

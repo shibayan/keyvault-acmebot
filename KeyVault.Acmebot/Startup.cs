@@ -140,8 +140,7 @@ public class Startup : FunctionsStartup
         });
 
         // Register ARI services
-        builder.Services.AddSingleton<RenewalWindowService>();
-        builder.Services.AddSingleton<AriIntegrationService>(); // Add this
+        builder.Services.AddSingleton<CertificateRenewalEligibilityChecker>(); // Add this
         
     }
 }

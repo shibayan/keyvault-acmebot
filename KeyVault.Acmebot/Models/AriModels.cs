@@ -37,26 +37,5 @@ namespace KeyVault.Acmebot.Models
         /// </summary>
         [JsonPropertyName("end")]
         public DateTime End { get; set; }
-    }
-
-    /// <summary>
-    /// Represents a certificate identifier for ARI requests
-    /// </summary>
-    public class CertificateIdentifier
-    {
-        /// <summary>
-        /// Authority Key Identifier from the certificate
-        /// </summary>
-        public string AuthorityKeyIdentifier { get; set; }
-
-        /// <summary>
-        /// Serial number from the certificate
-        /// </summary>
-        public string SerialNumber { get; set; }
-
-        /// <summary>
-        /// Base64url encoded certificate identifier for ARI requests
-        /// </summary>
-        public string CertificateId { get; set; }
-    }    
+    }   
 }
