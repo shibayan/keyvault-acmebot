@@ -83,7 +83,7 @@ public class AcmeProtocolClientFactory
             acmeProtocolClient.Account = account;
         }
 
-        if (acmeProtocolClient.Account.Payload.Contact[0] != $"mailto:{_options.Contacts}")
+        if (acmeProtocolClient.Account.Payload.Contact is { Length: > 0 } && acmeProtocolClient.Account.Payload.Contact[0] != $"mailto:{_options.Contacts}")
         {
             account = await acmeProtocolClient.UpdateAccountAsync(new[] { $"mailto:{_options.Contacts}" });
 
