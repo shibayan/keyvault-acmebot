@@ -69,8 +69,9 @@ public class CertificateRenewalEligibilityChecker
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error evaluating certificate {Name} for renewal", certificate.Name);
-            return (false, certificateItem);
+            _logger.LogError(ex, "Error evaluating certificate {Name} for ARI renewal. Falling back to expiry-based renewal", certificate.Name);
+            var shouldExpiryRenew = IsEligibleForExpiryBasedRenewal(certificate, currentDateTime);
+            return (shouldExpiryRenew, certificateItem);
         }
     }
 
