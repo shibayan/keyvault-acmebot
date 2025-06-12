@@ -96,7 +96,7 @@ internal static class X509Certificate2Extensions
         }
     }
 
-     /// <summary>
+    /// <summary>
     /// Extracts serial number from certificate
     /// </summary>
     public static byte[] ExtractSerialNumber(this X509Certificate2 certificate)

@@ -5,8 +5,8 @@ using System.Security.Cryptography.X509Certificates;
 
 using Azure.Security.KeyVault.Certificates;
 
-using KeyVault.Acmebot.Models;
 using KeyVault.Acmebot.Internal;
+using KeyVault.Acmebot.Models;
 
 namespace KeyVault.Acmebot.Internal;
 

@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 
 using ACMESharp.Authorizations;
 using ACMESharp.Protocol;
 using ACMESharp.Protocol.Resources;
 
-using Azure.Security.KeyVault.Certificates;
 using Azure;
+using Azure.Security.KeyVault.Certificates;
 
 using DnsClient;
 
@@ -146,7 +146,7 @@ public class SharedActivity : ISharedActivity
         var existingCertificateName = certificatePolicyItem.CertificateName;
         var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
         string replacesCertId = null;
-        
+
         if (_options.AriEnabled)
         {
             try

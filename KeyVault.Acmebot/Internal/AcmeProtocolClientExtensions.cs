@@ -61,5 +61,5 @@ internal static class AcmeProtocolClientExtensions
 
         // マッチする証明書チェーンが存在しない場合はデフォルトを返す
         return defaultX509Certificates;
-    }   
+    }
 }

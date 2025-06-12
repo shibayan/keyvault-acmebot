@@ -141,6 +141,6 @@ public class Startup : FunctionsStartup
 
         // Register ARI services
         builder.Services.AddSingleton<CertificateRenewalEligibilityChecker>(); // Add this
-        
+
     }
 }

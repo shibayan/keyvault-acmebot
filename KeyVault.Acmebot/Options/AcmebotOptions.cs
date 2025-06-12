@@ -56,5 +56,5 @@ public class AcmebotOptions
 
     // Add ARI configuration properties
     [JsonPropertyName("ariEnabled")]
-    public bool AriEnabled { get; set; } = false; 
+    public bool AriEnabled { get; set; } = false;
 }
