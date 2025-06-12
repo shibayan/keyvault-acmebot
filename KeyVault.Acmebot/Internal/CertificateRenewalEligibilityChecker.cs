@@ -45,33 +45,30 @@ public class CertificateRenewalEligibilityChecker
     /// <param name="acmeProtocolClient">ACME client for ARI operations</param>
     /// <param name="certificateClient">Certificate client for retrieving full certificate data</param>
     /// <returns>CertificateItem if renewal is needed, null otherwise</returns>
-    public async Task<(bool ShouldRenew, CertificateItem CertificateItem)> IsCertificateDueForRenewalAsync(
-        CertificateProperties certificate,
+    public async Task<bool> IsCertificateDueForRenewalAsync(
+        KeyVaultCertificateWithPolicy certificate,
         DateTime currentDateTime,
-        AcmeProtocolClient acmeProtocolClient,
-        CertificateClient certificateClient)
+        string ARIEndpoint)
+
     {
-        var fullCertificate = await certificateClient.GetCertificateAsync(certificate.Name);
-        CertificateItem certificateItem = fullCertificate.Value.ToCertificateItem();
         try
         {
 
-            var shouldARIRenew = await IsEligibleforARIRenewal(acmeProtocolClient, fullCertificate, CancellationToken.None);
-            var shouldExpiryRenew = IsEligibleForExpiryBasedRenewal(certificate, currentDateTime);
+            var shouldARIRenew = await IsEligibleforARIRenewal(ARIEndpoint, certificate);
+            var shouldExpiryRenew = IsEligibleForExpiryBasedRenewal(certificate.Properties, currentDateTime);
 
             if (shouldARIRenew || shouldExpiryRenew)
             {
-                return (true, certificateItem);
+                return true;
             }
 
             _logger.LogDebug("Certificate {Name} does not require renewal based on ARI or expiry checks", certificate.Name);
-            return (false, certificateItem);
+            return false;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error evaluating certificate {Name} for ARI renewal. Falling back to expiry-based renewal", certificate.Name);
-            var shouldExpiryRenew = IsEligibleForExpiryBasedRenewal(certificate, currentDateTime);
-            return (shouldExpiryRenew, certificateItem);
+            return IsEligibleForExpiryBasedRenewal(certificate.Properties, currentDateTime);
         }
     }
 
@@ -79,21 +76,21 @@ public class CertificateRenewalEligibilityChecker
     /// Determines if a certificate should be renewed based on ARI recommendations
     /// </summary>
     private async Task<bool> IsEligibleforARIRenewal(
-        AcmeProtocolClient acmeProtocolClient,
+        string ARIEndpoint,
         KeyVaultCertificateWithPolicy certificate,
         CancellationToken cancellationToken = default)
     {
         try
         {
             // Check ARI configuration
-            if (!_options.AriEnabled || string.IsNullOrEmpty(acmeProtocolClient?.Directory?.RenewalInfo))
+            if (!_options.AriEnabled || string.IsNullOrEmpty(ARIEndpoint))
             {
                 _logger.LogDebug("ARI is not enabled or RenewalInfo is not configured.");
                 return false;
             }
 
             var certificateId = certificate.ExtractARICertificateId();
-            var ariUrl = $"{acmeProtocolClient?.Directory?.RenewalInfo.TrimEnd('/')}/{certificateId}";
+            var ariUrl = $"{ARIEndpoint.TrimEnd('/')}/{certificateId}";
 
             _logger.LogDebug("Requesting renewal info from ARI endpoint: {AriUrl}", ariUrl);
 

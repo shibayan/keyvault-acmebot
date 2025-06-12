@@ -34,7 +34,7 @@ public class SharedActivity : ISharedActivity
     public SharedActivity(LookupClient lookupClient, AcmeProtocolClientFactory acmeProtocolClientFactory,
                           IEnumerable<IDnsProvider> dnsProviders, CertificateClient certificateClient,
                           WebhookInvoker webhookInvoker, IOptions<AcmebotOptions> options, ILogger<SharedActivity> logger,
-                          CertificateRenewalEligibilityChecker CertificateRenewalEligibilityChecker)
+                          CertificateRenewalEligibilityChecker certificateRenewalEligibilityChecker)
     {
         _lookupClient = lookupClient;
         _acmeProtocolClientFactory = acmeProtocolClientFactory;
@@ -43,7 +43,7 @@ public class SharedActivity : ISharedActivity
         _webhookInvoker = webhookInvoker;
         _options = options.Value;
         _logger = logger;
-        _CertificateRenewalEligibilityChecker = CertificateRenewalEligibilityChecker;
+        _certificateRenewalEligibilityChecker = certificateRenewalEligibilityChecker;
     }
 
     private readonly LookupClient _lookupClient;
@@ -53,7 +53,7 @@ public class SharedActivity : ISharedActivity
     private readonly WebhookInvoker _webhookInvoker;
     private readonly AcmebotOptions _options;
     private readonly ILogger<SharedActivity> _logger;
-    private readonly CertificateRenewalEligibilityChecker _CertificateRenewalEligibilityChecker;
+    private readonly CertificateRenewalEligibilityChecker _certificateRenewalEligibilityChecker;
 
     [FunctionName(nameof(GetExpiringCertificates))]
     public async Task<IReadOnlyList<CertificateItem>> GetExpiringCertificates([ActivityTrigger] DateTime currentDateTime)
@@ -66,17 +66,19 @@ public class SharedActivity : ISharedActivity
 
         await foreach (var certificate in certificates)
         {
-            if (!(certificate.IsIssuedByAcmebot() && certificate.IsSameEndpoint(_options.Endpoint)))
+            if (!certificate.IsIssuedByAcmebot() || !certificate.IsSameEndpoint(_options.Endpoint))
             {
                 continue;
             }
 
-            var (shouldRenew, certificateItem) = await _CertificateRenewalEligibilityChecker.IsCertificateDueForRenewalAsync(
-                certificate, currentDateTime, acmeProtocolClient, _certificateClient);
+            var certificateWithPolicy = (await _certificateClient.GetCertificateAsync(certificate.Name)).Value;
+
+            var shouldRenew = await _certificateRenewalEligibilityChecker.IsCertificateDueForRenewalAsync(
+                certificateWithPolicy, currentDateTime, acmeProtocolClient?.Directory?.RenewalInfo);
 
             if (shouldRenew)
             {
-                result.Add(certificateItem);
+                result.Add(certificateWithPolicy.ToCertificateItem());
             }
         }
         return result;
