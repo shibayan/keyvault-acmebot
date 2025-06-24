@@ -1,10 +1,10 @@
 # Base image for Azure Functions .NET 6
-FROM mcr.microsoft.com/azure-functions/dotnet:4-net6.0 AS base
+FROM mcr.microsoft.com/azure-functions/dotnet:4-dotnet8 AS base
 WORKDIR /home/site/wwwroot
 EXPOSE 80
 
 # Stage for building the application
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy solution and project files
