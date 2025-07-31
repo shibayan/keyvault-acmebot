@@ -138,5 +138,9 @@ public class Startup : FunctionsStartup
 
             return dnsProviders;
         });
+
+        // Register ARI services
+        builder.Services.AddSingleton<CertificateRenewalEligibilityChecker>(); // Add this
+
     }
 }

@@ -22,7 +22,7 @@ public interface ISharedActivity
 
     Task RevokeCertificate(string certificateName);
 
-    Task<OrderDetails> Order(IReadOnlyList<string> dnsNames);
+    Task<OrderDetails> Order(CertificatePolicyItem certificatePolicyItem);
 
     Task<string> Dns01Precondition(CertificatePolicyItem certificatePolicyItem);
 

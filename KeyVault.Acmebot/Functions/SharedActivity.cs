@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using System.Threading.Tasks;
 
 using ACMESharp.Authorizations;
 using ACMESharp.Protocol;
 using ACMESharp.Protocol.Resources;
 
+using Azure;
 using Azure.Security.KeyVault.Certificates;
 
 using DnsClient;
@@ -31,7 +33,8 @@ public class SharedActivity : ISharedActivity
 {
     public SharedActivity(LookupClient lookupClient, AcmeProtocolClientFactory acmeProtocolClientFactory,
                           IEnumerable<IDnsProvider> dnsProviders, CertificateClient certificateClient,
-                          WebhookInvoker webhookInvoker, IOptions<AcmebotOptions> options, ILogger<SharedActivity> logger)
+                          WebhookInvoker webhookInvoker, IOptions<AcmebotOptions> options, ILogger<SharedActivity> logger,
+                          CertificateRenewalEligibilityChecker certificateRenewalEligibilityChecker)
     {
         _lookupClient = lookupClient;
         _acmeProtocolClientFactory = acmeProtocolClientFactory;
@@ -40,6 +43,7 @@ public class SharedActivity : ISharedActivity
         _webhookInvoker = webhookInvoker;
         _options = options.Value;
         _logger = logger;
+        _certificateRenewalEligibilityChecker = certificateRenewalEligibilityChecker;
     }
 
     private readonly LookupClient _lookupClient;
@@ -49,13 +53,16 @@ public class SharedActivity : ISharedActivity
     private readonly WebhookInvoker _webhookInvoker;
     private readonly AcmebotOptions _options;
     private readonly ILogger<SharedActivity> _logger;
+    private readonly CertificateRenewalEligibilityChecker _certificateRenewalEligibilityChecker;
 
     [FunctionName(nameof(GetExpiringCertificates))]
     public async Task<IReadOnlyList<CertificateItem>> GetExpiringCertificates([ActivityTrigger] DateTime currentDateTime)
     {
         var certificates = _certificateClient.GetPropertiesOfCertificatesAsync();
-
         var result = new List<CertificateItem>();
+
+        // Initialize ARI client if enabled
+        var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
 
         await foreach (var certificate in certificates)
         {
@@ -64,14 +71,16 @@ public class SharedActivity : ISharedActivity
                 continue;
             }
 
-            if ((certificate.ExpiresOn.Value - currentDateTime).TotalDays > _options.RenewBeforeExpiry)
+            var certificateWithPolicy = (await _certificateClient.GetCertificateAsync(certificate.Name)).Value;
+
+            var shouldRenew = await _certificateRenewalEligibilityChecker.IsCertificateDueForRenewalAsync(
+                certificateWithPolicy, currentDateTime, acmeProtocolClient?.Directory?.RenewalInfo);
+
+            if (shouldRenew)
             {
-                continue;
+                result.Add(certificateWithPolicy.ToCertificateItem());
             }
-
-            result.Add((await _certificateClient.GetCertificateAsync(certificate.Name)).Value.ToCertificateItem());
         }
-
         return result;
     }
 
@@ -133,11 +142,35 @@ public class SharedActivity : ISharedActivity
     }
 
     [FunctionName(nameof(Order))]
-    public async Task<OrderDetails> Order([ActivityTrigger] IReadOnlyList<string> dnsNames)
+    public async Task<OrderDetails> Order([ActivityTrigger] CertificatePolicyItem certificatePolicyItem)
     {
+        var dnsNames = certificatePolicyItem.DnsNames;
+        var existingCertificateName = certificatePolicyItem.CertificateName;
         var acmeProtocolClient = await _acmeProtocolClientFactory.CreateClientAsync();
+        string replacesCertId = null;
 
-        return await acmeProtocolClient.CreateOrderAsync(dnsNames);
+        if (_options.AriEnabled)
+        {
+            try
+            {
+                // Attempt to get existing certificate for ARI replacement ID
+                var certificateForAri = await _certificateClient.GetCertificateAsync(existingCertificateName);
+                replacesCertId = certificateForAri.Value.ExtractARICertificateId();
+            }
+            catch (RequestFailedException ex) when (ex.Status == 404)
+            {
+                // Cert does not exist in KV. New Order
+                _logger.LogInformation("Certificate {CertificateName} does not exist yet - creating new certificate", existingCertificateName);
+            }
+            catch (Exception ex)
+            {
+                // Cert Exists but ARI extraction failed. For now, let's fallback to ordering without ARI.
+                _logger.LogWarning(ex, "Failed to extract ARI certificate ID for {CertificateName}, ordering without ARI", existingCertificateName);
+            }
+        }
+
+        return await acmeProtocolClient.CreateOrderAsync(
+            dnsNames, replacesCertId, null, null, CancellationToken.None);
     }
 
     [FunctionName(nameof(Dns01Precondition))]
@@ -476,4 +509,7 @@ public class SharedActivity : ISharedActivity
 
         return _webhookInvoker.SendCompletedEventAsync(certificateName, expirationDate, dnsNames, _options.Endpoint.Host);
     }
+
+
+
 }
