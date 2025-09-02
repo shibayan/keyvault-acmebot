@@ -28,6 +28,8 @@ public class AcmebotOptions
 
     public bool UseSystemNameServer { get; set; } = false;
 
+    public string ManagedIdentityClientId { get; set; }
+
     public ExternalAccountBindingOptions ExternalAccountBinding { get; set; }
 
     // Properties should be in alphabetical order
