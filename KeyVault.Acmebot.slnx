@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ACMESharpCore/src/ACMESharp/ACMESharp.csproj" />
+  <Project Path="KeyVault.Acmebot/KeyVault.Acmebot.csproj" />
+</Solution>
