@@ -12,7 +12,7 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      languages: ${{ steps.filter.set-matrix.languages }}
+      languages: ${{ steps.set-matrix.outputs.languages }}
     steps:
     - uses: dorny/paths-filter@v3
       if: github.event_name == 'pull_request'
@@ -25,9 +25,9 @@ jobs:
       id: set-matrix
       run: |
         if [[ "${{ github.event_name == 'pull_request' }}" ]]; then
-          echo "languages=${{ toJson(steps.filter.outputs.changes) }}" >> "$GITHUB_OUTPUT"
+          echo "languages=${{ toJson(steps.filter.outputs.changes) }}" >> $GITHUB_OUTPUT
         else
-          echo "languages=[\"actions\",\"csharp\"]" >> "$GITHUB_OUTPUT"
+          echo "languages=[\"actions\",\"csharp\"]" >> $GITHUB_OUTPUT
         fi
 
   analyze:
