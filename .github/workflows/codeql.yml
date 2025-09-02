@@ -9,9 +9,22 @@ on:
     - cron: '18 17 * * 4'
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      languages: ${{ steps.filter.outputs.changes }}
+    steps:
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          actions: ./.github/workflows/**/*.yml
+          csharp: ./**/*.cs
+
   analyze:
     name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
+    needs: [detect-changes]
     permissions:
       security-events: write
       packages: read
@@ -20,11 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-        - language: actions
-          build-mode: none
-        - language: csharp
-          build-mode: autobuild
+        language: ${{ fromJson(needs.detect-changes.outputs.languages) }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v5
@@ -35,7 +44,7 @@ jobs:
       uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
-        build-mode: ${{ matrix.build-mode }}
+        build-mode: none
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
