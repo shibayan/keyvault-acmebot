@@ -62,10 +62,12 @@ public class Startup : FunctionsStartup
         builder.Services.AddSingleton<TokenCredential>(provider =>
         {
             var environment = provider.GetRequiredService<AzureEnvironment>();
+            var options = provider.GetRequiredService<IOptions<AcmebotOptions>>();
 
             return new DefaultAzureCredential(new DefaultAzureCredentialOptions
             {
-                AuthorityHost = environment.AuthorityHost
+                AuthorityHost = environment.AuthorityHost,
+                ManagedIdentityClientId = options.Value.ManagedIdentityClientId
             });
         });
 
