@@ -92,17 +92,19 @@ public class Startup : FunctionsStartup
                 return new GenericPayloadBuilder(options);
             }
 
-            if (options.Webhook.Host.EndsWith("hooks.slack.com", StringComparison.OrdinalIgnoreCase))
+            var host = options.Webhook.Host;
+
+            if (host.EndsWith("hooks.slack.com", StringComparison.OrdinalIgnoreCase))
             {
                 return new SlackPayloadBuilder();
             }
 
-            if (options.Webhook.Host.EndsWith(".logic.azure.com", StringComparison.OrdinalIgnoreCase))
+            if (host.EndsWith(".logic.azure.com", StringComparison.OrdinalIgnoreCase) || host.EndsWith(".environment.api.powerplatform.com", StringComparison.OrdinalIgnoreCase))
             {
                 return new TeamsPayloadBuilder();
             }
 
-            if (options.Webhook.Host.EndsWith(".office.com", StringComparison.OrdinalIgnoreCase))
+            if (host.EndsWith(".office.com", StringComparison.OrdinalIgnoreCase))
             {
                 return new LegacyTeamsPayloadBuilder();
             }
