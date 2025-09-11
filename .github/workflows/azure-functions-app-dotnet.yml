@@ -32,7 +32,7 @@ jobs:
       shell: bash
 
     - name: 'Checkout GitHub Action'
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Azure CLI Login
       uses: azure/login@v2
