@@ -51,6 +51,8 @@ public class AcmebotOptions
 
     public GoogleDnsOptions GoogleDns { get; set; }
 
+    public OvhOptions OVH { get; set; }
+
     public Route53Options Route53 { get; set; }
 
     public TransIpOptions TransIp { get; set; }
