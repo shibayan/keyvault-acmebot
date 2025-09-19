@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace KeyVault.Acmebot.Options;
 
@@ -54,4 +55,8 @@ public class AcmebotOptions
     public Route53Options Route53 { get; set; }
 
     public TransIpOptions TransIp { get; set; }
+
+    // Add ARI configuration properties
+    [JsonPropertyName("ariEnabled")]
+    public bool AriEnabled { get; set; } = false;
 }

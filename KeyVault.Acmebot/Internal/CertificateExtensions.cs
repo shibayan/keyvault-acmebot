@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 using Azure.Security.KeyVault.Certificates;
 
+using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Models;
 
 namespace KeyVault.Acmebot.Internal;
@@ -75,6 +77,21 @@ internal static class CertificateExtensions
         }
 
         return metadata;
+    }
+
+
+    /// <summary>
+    /// Extracts certificate identifier components from an X.509 certificate
+    /// </summary>
+    /// <param name="certificate">The X.509 certificate to process</param>
+    /// <returns>Certificate identifier with AKI, serial number, and encoded certificate ID</returns>
+    /// <exception cref="ArgumentNullException">Thrown when certificate is null</exception>
+    /// <exception cref="InvalidOperationException">Thrown when required certificate components cannot be extracted</exception>
+    public static string ExtractARICertificateId(this KeyVaultCertificateWithPolicy certificate)
+    {
+        var x509Certificate = new X509Certificate2(certificate.Cer);
+        var certificateId = x509Certificate.GenerateCertificateId();
+        return certificateId;
     }
 
     private const string IssuerKey = "Issuer";
