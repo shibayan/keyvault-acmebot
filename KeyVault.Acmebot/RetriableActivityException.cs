@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.Serialization;
 
 namespace KeyVault.Acmebot;
 
@@ -16,6 +17,11 @@ public class RetriableActivityException : Exception
 
     public RetriableActivityException(string message, Exception inner)
         : base(message, inner)
+    {
+    }
+
+    protected RetriableActivityException(SerializationInfo info, StreamingContext context)
+        : base(info, context)
     {
     }
 }
