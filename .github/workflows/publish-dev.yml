@@ -87,11 +87,11 @@ jobs:
       - name: Upload to Blob (Windows + Linux)
         run: |
           # Windows artifacts
-          az storage blob upload --auth-mode login -f latest-windows.zip --account-name stacmebotprod -c keyvault-acmebot -n v4/windows/latest.zip --overwrite
-          az storage blob upload --auth-mode login -f latest-windows.zip --account-name stacmebotprod -c keyvault-acmebot -n v4/windows/${{ needs.publish.outputs.version }}.zip --overwrite
+          az storage blob upload --auth-mode login -f latest-windows.zip --account-name stbwckvacmedev -c keyvault-acmebot -n v4/windows/latest.zip --overwrite
+          az storage blob upload --auth-mode login -f latest-windows.zip --account-name stbwckvacmedev -c keyvault-acmebot -n v4/windows/${{ needs.publish.outputs.version }}.zip --overwrite
           # Linux artifacts
-          az storage blob upload --auth-mode login -f latest-linux.zip --account-name stacmebotprod -c keyvault-acmebot -n v4/linux/latest.zip --overwrite
-          az storage blob upload --auth-mode login -f latest-linux.zip --account-name stacmebotprod -c keyvault-acmebot -n v4/linux/${{ needs.publish.outputs.version }}.zip --overwrite
+          az storage blob upload --auth-mode login -f latest-linux.zip --account-name stbwckvacmedev -c keyvault-acmebot -n v4/linux/latest.zip --overwrite
+          az storage blob upload --auth-mode login -f latest-linux.zip --account-name stbwckvacmedev -c keyvault-acmebot -n v4/linux/${{ needs.publish.outputs.version }}.zip --overwrite
  
       - name: Publish to Private Registry
         run: |
