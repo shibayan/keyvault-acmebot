@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 
 using Azure.Core;
+using Azure.Functions.Worker.Extensions.HttpApi.Config;
 using Azure.Identity;
 using Azure.Security.KeyVault.Certificates;
 
@@ -20,7 +21,8 @@ using Microsoft.Extensions.Options;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
-builder.ConfigureFunctionsWebApplication();
+builder.ConfigureFunctionsWebApplication()
+    .AddHttpApi();
 
 builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
