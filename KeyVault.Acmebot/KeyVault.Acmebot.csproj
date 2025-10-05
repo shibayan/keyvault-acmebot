@@ -1,9 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="AWSSDK.Route53" Version="4.0.4" />
     <PackageReference Include="Azure.Identity" Version="1.16.0" />
     <PackageReference Include="Azure.ResourceManager.Dns" Version="1.1.1" />
@@ -11,19 +13,22 @@
     <PackageReference Include="Azure.Security.KeyVault.Certificates" Version="4.8.0" />
     <PackageReference Include="Azure.Security.KeyVault.Keys" Version="4.8.0" />
     <PackageReference Include="DnsClient" Version="1.8.0" />
-    <PackageReference Include="DurableTask.TypedProxy" Version="2.2.2" />
+    <PackageReference Include="Functions.Worker.Extensions.HttpApi" Version="3.0.1" />
     <PackageReference Include="Google.Apis.Dns.v1" Version="1.70.0.3892" />
-    <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="3.4.1" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="[6.0.*,7.0.0)" />
-    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.6.0" />
-    <PackageReference Include="WebJobs.Extensions.HttpApi" Version="[2.*,3.0.0)" />
+    <PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.23.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.DurableTask" Version="1.8.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore" Version="2.0.2" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.3.1" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.5" />
+    <PackageReference Include="Microsoft.DurableTask.Generators" Version="1.0.0-preview.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ACMESharpCore\src\ACMESharp\ACMESharp.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <FunctionsPreservedDependencies Include="System.Memory.Data.dll" />
+    <Using Include="System.Threading.ExecutionContext" Alias="ExecutionContext" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
@@ -37,7 +42,4 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <Target Name="DeleteFiles" AfterTargets="Publish">
-    <Delete Files="$(PublishDir)System.Reactive.xml" />
-  </Target>
 </Project>

@@ -1,30 +1,24 @@
 ﻿using System.Threading.Tasks;
 
-using Azure.WebJobs.Extensions.HttpApi;
+using Azure.Functions.Worker.Extensions.HttpApi;
 
 using KeyVault.Acmebot.Internal;
 using KeyVault.Acmebot.Models;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
 
 namespace KeyVault.Acmebot.Functions;
 
-public class AddCertificate : HttpFunctionBase
+public class AddCertificate(IHttpContextAccessor httpContextAccessor) : HttpFunctionBase(httpContextAccessor)
 {
-    public AddCertificate(IHttpContextAccessor httpContextAccessor)
-        : base(httpContextAccessor)
-    {
-    }
-
-    [FunctionName($"{nameof(AddCertificate)}_{nameof(HttpStart)}")]
+    [Function($"{nameof(AddCertificate)}_{nameof(HttpStart)}")]
     public async Task<IActionResult> HttpStart(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/certificate")] CertificatePolicyItem certificatePolicyItem,
-        [DurableClient] IDurableClient starter,
+        [DurableClient] DurableTaskClient starter,
         ILogger log)
     {
         if (!User.Identity.IsAuthenticated)
@@ -48,7 +42,7 @@ public class AddCertificate : HttpFunctionBase
         }
 
         // Function input comes from the request content.
-        var instanceId = await starter.StartNewAsync(nameof(SharedOrchestrator.IssueCertificate), certificatePolicyItem);
+        var instanceId = await starter.ScheduleNewOrchestrationInstanceAsync(nameof(SharedOrchestrator.IssueCertificate), certificatePolicyItem);
 
         log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
