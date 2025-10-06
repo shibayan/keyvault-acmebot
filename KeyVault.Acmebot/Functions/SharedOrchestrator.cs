@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using KeyVault.Acmebot.Models;
@@ -31,13 +32,13 @@ public class SharedOrchestrator
             await context.CreateTimer(context.CurrentUtcDateTime.AddSeconds(propagationSeconds), CancellationToken.None);
 
             // 正しく追加した DNS TXT レコードが引けるか確認
-            await context.CallCheckDnsChallengeAsync(challengeResults);
+            await context.CallCheckDnsChallengeAsync(challengeResults, TaskOptions.FromRetryPolicy(_retryPolicy));
 
             // ACME Answer Challenge を実行
             await context.CallAnswerChallengesAsync(challengeResults);
 
             // ACME Order のステータスが ready になるまで 60 秒待機
-            await context.CallCheckIsReadyAsync((orderDetails, challengeResults));
+            await context.CallCheckIsReadyAsync((orderDetails, challengeResults), TaskOptions.FromRetryPolicy(_retryPolicy));
 
             // 作成した DNS レコードを削除
             await context.CallCleanupDnsChallengeAsync((certificatePolicyItem.DnsProviderName, challengeResults));
@@ -50,7 +51,7 @@ public class SharedOrchestrator
         if (orderDetails.Payload.Status != "valid")
         {
             // Finalize 後のステータスが valid になるまで 60 秒待機
-            orderDetails = await context.CallCheckIsValidAsync(orderDetails);
+            orderDetails = await context.CallCheckIsValidAsync(orderDetails, TaskOptions.FromRetryPolicy(_retryPolicy));
         }
 
         // 証明書をダウンロードし Key Vault に保存された秘密鍵とマージ
@@ -59,4 +60,9 @@ public class SharedOrchestrator
         // 証明書の更新が完了後に Webhook を送信する
         await context.CallSendCompletedEventAsync((certificate.Name, certificate.ExpiresOn, certificatePolicyItem.DnsNames));
     }
+
+    private readonly RetryPolicy _retryPolicy = new(12, TimeSpan.FromSeconds(5))
+    {
+        HandleFailure = taskFailureDetails => taskFailureDetails.IsCausedBy<RetriableActivityException>()
+    };
 }

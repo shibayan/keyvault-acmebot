@@ -97,7 +97,7 @@ public class SharedActivity(
         }
         catch
         {
-            return Array.Empty<DnsZoneGroup>();
+            return [];
         }
     }
 
@@ -186,10 +186,10 @@ public class SharedActivity(
         if (dnsProvider is null)
         {
             // 見つかった DNS zone の属する DNS Provider を取得
-            var dnsProviders = foundZones.Select(x => x.DnsProvider).DistinctBy(x => x.Name).ToArray();
+            var foundDnsProviders = foundZones.Select(x => x.DnsProvider).DistinctBy(x => x.Name).ToArray();
 
             // 単一の DNS Provider で構成された証明書かチェックする
-            if (dnsProviders.Length != 1)
+            if (foundDnsProviders.Length != 1)
             {
                 // 互換性のために常に空文字列を返す
                 return "";

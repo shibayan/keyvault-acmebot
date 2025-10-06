@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json;
 
 using Azure.Core;
 using Azure.Functions.Worker.Extensions.HttpApi.Config;
@@ -27,6 +28,8 @@ builder.ConfigureFunctionsWebApplication()
 builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
     .ConfigureFunctionsApplicationInsights();
+
+builder.Services.Configure<JsonSerializerOptions>(options => options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase);
 
 // Add Options
 builder.Services.AddOptions<AcmebotOptions>()
