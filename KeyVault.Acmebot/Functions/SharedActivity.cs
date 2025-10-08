@@ -388,7 +388,7 @@ public class SharedActivity : ISharedActivity
             var certificatePolicy = certificatePolicyItem.ToCertificatePolicy();
             var metadata = certificatePolicyItem.ToCertificateMetadata(_options.Endpoint);
 
-            var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificatePolicyItem.CertificateName, certificatePolicy, tags: metadata);
+            var certificateOperation = await _certificateClient.StartCreateCertificateAsync(certificatePolicyItem.CertificateName, certificatePolicy, enabled: true, tags: metadata, cancellationToken: default);
 
             csr = certificateOperation.Properties.Csr;
         }

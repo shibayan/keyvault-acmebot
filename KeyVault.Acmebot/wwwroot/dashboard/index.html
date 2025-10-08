@@ -319,6 +319,37 @@
                   </div>
                 </div>
               </div>
+              <div class="field is-horizontal" v-if="add.useAdvancedOptions">
+                <div class="field-label is-normal">
+                  <label class="label">Custom Tags</label>
+                </div>
+                <div class="field-body">
+                  <div class="field has-addons">
+                    <p class="control">
+                      <input v-model="add.tagKey" class="input" type="text" placeholder="Tag key">
+                    </p>
+                    <p class="control">
+                      <input v-model="add.tagValue" class="input" type="text" placeholder="Tag value">
+                    </p>
+                    <p class="control">
+                      <button class="button is-info" @click="addTag">Add Tag</button>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal" v-if="add.useAdvancedOptions && Object.keys(add.tags).length > 0">
+                <div class="field-label"></div>
+                <div class="field-body">
+                  <div class="content">
+                    <div class="tags">
+                      <span v-for="(value, key) in add.tags" :key="key" class="tag is-info is-medium">
+                        {{ key }}: {{ value }}
+                        <button class="delete is-small" @click="removeTag(key)"></button>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </section>
             <footer class="modal-card-foot is-justify-content-flex-end">
               <button class="button is-primary" @click="addCertificate" :class="{ 'is-loading': add.sending }">Add</button>
@@ -469,6 +500,20 @@
                     </div>
                   </div>
                 </div>
+                <div v-if="details.certificate.tags && Object.keys(details.certificate.tags).length > 0" class="field is-horizontal">
+                  <div class="field-label">
+                    <label class="label">Custom Tags</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="content">
+                      <div class="tags">
+                        <span v-for="(value, key) in details.certificate.tags" :key="key" class="tag is-info is-medium">
+                          {{ key }}: {{ value }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
             <footer class="modal-card-foot is-justify-content-flex-end">
@@ -506,6 +551,9 @@
             keySize: "2048",
             keyCurveName: "P-256",
             reuseKey: false,
+            tags: {},
+            tagKey: "",
+            tagValue: "",
             loading: false,
             sending: false,
             modalActive: false
@@ -593,6 +641,16 @@
             this.add.dnsProviderName = "";
           }
         },
+        addTag() {
+          if (this.add.tagKey && this.add.tagValue) {
+            this.add.tags[this.add.tagKey] = this.add.tagValue;
+            this.add.tagKey = "";
+            this.add.tagValue = "";
+          }
+        },
+        removeTag(key) {
+          delete this.add.tags[key];
+        },
         async addCertificate() {
           this.add.sending = true;
 
@@ -608,6 +666,10 @@
             postData.keySize = this.add.keySize;
           } else {
             postData.keyCurveName = this.add.keyCurveName;
+          }
+
+          if (Object.keys(this.add.tags).length > 0) {
+            postData.tags = this.add.tags;
           }
 
           try {
@@ -637,6 +699,9 @@
           this.add.dnsNames = [];
           this.add.dnsProviderName = "";
           this.add.certificateName = "";
+          this.add.tags = {};
+          this.add.tagKey = "";
+          this.add.tagValue = "";
           this.add.modalActive = true;
 
           await this.loadDnsZones();
