@@ -45,7 +45,7 @@ public class RenewCertificate(IHttpContextAccessor httpContextAccessor, ILogger<
         // Function input comes from the request content.
         var instanceId = await starter.ScheduleNewOrchestrationInstanceAsync($"{nameof(RenewCertificate)}_{nameof(Orchestrator)}", certificateName);
 
-        logger.LogInformation($"Started orchestration with ID = '{instanceId}'.");
+        logger.LogInformation("Started orchestration with ID = '{InstanceId}'.", instanceId);
 
         return AcceptedAtFunction($"{nameof(GetInstanceState)}_{nameof(GetInstanceState.HttpStart)}", new { instanceId }, null);
     }

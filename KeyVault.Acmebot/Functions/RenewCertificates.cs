@@ -35,7 +35,7 @@ public class RenewCertificates(ILogger<RenewCertificates> logger)
         // 証明書の更新を行う
         foreach (var certificate in certificates)
         {
-            logger.LogInformation($"{certificate.Id} - {certificate.ExpiresOn}");
+            logger.LogInformation("{CertificateId} - {CertificateExpiresOn}", certificate.Id, certificate.ExpiresOn);
 
             try
             {
@@ -47,7 +47,7 @@ public class RenewCertificates(ILogger<RenewCertificates> logger)
             catch (Exception ex)
             {
                 // 失敗した場合はログに詳細を書き出して続きを実行する
-                logger.LogError($"Failed sub orchestration with DNS names = {string.Join(",", certificate.DnsNames)}");
+                logger.LogError("Failed sub orchestration with DNS names = {Join}", string.Join(",", certificate.DnsNames));
                 logger.LogError(ex.Message);
             }
         }
@@ -59,7 +59,7 @@ public class RenewCertificates(ILogger<RenewCertificates> logger)
         // Function input comes from the request content.
         var instanceId = await starter.ScheduleNewOrchestrationInstanceAsync($"{nameof(RenewCertificates)}_{nameof(Orchestrator)}");
 
-        logger.LogInformation($"Started orchestration with ID = '{instanceId}'.");
+        logger.LogInformation("Started orchestration with ID = '{InstanceId}'.", instanceId);
     }
 
     private readonly RetryPolicy _retryOptions = new(2, TimeSpan.FromHours(3))

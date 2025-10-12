@@ -35,7 +35,7 @@ public class GetCertificates(IHttpContextAccessor httpContextAccessor, ILogger<G
         // Function input comes from the request content.
         var instanceId = await starter.ScheduleNewOrchestrationInstanceAsync($"{nameof(GetCertificates)}_{nameof(Orchestrator)}");
 
-        logger.LogInformation($"Started orchestration with ID = '{instanceId}'.");
+        logger.LogInformation("Started orchestration with ID = '{InstanceId}'.", instanceId);
 
         var metadata = await starter.WaitForInstanceCompletionAsync(instanceId, getInputsAndOutputs: true);
 

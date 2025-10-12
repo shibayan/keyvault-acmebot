@@ -57,7 +57,7 @@ public class WebhookInvoker
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning($"Failed invoke webhook. Status Code = {response.StatusCode}, Reason = {await response.Content.ReadAsStringAsync()}");
+            _logger.LogWarning("Failed invoke webhook. Status Code = {ResponseStatusCode}, Reason = {ReadAsStringAsync}", response.StatusCode, await response.Content.ReadAsStringAsync());
         }
     }
 }

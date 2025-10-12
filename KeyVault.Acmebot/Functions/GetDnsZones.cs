@@ -35,7 +35,7 @@ public class GetDnsZones(IHttpContextAccessor httpContextAccessor, ILogger<GetDn
         // Function input comes from the request content.
         var instanceId = await starter.ScheduleNewOrchestrationInstanceAsync($"{nameof(GetDnsZones)}_{nameof(Orchestrator)}");
 
-        logger.LogInformation($"Started orchestration with ID = '{instanceId}'.");
+        logger.LogInformation("Started orchestration with ID = '{InstanceId}'.", instanceId);
 
         var metadata = await starter.WaitForInstanceCompletionAsync(instanceId, getInputsAndOutputs: true);
 

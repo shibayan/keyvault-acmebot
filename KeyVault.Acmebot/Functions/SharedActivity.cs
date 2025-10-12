@@ -341,7 +341,7 @@ public class SharedActivity(
                     continue;
                 }
 
-                logger.LogError($"ACME domain validation error: {JsonConvert.SerializeObject(challenge.Error)}");
+                logger.LogError("ACME domain validation error: {SerializeObject}", JsonConvert.SerializeObject(challenge.Error));
 
                 problems.Add(challenge.Error);
             }

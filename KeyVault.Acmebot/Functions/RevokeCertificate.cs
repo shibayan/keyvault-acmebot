@@ -42,7 +42,7 @@ public class RevokeCertificate(IHttpContextAccessor httpContextAccessor, ILogger
         // Function input comes from the request content.
         var instanceId = await starter.ScheduleNewOrchestrationInstanceAsync($"{nameof(RevokeCertificate)}_{nameof(Orchestrator)}", certificateName);
 
-        logger.LogInformation($"Started orchestration with ID = '{instanceId}'.");
+        logger.LogInformation("Started orchestration with ID = '{InstanceId}'.", instanceId);
 
         var metadata = await starter.WaitForInstanceCompletionAsync(instanceId, getInputsAndOutputs: true);
 
