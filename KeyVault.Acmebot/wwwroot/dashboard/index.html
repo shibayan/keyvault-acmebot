@@ -202,6 +202,73 @@
               </div>
               <div class="field is-horizontal">
                 <div class="field-label">
+                  <label class="label">Application Gateway Integration?</label>
+                </div>
+                <div class="field-body">
+                  <div class="field is-narrow">
+                    <div class="control">
+                      <label class="radio">
+                        <input type="radio" v-model="add.useAppGatewayMode" :value="true">
+                        Yes
+                      </label>
+                      <label class="radio">
+                        <input type="radio" v-model="add.useAppGatewayMode" :value="false">
+                        No
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal" v-if="add.useAppGatewayMode">
+                <div class="field-label is-normal">
+                  <label class="label">EntraID *</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <p class="control">
+                      <input v-model="add.appGwEntraId" class="input" type="text" placeholder="Enter Entra ID" required>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal" v-if="add.useAppGatewayMode">
+                <div class="field-label is-normal">
+                  <label class="label">SubscriptionID *</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <p class="control">
+                      <input v-model="add.appGwSubscriptionId" class="input" type="text" placeholder="Enter Subscription ID" required>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal" v-if="add.useAppGatewayMode">
+                <div class="field-label is-normal">
+                  <label class="label">KeyVault Resource Group *</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <p class="control">
+                      <input v-model="add.appGwKeyVaultResourceGroup" class="input" type="text" placeholder="Enter Resource Group" required>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal" v-if="add.useAppGatewayMode">
+                <div class="field-label is-normal">
+                  <label class="label">KeyVault Name *</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <p class="control">
+                      <input v-model="add.appGwKeyVaultName" class="input" type="text" placeholder="Enter KeyVault Name" required>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal">
+                <div class="field-label">
                   <label class="label">Use Advanced Options?</label>
                 </div>
                 <div class="field-body">
@@ -545,6 +612,11 @@
             recordName: "",
             dnsNames: [],
             dnsProviderName: "",
+            useAppGatewayMode: false,
+            appGwEntraId: "",
+            appGwSubscriptionId: "",
+            appGwKeyVaultResourceGroup: "",
+            appGwKeyVaultName: "",
             useAdvancedOptions: false,
             certificateName: "",
             keyType: "RSA",
@@ -652,6 +724,15 @@
           delete this.add.tags[key];
         },
         async addCertificate() {
+          // Validate AppGW required fields
+          if (this.add.useAppGatewayMode) {
+            if (!this.add.appGwEntraId || !this.add.appGwSubscriptionId ||
+                !this.add.appGwKeyVaultResourceGroup || !this.add.appGwKeyVaultName) {
+              alert("All Application Gateway fields are required:\n- EntraID\n- SubscriptionID\n- KeyVaultResourceGroup\n- KeyVaultName");
+              return;
+            }
+          }
+
           this.add.sending = true;
 
           const postData = {
@@ -668,7 +749,16 @@
             postData.keyCurveName = this.add.keyCurveName;
           }
 
-          if (Object.keys(this.add.tags).length > 0) {
+          // Build tags based on mode
+          if (this.add.useAppGatewayMode) {
+            postData.tags = {
+              EntraID: this.add.appGwEntraId,
+              SubscriptionID: this.add.appGwSubscriptionId,
+              KeyVaultResourceGroup: this.add.appGwKeyVaultResourceGroup,
+              KeyVaultName: this.add.appGwKeyVaultName,
+              ...this.add.tags
+            };
+          } else if (Object.keys(this.add.tags).length > 0) {
             postData.tags = this.add.tags;
           }
 
@@ -699,6 +789,11 @@
           this.add.dnsNames = [];
           this.add.dnsProviderName = "";
           this.add.certificateName = "";
+          this.add.useAppGatewayMode = false;
+          this.add.appGwEntraId = "";
+          this.add.appGwSubscriptionId = "";
+          this.add.appGwKeyVaultResourceGroup = "";
+          this.add.appGwKeyVaultName = "";
           this.add.tags = {};
           this.add.tagKey = "";
           this.add.tagValue = "";

@@ -276,3 +276,149 @@ git commit -m "Merge upstream changes"
    ```
 2. **Create Pull Request**: After push succeeds, create PR to merge feature/certificate-tags into main branch
 3. **Review and Testing**: Complete code review and testing before merging to production
+
+---
+
+# Application Gateway Integration Feature (Branch: feature/appgw-integration)
+
+## Context
+Built on top of the `feature/certificate-tags` branch to provide a streamlined workflow for Application Gateway certificate deployments that require specific Azure infrastructure tags.
+
+## Branch Dependency
+- **Base Branch:** `feature/certificate-tags` (must be merged first)
+- **Feature Branch:** `feature/appgw-integration`
+- **Purpose:** Company-specific enhancement for Application Gateway certificate management
+
+## Use Case
+Internal employees deploying certificates to Application Gateways need to specify 4 mandatory Azure infrastructure tags:
+- **EntraID**: Azure Entra ID identifier
+- **SubscriptionID**: Azure subscription identifier
+- **KeyVaultResourceGroup**: Resource group containing the Key Vault
+- **KeyVaultName**: Name of the Key Vault
+
+This feature provides a dedicated UI mode that enforces these required fields and automatically tags certificates appropriately.
+
+## Changes Made
+
+### Frontend (JavaScript/Vue.js)
+
+#### wwwroot/dashboard/index.html
+
+**Application Gateway Mode Toggle (lines ~203-221):**
+- Radio button section: "Application Gateway Integration?" (Yes/No)
+- Positioned on main page, before "Use Advanced Options?" section
+- Binding: `add.useAppGatewayMode` (boolean, default: false)
+
+**Required AppGW Tag Fields (lines ~222-269):**
+- Four conditionally-visible input fields (shown when AppGW mode = true):
+  - **EntraID*** - Text input for Azure Entra ID
+  - **SubscriptionID*** - Text input for Subscription ID
+  - **KeyVaultResourceGroup*** - Text input for Resource Group name
+  - **KeyVaultName*** - Text input for Key Vault name
+- All fields marked as required with asterisk (*)
+
+**JavaScript Data Model (lines ~615-619):**
+Added to `add` object:
+```javascript
+useAppGatewayMode: false,
+appGwEntraId: "",
+appGwSubscriptionId: "",
+appGwKeyVaultResourceGroup: "",
+appGwKeyVaultName: "",
+```
+
+**JavaScript Validation (lines ~727-734):**
+Client-side validation in `addCertificate()` method:
+- Checks all 4 AppGW fields are non-empty when AppGW mode is enabled
+- Displays alert with list of required fields if validation fails
+- Prevents form submission until all fields are filled
+
+**Tag Building Logic (lines ~753-763):**
+Merge logic in `addCertificate()` method:
+```javascript
+if (this.add.useAppGatewayMode) {
+  postData.tags = {
+    EntraID: this.add.appGwEntraId,
+    SubscriptionID: this.add.appGwSubscriptionId,
+    KeyVaultResourceGroup: this.add.appGwKeyVaultResourceGroup,
+    KeyVaultName: this.add.appGwKeyVaultName,
+    ...this.add.tags  // Merge any additional custom tags
+  };
+}
+```
+- AppGW tags are always included when mode is enabled
+- Additional custom tags (from Advanced Options) are merged in
+- Generic tags feature remains fully functional alongside AppGW mode
+
+**Field Reset Logic (lines ~792-796):**
+Reset in `openAdd()` method:
+- Resets `useAppGatewayMode` to false
+- Clears all 4 AppGW tag input fields when modal opens
+
+## Data Flow
+
+### Certificate Creation with AppGW Mode:
+1. User selects "Yes" for Application Gateway Integration
+2. UI displays 4 required tag input fields
+3. User fills in EntraID, SubscriptionID, KeyVaultResourceGroup, KeyVaultName
+4. User can optionally enable Advanced Options to add additional custom tags
+5. On submit, JavaScript validates all 4 AppGW fields are non-empty
+6. If valid, builds tags object with 4 required AppGW tags + any additional tags
+7. POST to `/api/certificate` with tags in request body
+8. Backend stores all tags in Key Vault (leverages existing tags feature)
+9. Certificate created with proper Azure infrastructure metadata
+
+### Certificate Retrieval:
+- AppGW tags are stored as standard Key Vault certificate tags
+- Retrieved and displayed like any other custom tags
+- No special handling needed on backend (leverages existing infrastructure)
+
+## Design Decisions
+
+### Client-Side Only Implementation
+- **No server-side validation**: Acceptable for internal-only application with trusted users
+- **No C# model changes**: AppGW tags are just regular custom tags on the backend
+- **Rationale**:
+  - Simplifies implementation and maintenance
+  - Faster development cycle
+  - Azure Key Vault provides final validation layer
+  - Worst case: incomplete submission fails at Azure level with clear error
+
+### UI Design
+- **Radio button placement**: Above Advanced Options to emphasize it's a primary workflow choice
+- **Conditional visibility**: Fields only show when AppGW mode enabled to reduce clutter
+- **Custom tags remain visible**: Users can add extra tags beyond the 4 required ones
+- **Clear required indicator**: Asterisk (*) on all required field labels
+
+### Tag Merging Strategy
+- AppGW required tags come first in the object
+- Additional custom tags merged after using spread operator
+- This ensures AppGW tags take precedence if there's a naming conflict (unlikely)
+
+## Testing Considerations
+- ✅ Test AppGW mode ON: All 4 fields required
+- ✅ Test AppGW mode OFF: Generic tags functionality unchanged
+- ✅ Test validation: Empty fields trigger alert
+- ✅ Test tag merging: AppGW tags + custom tags both included
+- ✅ Test modal reset: Fields clear when reopening modal
+- Test certificate creation with AppGW tags
+- Test certificate retrieval displays AppGW tags correctly
+
+## Deployment Notes
+- This feature requires `feature/certificate-tags` to be deployed first
+- No backend changes means no rebuild/redeploy needed for AppGW feature
+- UI changes deployed via same process (included in wwwroot/ folder)
+- Compatible with existing Azure Function deployment
+
+## Branch Strategy
+1. `feature/certificate-tags` contains base custom tags functionality
+2. `feature/appgw-integration` builds on top with company-specific UI
+3. Both can be merged independently:
+   - Merge `feature/certificate-tags` first (base functionality)
+   - Then merge `feature/appgw-integration` (optional company-specific enhancement)
+
+## Future Enhancements (Optional)
+- Add dropdown for common resource groups/key vaults
+- Pre-populate fields based on selected DNS zone
+- Server-side validation if application becomes externally exposed
+- Save AppGW tag presets for faster form completion
