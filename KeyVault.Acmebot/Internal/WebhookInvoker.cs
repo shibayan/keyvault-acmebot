@@ -37,14 +37,14 @@ public class WebhookInvoker
         return SendEventAsync(payload);
     }
 
-    public Task SendFailedEventAsync(string functionName, string reason)
+    public Task SendFailedEventAsync(string certificateName, IEnumerable<string> dnsNames)
     {
         if (_options.Webhook is null)
         {
             return Task.CompletedTask;
         }
 
-        var payload = _webhookPayloadBuilder.BuildFailed(functionName, reason);
+        var payload = _webhookPayloadBuilder.BuildFailed(certificateName, dnsNames);
 
         return SendEventAsync(payload);
     }

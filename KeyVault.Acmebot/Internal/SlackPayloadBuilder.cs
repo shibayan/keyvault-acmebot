@@ -47,7 +47,7 @@ internal class SlackPayloadBuilder : IWebhookPayloadBuilder
         };
     }
 
-    public object BuildFailed(string functionName, string reason)
+    public object BuildFailed(string certificateName, IEnumerable<string> dnsNames)
     {
         return new
         {
@@ -56,9 +56,22 @@ internal class SlackPayloadBuilder : IWebhookPayloadBuilder
             {
                 new
                 {
-                    title = functionName,
-                    text = reason,
-                    color = "danger"
+                    text = "Failed to issue a new certificate.",
+                    color = "danger",
+                    fields = new object[]
+                    {
+                        new
+                        {
+                            title = "Certificate Name",
+                            value= certificateName,
+                            @short = true
+                        },
+                        new
+                        {
+                            title = "DNS Names",
+                            value = string.Join("\n", dnsNames)
+                        }
+                    }
                 }
             }
         };

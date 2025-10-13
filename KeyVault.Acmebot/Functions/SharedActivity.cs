@@ -463,4 +463,12 @@ public class SharedActivity(
 
         return webhookInvoker.SendCompletedEventAsync(certificateName, expirationDate, dnsNames, _options.Endpoint.Host);
     }
+
+    [Function(nameof(SendFailedEvent))]
+    public Task SendFailedEvent([ActivityTrigger] (string, IReadOnlyList<string>) input)
+    {
+        var (certificateName, dnsNames) = input;
+
+        return webhookInvoker.SendFailedEventAsync(certificateName, dnsNames);
+    }
 }
