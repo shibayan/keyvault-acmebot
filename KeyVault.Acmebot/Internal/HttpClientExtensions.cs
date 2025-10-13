@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
-
-using Newtonsoft.Json;
 
 namespace KeyVault.Acmebot.Internal;
 
@@ -27,5 +26,5 @@ internal static class HttpClientExtensions
         return client.SendAsync(request);
     }
 
-    private static HttpContent SerializeToJson<T>(T value) => new StringContent(JsonConvert.SerializeObject(value), Encoding.UTF8, "application/json");
+    private static HttpContent SerializeToJson<T>(T value) => new StringContent(JsonSerializer.Serialize(value), Encoding.UTF8, "application/json");
 }

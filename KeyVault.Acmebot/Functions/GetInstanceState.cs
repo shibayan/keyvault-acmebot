@@ -1,34 +1,28 @@
 ﻿using System.Threading.Tasks;
 
-using Azure.WebJobs.Extensions.HttpApi;
+using Azure.Functions.Worker.Extensions.HttpApi;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.DurableTask.Client;
 
 namespace KeyVault.Acmebot.Functions;
 
-public class GetInstanceState : HttpFunctionBase
+public class GetInstanceState(IHttpContextAccessor httpContextAccessor) : HttpFunctionBase(httpContextAccessor)
 {
-    public GetInstanceState(IHttpContextAccessor httpContextAccessor)
-        : base(httpContextAccessor)
-    {
-    }
-
-    [FunctionName($"{nameof(GetInstanceState)}_{nameof(HttpStart)}")]
+    [Function($"{nameof(GetInstanceState)}_{nameof(HttpStart)}")]
     public async Task<IActionResult> HttpStart(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/state/{instanceId}")] HttpRequest req,
         string instanceId,
-        [DurableClient] IDurableClient starter)
+        [DurableClient] DurableTaskClient starter)
     {
         if (!User.Identity.IsAuthenticated)
         {
             return Unauthorized();
         }
 
-        var status = await starter.GetStatusAsync(instanceId);
+        var status = await starter.GetInstanceAsync(instanceId, getInputsAndOutputs: true);
 
         if (status is null)
         {
@@ -37,8 +31,8 @@ public class GetInstanceState : HttpFunctionBase
 
         return status.RuntimeStatus switch
         {
-            OrchestrationRuntimeStatus.Failed => Problem(status.Output.ToString()),
-            OrchestrationRuntimeStatus.Running or OrchestrationRuntimeStatus.Pending or OrchestrationRuntimeStatus.ContinuedAsNew => AcceptedAtFunction($"{nameof(GetInstanceState)}_{nameof(HttpStart)}", new { instanceId }, null),
+            OrchestrationRuntimeStatus.Failed => Problem(status.SerializedOutput),
+            OrchestrationRuntimeStatus.Running or OrchestrationRuntimeStatus.Pending => AcceptedAtFunction($"{nameof(GetInstanceState)}_{nameof(HttpStart)}", new { instanceId }, null),
             _ => Ok()
         };
     }
