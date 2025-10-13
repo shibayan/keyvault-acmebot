@@ -217,4 +217,62 @@ git commit -m "Merge upstream changes"
 - ✅ Fixed deployment issue (nested ZIP directory structure)
 - ✅ Documentation updated with deployment troubleshooting
 - ✅ Git commit created with proper attribution
-- ⏳ Pending: Push to remote repository (GitHub CLI authentication in progress)
+- ✅ Feature branch `feature/certificate-tags` ready for push
+- ⏳ **Pending: Push to remote repository** - awaiting organization to grant push permissions to user JakeMF on projecthosts/keyvault-acmebot repository (403 permission error)
+
+## Upstream Merge Risk Assessment
+
+### High Risk Files (Most Likely to Conflict):
+
+**1. KeyVault.Acmebot/Functions/SharedActivity.cs (line 391)**
+- Contains CRITICAL fix to `StartCreateCertificateAsync()` method call
+- Changed to use named parameter `tags:` and added `cancellationToken: default`
+- If upstream modifies certificate creation logic, conflicts are likely
+- This is the most critical change that fixes InternalServerError bug
+- **Action on conflict**: Preserve our named parameter approach to avoid method overload ambiguity
+
+**2. KeyVault.Acmebot/wwwroot/dashboard/index.html**
+- Extensive UI modifications across multiple sections:
+  - Add Certificate Modal (lines ~322-352): Tag input fields and UI
+  - Certificate Details Modal (lines ~503-516): Tag display section
+  - JavaScript data() (lines ~554-556): Tag-related data properties
+  - JavaScript methods (lines ~644-653, 671-704): Tag management functions
+- Highest conflict risk due to frequent upstream UI framework updates
+- **Action on conflict**: Carefully merge to preserve tag functionality while adopting upstream improvements
+
+### Medium Risk Files:
+
+**3. KeyVault.Acmebot/Internal/CertificateExtensions.cs**
+- Modified `ToCertificateItem()` (lines 27-49): Filters reserved system tags
+- Modified `ToCertificateMetadata()` (lines 83-96): Merges custom tags, protects reserved tags
+- Could conflict if upstream refactors certificate metadata handling
+- **Action on conflict**: Preserve tag filtering and reserved tag protection logic
+
+### Low Risk Files:
+
+**4. KeyVault.Acmebot/Models/CertificatePolicyItem.cs (lines 37-38)**
+**5. KeyVault.Acmebot/Models/CertificateItem.cs (lines 58-59)**
+- Simple `Tags` property additions
+- Low conflict probability unless upstream adds identical/similar properties
+- **Action on conflict**: Easy to resolve, keep our Tags property
+
+### Other Considerations:
+
+**ACMESharpCore Submodule**:
+- If upstream updates submodule pointer to different commit, review compatibility
+- Check if ACMESharp API changes affect our certificate creation code
+- **Action**: Test build after accepting upstream submodule update
+
+**Merge Strategy Recommendation**:
+1. Before merging upstream: Create backup branch of current feature/certificate-tags
+2. Test build after merge to catch breaking changes
+3. Focus testing on certificate creation with tags (SharedActivity.cs line 391)
+4. Verify UI tag functionality still works after index.html merge
+
+## Next Steps
+1. **Push Feature Branch**: Once push permissions are granted by organization owner, run:
+   ```bash
+   git push -u origin feature/certificate-tags
+   ```
+2. **Create Pull Request**: After push succeeds, create PR to merge feature/certificate-tags into main branch
+3. **Review and Testing**: Complete code review and testing before merging to production
