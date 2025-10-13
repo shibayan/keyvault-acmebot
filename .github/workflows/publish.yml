@@ -15,6 +15,7 @@ jobs:
       contents: read
     outputs:
       version: ${{ steps.setup_version.outputs.version }}
+      major_version: ${{ steps.setup_version.outputs.major_version }}
     steps:
     - uses: actions/checkout@v5
       with:
@@ -27,7 +28,10 @@ jobs:
 
     - name: Setup Version
       id: setup_version
-      run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_OUTPUT
+      run: |
+        FULL_VERSION=${GITHUB_REF/refs\/tags\/v/}
+        echo "VERSION=${FULL_VERSION}" >> $GITHUB_OUTPUT
+        echo "MAJOR_VERSION=${FULL_VERSION:0:1}" >> $GITHUB_OUTPUT
 
     - name: Publish Function app
       run: dotnet publish -c Release -r win-x86 --no-self-contained -o ./dist -p:Version=${{ steps.setup_version.outputs.version }} KeyVault.Acmebot
@@ -70,10 +74,10 @@ jobs:
 
     - name: Upload to Blob
       run: |
-        az storage blob upload --auth-mode login -f latest.zip --account-name stacmebotprod -c keyvault-acmebot -n v4/latest.zip --overwrite
-        az storage blob upload --auth-mode login -f latest.zip --account-name stacmebotprod -c keyvault-acmebot -n v4/${{ needs.publish.outputs.version }}.zip --overwrite
+        az storage blob upload --auth-mode login -f latest.zip --account-name stacmebotprod -c keyvault-acmebot -n v${{ needs.publish.outputs.major_version }}/latest.zip --overwrite
+        az storage blob upload --auth-mode login -f latest.zip --account-name stacmebotprod -c keyvault-acmebot -n v${{ needs.publish.outputs.major_version }}/${{ needs.publish.outputs.version }}.zip --overwrite
 
     - name: Publish to Private Registry
       run: |
-        az bicep publish --file azuredeploy.bicep --target br:cracmebotprod.azurecr.io/bicep/modules/keyvault-acmebot:v4 --force
+        az bicep publish --file azuredeploy.bicep --target br:cracmebotprod.azurecr.io/bicep/modules/keyvault-acmebot:v${{ needs.publish.outputs.major_version }} --force
         az bicep publish --file azuredeploy.bicep --target br:cracmebotprod.azurecr.io/bicep/modules/keyvault-acmebot:v${{ needs.publish.outputs.version }} --force
