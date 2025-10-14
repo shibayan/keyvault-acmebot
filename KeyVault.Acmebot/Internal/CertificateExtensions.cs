@@ -24,6 +24,11 @@ internal static class CertificateExtensions
     {
         var dnsNames = certificate.Policy.SubjectAlternativeNames?.DnsNames.ToArray();
 
+        // Extract custom tags (excluding reserved system tags)
+        var customTags = certificate.Properties.Tags
+            .Where(tag => tag.Key != IssuerKey && tag.Key != EndpointKey && tag.Key != DnsProviderKey && tag.Key != DnsAliasKey)
+            .ToDictionary(tag => tag.Key, tag => tag.Value);
+
         return new CertificateItem
         {
             Id = certificate.Id,
@@ -39,7 +44,8 @@ internal static class CertificateExtensions
             ReuseKey = certificate.Policy.ReuseKey,
             IsExpired = DateTimeOffset.UtcNow > certificate.Properties.ExpiresOn.Value,
             AcmeEndpoint = certificate.Properties.Tags.TryGetEndpoint(out var acmeEndpoint) ? NormalizeEndpoint(acmeEndpoint) : "",
-            DnsAlias = certificate.Properties.Tags.TryGetDnsAlias(out var dnsAlias) ? dnsAlias : ""
+            DnsAlias = certificate.Properties.Tags.TryGetDnsAlias(out var dnsAlias) ? dnsAlias : "",
+            Tags = customTags
         };
     }
 
@@ -72,6 +78,19 @@ internal static class CertificateExtensions
         if (!string.IsNullOrEmpty(certificatePolicyItem.DnsAlias))
         {
             metadata.Add(DnsAliasKey, certificatePolicyItem.DnsAlias);
+        }
+
+        // Add custom tags if provided
+        if (certificatePolicyItem.Tags != null)
+        {
+            foreach (var tag in certificatePolicyItem.Tags)
+            {
+                // Skip reserved keys to avoid conflicts
+                if (tag.Key != IssuerKey && tag.Key != EndpointKey && tag.Key != DnsProviderKey && tag.Key != DnsAliasKey)
+                {
+                    metadata[tag.Key] = tag.Value;
+                }
+            }
         }
 
         return metadata;
