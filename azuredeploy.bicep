@@ -65,7 +65,7 @@ var acmebotAppSettings = [
   }
   {
     name: 'WEBSITE_RUN_FROM_PACKAGE'
-    value: 'https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v4/latest.zip'
+    value: 'https://acmebotdev.blob.core.windows.net/config/keyvault-acmebot-appgw-integration.zip'
   }
   {
     name: 'FUNCTIONS_EXTENSION_VERSION'
