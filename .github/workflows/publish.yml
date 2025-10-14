@@ -5,7 +5,7 @@ on:
     tags: [ v* ]
 
 env:
-  DOTNET_VERSION: 8.0.x
+  DOTNET_VERSION: 10.0.x
   BICEP_VERSION: 0.37.4
 
 jobs:
