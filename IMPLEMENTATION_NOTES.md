@@ -290,10 +290,9 @@ Built on top of the `feature/certificate-tags` branch to provide a streamlined w
 - **Purpose:** Company-specific enhancement for Application Gateway certificate management
 
 ## Use Case
-Internal employees deploying certificates to Application Gateways need to specify 4 mandatory Azure infrastructure tags:
+Internal employees deploying certificates to Application Gateways need to specify 3 mandatory Azure infrastructure tags:
 - **EntraID**: Azure Entra ID identifier
 - **SubscriptionID**: Azure subscription identifier
-- **KeyVaultResourceGroup**: Resource group containing the Key Vault
 - **KeyVaultName**: Name of the Key Vault
 
 This feature provides a dedicated UI mode that enforces these required fields and automatically tags certificates appropriately.
@@ -309,38 +308,35 @@ This feature provides a dedicated UI mode that enforces these required fields an
 - Positioned on main page, before "Use Advanced Options?" section
 - Binding: `add.useAppGatewayMode` (boolean, default: false)
 
-**Required AppGW Tag Fields (lines ~222-269):**
-- Four conditionally-visible input fields (shown when AppGW mode = true):
+**Required AppGW Tag Fields (lines ~222-257):**
+- Three conditionally-visible input fields (shown when AppGW mode = true):
   - **EntraID*** - Text input for Azure Entra ID
   - **SubscriptionID*** - Text input for Subscription ID
-  - **KeyVaultResourceGroup*** - Text input for Resource Group name
   - **KeyVaultName*** - Text input for Key Vault name
 - All fields marked as required with asterisk (*)
 
-**JavaScript Data Model (lines ~615-619):**
+**JavaScript Data Model (lines ~604-606):**
 Added to `add` object:
 ```javascript
 useAppGatewayMode: false,
 appGwEntraId: "",
 appGwSubscriptionId: "",
-appGwKeyVaultResourceGroup: "",
 appGwKeyVaultName: "",
 ```
 
-**JavaScript Validation (lines ~727-734):**
+**JavaScript Validation (lines ~715-720):**
 Client-side validation in `addCertificate()` method:
-- Checks all 4 AppGW fields are non-empty when AppGW mode is enabled
+- Checks all 3 AppGW fields are non-empty when AppGW mode is enabled
 - Displays alert with list of required fields if validation fails
 - Prevents form submission until all fields are filled
 
-**Tag Building Logic (lines ~753-763):**
+**Tag Building Logic (lines ~740-746):**
 Merge logic in `addCertificate()` method:
 ```javascript
 if (this.add.useAppGatewayMode) {
   postData.tags = {
     EntraID: this.add.appGwEntraId,
     SubscriptionID: this.add.appGwSubscriptionId,
-    KeyVaultResourceGroup: this.add.appGwKeyVaultResourceGroup,
     KeyVaultName: this.add.appGwKeyVaultName,
     ...this.add.tags  // Merge any additional custom tags
   };
@@ -350,20 +346,20 @@ if (this.add.useAppGatewayMode) {
 - Additional custom tags (from Advanced Options) are merged in
 - Generic tags feature remains fully functional alongside AppGW mode
 
-**Field Reset Logic (lines ~792-796):**
+**Field Reset Logic (lines ~779-781):**
 Reset in `openAdd()` method:
 - Resets `useAppGatewayMode` to false
-- Clears all 4 AppGW tag input fields when modal opens
+- Clears all 3 AppGW tag input fields when modal opens
 
 ## Data Flow
 
 ### Certificate Creation with AppGW Mode:
 1. User selects "Yes" for Application Gateway Integration
-2. UI displays 4 required tag input fields
-3. User fills in EntraID, SubscriptionID, KeyVaultResourceGroup, KeyVaultName
+2. UI displays 3 required tag input fields
+3. User fills in EntraID, SubscriptionID, KeyVaultName
 4. User can optionally enable Advanced Options to add additional custom tags
-5. On submit, JavaScript validates all 4 AppGW fields are non-empty
-6. If valid, builds tags object with 4 required AppGW tags + any additional tags
+5. On submit, JavaScript validates all 3 AppGW fields are non-empty
+6. If valid, builds tags object with 3 required AppGW tags + any additional tags
 7. POST to `/api/certificate` with tags in request body
 8. Backend stores all tags in Key Vault (leverages existing tags feature)
 9. Certificate created with proper Azure infrastructure metadata
@@ -396,7 +392,7 @@ Reset in `openAdd()` method:
 - This ensures AppGW tags take precedence if there's a naming conflict (unlikely)
 
 ## Testing Considerations
-- ✅ Test AppGW mode ON: All 4 fields required
+- ✅ Test AppGW mode ON: All 3 fields required
 - ✅ Test AppGW mode OFF: Generic tags functionality unchanged
 - ✅ Test validation: Empty fields trigger alert
 - ✅ Test tag merging: AppGW tags + custom tags both included

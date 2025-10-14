@@ -245,18 +245,6 @@
               </div>
               <div class="field is-horizontal" v-if="add.useAppGatewayMode">
                 <div class="field-label is-normal">
-                  <label class="label">KeyVault Resource Group *</label>
-                </div>
-                <div class="field-body">
-                  <div class="field">
-                    <p class="control">
-                      <input v-model="add.appGwKeyVaultResourceGroup" class="input" type="text" placeholder="Enter Resource Group" required>
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div class="field is-horizontal" v-if="add.useAppGatewayMode">
-                <div class="field-label is-normal">
                   <label class="label">KeyVault Name *</label>
                 </div>
                 <div class="field-body">
@@ -615,7 +603,6 @@
             useAppGatewayMode: false,
             appGwEntraId: "",
             appGwSubscriptionId: "",
-            appGwKeyVaultResourceGroup: "",
             appGwKeyVaultName: "",
             useAdvancedOptions: false,
             certificateName: "",
@@ -727,8 +714,8 @@
           // Validate AppGW required fields
           if (this.add.useAppGatewayMode) {
             if (!this.add.appGwEntraId || !this.add.appGwSubscriptionId ||
-                !this.add.appGwKeyVaultResourceGroup || !this.add.appGwKeyVaultName) {
-              alert("All Application Gateway fields are required:\n- EntraID\n- SubscriptionID\n- KeyVaultResourceGroup\n- KeyVaultName");
+                !this.add.appGwKeyVaultName) {
+              alert("All Application Gateway fields are required:\n- EntraID\n- SubscriptionID\n- KeyVaultName");
               return;
             }
           }
@@ -754,7 +741,6 @@
             postData.tags = {
               EntraID: this.add.appGwEntraId,
               SubscriptionID: this.add.appGwSubscriptionId,
-              KeyVaultResourceGroup: this.add.appGwKeyVaultResourceGroup,
               KeyVaultName: this.add.appGwKeyVaultName,
               ...this.add.tags
             };
@@ -792,7 +778,6 @@
           this.add.useAppGatewayMode = false;
           this.add.appGwEntraId = "";
           this.add.appGwSubscriptionId = "";
-          this.add.appGwKeyVaultResourceGroup = "";
           this.add.appGwKeyVaultName = "";
           this.add.tags = {};
           this.add.tagKey = "";
