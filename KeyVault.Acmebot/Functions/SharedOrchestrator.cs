@@ -65,6 +65,8 @@ public class SharedOrchestrator
         catch
         {
             await context.CallSendFailedEventAsync((certificatePolicyItem.CertificateName, certificatePolicyItem.DnsNames));
+
+            throw;
         }
     }
 
