@@ -18,6 +18,11 @@ updates:
         update-types:
           - version-update:semver-major
 
+  - package-ecosystem: 'gitsubmodule'
+    directory: '/'
+    schedule:
+      interval: "weekly"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
