@@ -23,16 +23,16 @@ internal class LegacyTeamsPayloadBuilder : IWebhookPayloadBuilder
         };
     }
 
-    public object BuildFailed(string functionName, string reason)
+    public object BuildFailed(string certificateName, IEnumerable<string> dnsNames)
     {
         return new
         {
             title = "Acmebot",
-            text = @$"**{functionName}**
+            text = @$"Failed to issue a new certificate.
 
-**Reason**
+**Certificate Name**: {certificateName}
 
-{reason}",
+**DNS Names**: {string.Join(", ", dnsNames)}",
             themeColor = "A30200"
         };
     }

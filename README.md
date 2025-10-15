@@ -1,5 +1,5 @@
 <h1 align="center">
-  Key Vault Acmebot
+  Acmebot for Azure Key Vault
 </h1>
 <p align="center">
   Automated ACME SSL/TLS certificates issuer for Azure Key Vault (App Service / Container Apps / App Gateway / Front Door / CDN / others)

@@ -1,42 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-using Azure.WebJobs.Extensions.HttpApi;
-
-using DurableTask.TypedProxy;
+using Azure.Functions.Worker.Extensions.HttpApi;
 
 using KeyVault.Acmebot.Models;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.DurableTask;
+using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
 
 namespace KeyVault.Acmebot.Functions;
 
-public class GetDnsZones : HttpFunctionBase
+public class GetDnsZones(IHttpContextAccessor httpContextAccessor, ILogger<GetDnsZones> logger) : HttpFunctionBase(httpContextAccessor)
 {
-    public GetDnsZones(IHttpContextAccessor httpContextAccessor)
-        : base(httpContextAccessor)
+    [Function($"{nameof(GetDnsZones)}_{nameof(Orchestrator)}")]
+    public Task<IReadOnlyList<DnsZoneGroup>> Orchestrator([OrchestrationTrigger] TaskOrchestrationContext context)
     {
+        return context.CallGetAllDnsZonesAsync(null!);
     }
 
-    [FunctionName($"{nameof(GetDnsZones)}_{nameof(Orchestrator)}")]
-    public Task<IReadOnlyList<DnsZoneGroup>> Orchestrator([OrchestrationTrigger] IDurableOrchestrationContext context)
-    {
-        var activity = context.CreateActivityProxy<ISharedActivity>();
-
-        return activity.GetAllDnsZones();
-    }
-
-    [FunctionName($"{nameof(GetDnsZones)}_{nameof(HttpStart)}")]
+    [Function($"{nameof(GetDnsZones)}_{nameof(HttpStart)}")]
     public async Task<IActionResult> HttpStart(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/dns-zones")] HttpRequest req,
-        [DurableClient] IDurableClient starter,
-        ILogger log)
+        [DurableClient] DurableTaskClient starter)
     {
         if (!User.Identity.IsAuthenticated)
         {
@@ -44,10 +33,12 @@ public class GetDnsZones : HttpFunctionBase
         }
 
         // Function input comes from the request content.
-        var instanceId = await starter.StartNewAsync($"{nameof(GetDnsZones)}_{nameof(Orchestrator)}");
+        var instanceId = await starter.ScheduleNewOrchestrationInstanceAsync($"{nameof(GetDnsZones)}_{nameof(Orchestrator)}");
 
-        log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
+        logger.LogInformation("Started orchestration with ID = '{InstanceId}'.", instanceId);
 
-        return await starter.WaitForCompletionOrCreateCheckStatusResponseAsync(req, instanceId, TimeSpan.FromMinutes(1), returnInternalServerErrorOnFailure: true);
+        var metadata = await starter.WaitForInstanceCompletionAsync(instanceId, getInputsAndOutputs: true);
+
+        return Ok(metadata.SerializedOutput);
     }
 }

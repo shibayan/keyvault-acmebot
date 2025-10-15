@@ -1,24 +1,16 @@
-﻿using Azure.WebJobs.Extensions.HttpApi;
+﻿using Azure.Functions.Worker.Extensions.HttpApi;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Extensions.Logging;
+using Microsoft.Azure.Functions.Worker;
 
 namespace KeyVault.Acmebot.Functions;
 
-public class StaticPage : HttpFunctionBase
+public class StaticPage(IHttpContextAccessor httpContextAccessor) : HttpFunctionBase(httpContextAccessor)
 {
-    public StaticPage(IHttpContextAccessor httpContextAccessor)
-        : base(httpContextAccessor)
-    {
-    }
-
-    [FunctionName($"{nameof(StaticPage)}_{nameof(Serve)}")]
+    [Function($"{nameof(StaticPage)}_{nameof(Serve)}")]
     public IActionResult Serve(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "{*path}")] HttpRequest req,
-        ILogger log)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "{*path}")] HttpRequest req)
     {
         if (!IsAuthenticationEnabled || !User.Identity.IsAuthenticated)
         {

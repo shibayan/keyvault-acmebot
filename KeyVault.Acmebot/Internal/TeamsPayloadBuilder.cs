@@ -26,7 +26,8 @@ internal class TeamsPayloadBuilder : IWebhookPayloadBuilder
                                 text = "A new certificate has been issued.",
                                 wrap = true
                             },
-                            new{
+                            new
+                            {
                                 type = "FactSet",
                                 facts = new object[]
                                 {
@@ -59,7 +60,7 @@ internal class TeamsPayloadBuilder : IWebhookPayloadBuilder
         };
     }
 
-    public object BuildFailed(string functionName, string reason)
+    public object BuildFailed(string certificateName, IEnumerable<string> dnsNames)
     {
         return new
         {
@@ -77,17 +78,25 @@ internal class TeamsPayloadBuilder : IWebhookPayloadBuilder
                             new
                             {
                                 type = "TextBlock",
-                                size = "Medium",
-                                weight = "Bolder",
-                                text = functionName,
-                                style = "heading",
+                                text = "Failed to issue a new certificate.",
                                 wrap = true
                             },
                             new
                             {
-                                type = "TextBlock",
-                                text = reason,
-                                wrap = true
+                                type = "FactSet",
+                                facts = new object[]
+                                {
+                                    new
+                                    {
+                                        title = "Certificate Name",
+                                        value = certificateName
+                                    },
+                                    new
+                                    {
+                                        title = "DNS Names",
+                                        value = string.Join("\n", dnsNames)
+                                    }
+                                }
                             }
                         }
                     }

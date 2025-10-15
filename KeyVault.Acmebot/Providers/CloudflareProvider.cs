@@ -12,14 +12,9 @@ using Newtonsoft.Json;
 
 namespace KeyVault.Acmebot.Providers;
 
-public class CloudflareProvider : IDnsProvider
+public class CloudflareProvider(CloudflareOptions options) : IDnsProvider
 {
-    public CloudflareProvider(CloudflareOptions options)
-    {
-        _cloudflareDnsClient = new CloudflareDnsClient(options.ApiToken);
-    }
-
-    private readonly CloudflareDnsClient _cloudflareDnsClient;
+    private readonly CloudflareDnsClient _cloudflareDnsClient = new(options.ApiToken);
 
     public string Name => "Cloudflare";
 
