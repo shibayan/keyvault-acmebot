@@ -21,8 +21,6 @@ public class AcmebotOptions
 
     public string PreferredChain { get; set; }
 
-    public bool MitigateChainOrder { get; set; } = false;
-
     [Range(0, 365)]
     public int RenewBeforeExpiry { get; set; } = 30;
 
