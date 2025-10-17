@@ -64,14 +64,17 @@ public class SharedActivity(
             {
                 var certificateId = X509CertificateLoader.LoadCertificate(certificate.Value.Cer).GetCertificateId();
 
-                var renewalInfo = await acmeProtocolClient.GetRenewalInfoAsync(certificateId);
-
-                // 推奨ウィンドウが始まった場合は更新する
-                if (renewalInfo.SuggestedWindow.Start < now)
+                if (certificateId is not null)
                 {
-                    result.Add(certificate.Value.ToCertificateItem());
+                    var renewalInfo = await acmeProtocolClient.GetRenewalInfoAsync(certificateId);
 
-                    continue;
+                    // 推奨ウィンドウが始まった場合は更新する
+                    if (renewalInfo.SuggestedWindow.Start < now)
+                    {
+                        result.Add(certificate.Value.ToCertificateItem());
+
+                        continue;
+                    }
                 }
             }
 
