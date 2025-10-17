@@ -14,8 +14,8 @@ public class RenewCertificates(ILogger<RenewCertificates> logger)
     [Function($"{nameof(RenewCertificates)}_{nameof(Orchestrator)}")]
     public async Task Orchestrator([OrchestrationTrigger] TaskOrchestrationContext context)
     {
-        // 期限切れまで 30 日以内の証明書を取得する
-        var certificates = await context.CallGetExpiringCertificatesAsync(context.CurrentUtcDateTime);
+        // 更新が必要な証明書の一覧を取得する
+        var certificates = await context.CallGetRenewalCertificatesAsync(null!);
 
         // 更新対象となる証明書がない場合は終わる
         if (certificates.Count == 0)
@@ -28,7 +28,7 @@ public class RenewCertificates(ILogger<RenewCertificates> logger)
         // スロットリング対策として 600 秒以内でジッターを追加する
         var jitter = (uint)context.NewGuid().GetHashCode() % 600;
 
-        logger.LogInformation("Adding random delay = " + jitter);
+        logger.LogInformation("Adding random delay = {Jitter}", jitter);
 
         await context.CreateTimer(context.CurrentUtcDateTime.AddSeconds(jitter), CancellationToken.None);
 
@@ -47,8 +47,7 @@ public class RenewCertificates(ILogger<RenewCertificates> logger)
             catch (Exception ex)
             {
                 // 失敗した場合はログに詳細を書き出して続きを実行する
-                logger.LogError("Failed sub orchestration with DNS names = {Join}", string.Join(",", certificate.DnsNames));
-                logger.LogError(ex.Message);
+                logger.LogError("Failed sub orchestration with DNS names = {Join}, Exception = {Exception}", string.Join(",", certificate.DnsNames), ex.Message);
             }
         }
     }
