@@ -158,7 +158,7 @@ resource functionApp 'Microsoft.Web/sites@2024-11-01' = {
     serverFarmId: appServicePlan.id
     siteConfig: {
       appSettings: concat(acmebotAppSettings, additionalAppSettings)
-      netFrameworkVersion: 'v8.0'
+      netFrameworkVersion: 'v10.0'
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
       scmMinTlsVersion: '1.2'
