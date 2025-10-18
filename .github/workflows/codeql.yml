@@ -24,7 +24,7 @@ jobs:
     - name: Set scan languages
       id: set-matrix
       run: |
-        if [[ $GITHUB_EVENT_NAME = "pull_request" ]]; then
+        if [[ $GITHUB_EVENT_NAME != "pull_request" ]]; then
           echo "languages=${{ toJson(steps.filter.outputs.changes) }}" >> $GITHUB_OUTPUT
         else
           echo "languages=[\"actions\",\"csharp\"]" >> $GITHUB_OUTPUT
