@@ -37,33 +37,59 @@ public class SharedActivity(
 {
     private readonly AcmebotOptions _options = options.Value;
 
-    [Function(nameof(GetExpiringCertificates))]
-    public async Task<IReadOnlyList<CertificateItem>> GetExpiringCertificates([ActivityTrigger] DateTime currentDateTime)
+    [Function(nameof(GetRenewalCertificates))]
+    public async Task<IReadOnlyList<CertificateItem>> GetRenewalCertificates([ActivityTrigger] object input)
     {
-        var certificates = certificateClient.GetPropertiesOfCertificatesAsync();
+        var acmeProtocolClient = await acmeProtocolClientFactory.CreateClientAsync();
+
+        var certificateProperties = certificateClient.GetPropertiesOfCertificatesAsync();
 
         var result = new List<CertificateItem>();
 
-        await foreach (var certificate in certificates)
+        var now = DateTimeOffset.UtcNow;
+
+        await foreach (var properties in certificateProperties)
         {
-            if (!certificate.IsIssuedByAcmebot() || !certificate.IsSameEndpoint(_options.Endpoint))
+            // Acmebot で発行していない、ACME エンドポイントが異なる証明書は対象外とする
+            if (!properties.IsIssuedByAcmebot() || !properties.IsSameEndpoint(_options.Endpoint))
             {
                 continue;
             }
 
-            if ((certificate.ExpiresOn.Value - currentDateTime).TotalDays > _options.RenewBeforeExpiry)
+            // Key Vault から証明書を取得する
+            var certificate = await certificateClient.GetCertificateAsync(properties.Name);
+
+            // ACME Renewal Information が有効な場合は優先して使う
+            if (acmeProtocolClient.Directory.RenewalInfo is not null)
             {
-                continue;
+                var certificateId = X509CertificateLoader.LoadCertificate(certificate.Value.Cer).GetCertificateId();
+
+                if (certificateId is not null)
+                {
+                    var renewalInfo = await acmeProtocolClient.GetRenewalInfoAsync(certificateId);
+
+                    // 推奨ウィンドウが始まった場合は更新する
+                    if (renewalInfo.SuggestedWindow.Start < now)
+                    {
+                        result.Add(certificate.Value.ToCertificateItem());
+
+                        continue;
+                    }
+                }
             }
 
-            result.Add((await certificateClient.GetCertificateAsync(certificate.Name)).Value.ToCertificateItem());
+            // 期限が近い場合には更新する
+            if ((properties.ExpiresOn.Value - now).TotalDays <= _options.RenewBeforeExpiry)
+            {
+                result.Add(certificate.Value.ToCertificateItem());
+            }
         }
 
         return result;
     }
 
     [Function(nameof(GetAllCertificates))]
-    public async Task<IReadOnlyList<CertificateItem>> GetAllCertificates([ActivityTrigger] object input = null)
+    public async Task<IReadOnlyList<CertificateItem>> GetAllCertificates([ActivityTrigger] object input)
     {
         var certificates = certificateClient.GetPropertiesOfCertificatesAsync();
 
@@ -83,7 +109,7 @@ public class SharedActivity(
     }
 
     [Function(nameof(GetAllDnsZones))]
-    public async Task<IReadOnlyList<DnsZoneGroup>> GetAllDnsZones([ActivityTrigger] object input = null)
+    public async Task<IReadOnlyList<DnsZoneGroup>> GetAllDnsZones([ActivityTrigger] object input)
     {
         try
         {
@@ -424,11 +450,9 @@ public class SharedActivity(
         // 証明書をダウンロードして Key Vault へ格納
         var x509Certificates = await acmeProtocolClient.GetOrderCertificateAsync(orderDetails, _options.PreferredChain);
 
-        var exportedX509Certificates = x509Certificates.Select(x => x.Export(X509ContentType.Pfx));
-
         var mergeCertificateOptions = new MergeCertificateOptions(
             certificateName,
-            _options.MitigateChainOrder ? exportedX509Certificates.Reverse() : exportedX509Certificates
+            [x509Certificates.Export(X509ContentType.Pfx)]
         );
 
         return (await certificateClient.MergeCertificateAsync(mergeCertificateOptions)).Value.ToCertificateItem();
