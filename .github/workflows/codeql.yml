@@ -11,6 +11,8 @@ on:
 jobs:
   detect-changes:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       languages: ${{ steps.set-matrix.outputs.languages }}
     steps:
