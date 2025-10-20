@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-using Azure.Identity;
+﻿using Azure.Identity;
 using Azure.ResourceManager;
 
 namespace KeyVault.Acmebot.Internal;

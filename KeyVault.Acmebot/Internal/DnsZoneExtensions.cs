@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using KeyVault.Acmebot.Models;
+﻿using KeyVault.Acmebot.Models;
 using KeyVault.Acmebot.Providers;
 
 namespace KeyVault.Acmebot.Internal;

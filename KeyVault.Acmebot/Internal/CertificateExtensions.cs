@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using Azure.Security.KeyVault.Certificates;
+﻿using Azure.Security.KeyVault.Certificates;
 
 using KeyVault.Acmebot.Models;
 

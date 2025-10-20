@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
-
-using KeyVault.Acmebot.Options;
+﻿using KeyVault.Acmebot.Options;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
