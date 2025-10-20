@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace KeyVault.Acmebot.Internal;
+﻿namespace KeyVault.Acmebot.Internal;
 
 internal class SlackPayloadBuilder : IWebhookPayloadBuilder
 {

@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-
-using Azure.Functions.Worker.Extensions.HttpApi;
+﻿using Azure.Functions.Worker.Extensions.HttpApi;
 
 using KeyVault.Acmebot.Models;
 

@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 using Azure.Core;
 using Azure.Security.KeyVault.Keys.Cryptography;

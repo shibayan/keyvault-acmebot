@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 using Azure.Core;
 using Azure.Functions.Worker.Extensions.HttpApi.Config;
