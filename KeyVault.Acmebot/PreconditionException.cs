@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KeyVault.Acmebot;
+﻿namespace KeyVault.Acmebot;
 
 public class PreconditionException : Exception
 {

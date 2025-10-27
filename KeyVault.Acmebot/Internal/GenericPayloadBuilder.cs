@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-using KeyVault.Acmebot.Options;
+﻿using KeyVault.Acmebot.Options;
 
 namespace KeyVault.Acmebot.Internal;
 

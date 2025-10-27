@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 using ACMESharp.Protocol;
 

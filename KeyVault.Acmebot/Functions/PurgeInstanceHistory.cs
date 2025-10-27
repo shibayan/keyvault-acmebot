@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-using Microsoft.Azure.Functions.Worker;
+﻿using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask.Client;
 
 namespace KeyVault.Acmebot.Functions;

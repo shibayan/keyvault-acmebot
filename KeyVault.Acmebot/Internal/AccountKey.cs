@@ -1,6 +1,4 @@
-﻿using System;
-
-using ACMESharp.Crypto.JOSE;
+﻿using ACMESharp.Crypto.JOSE;
 
 namespace KeyVault.Acmebot.Internal;
 

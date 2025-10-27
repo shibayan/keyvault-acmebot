@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-
-namespace KeyVault.Acmebot.Providers;
+﻿namespace KeyVault.Acmebot.Providers;
 
 public interface IDnsProvider
 {
