@@ -65,6 +65,7 @@ var acmebotAppSettings = [
   }
   {
     name: 'WEBSITE_RUN_FROM_PACKAGE'
+#disable-next-line no-hardcoded-env-urls
     value: 'https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v5/latest.zip'
   }
   {
