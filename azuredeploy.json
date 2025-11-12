@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.37.4.10188",
-      "templateHash": "15699036419696632035"
+      "version": "0.38.33.27573",
+      "templateHash": "16442614651015046479"
     }
   },
   "parameters": {
@@ -96,7 +96,7 @@
       "apiVersion": "2025-01-01",
       "name": "[variables('storageAccountName')]",
       "location": "[parameters('location')]",
-      "kind": "Storage",
+      "kind": "StorageV2",
       "sku": {
         "name": "Standard_LRS"
       },

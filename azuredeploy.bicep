@@ -65,6 +65,7 @@ var acmebotAppSettings = [
   }
   {
     name: 'WEBSITE_RUN_FROM_PACKAGE'
+#disable-next-line no-hardcoded-env-urls
     value: 'https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v4/latest.zip'
   }
   {
@@ -100,7 +101,7 @@ var acmebotAppSettings = [
 resource storageAccount 'Microsoft.Storage/storageAccounts@2025-01-01' = {
   name: storageAccountName
   location: location
-  kind: 'Storage'
+  kind: 'StorageV2'
   sku: {
     name: 'Standard_LRS'
   }
