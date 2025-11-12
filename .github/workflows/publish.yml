@@ -25,7 +25,6 @@ jobs:
       uses: actions/setup-dotnet@v5
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
-        dotnet-quality: preview
 
     - name: Setup Version
       id: setup_version
