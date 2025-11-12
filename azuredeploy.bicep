@@ -66,15 +66,19 @@ var acmebotAppSettings = [
   {
     name: 'WEBSITE_RUN_FROM_PACKAGE'
 #disable-next-line no-hardcoded-env-urls
-    value: 'https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v5/latest.zip'
+    value: 'https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v4/latest.zip'
   }
   {
     name: 'FUNCTIONS_EXTENSION_VERSION'
     value: '~4'
   }
   {
+    name: 'FUNCTIONS_INPROC_NET8_ENABLED'
+    value: '1'
+  }
+  {
     name: 'FUNCTIONS_WORKER_RUNTIME'
-    value: 'dotnet-isolated'
+    value: 'dotnet'
   }
   {
     name: 'Acmebot:Contacts'
@@ -155,7 +159,7 @@ resource functionApp 'Microsoft.Web/sites@2024-11-01' = {
     serverFarmId: appServicePlan.id
     siteConfig: {
       appSettings: concat(acmebotAppSettings, additionalAppSettings)
-      netFrameworkVersion: 'v10.0'
+      netFrameworkVersion: 'v8.0'
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
       scmMinTlsVersion: '1.2'
