@@ -65,19 +65,15 @@ var acmebotAppSettings = [
   }
   {
     name: 'WEBSITE_RUN_FROM_PACKAGE'
-    value: 'https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v4/latest.zip'
+    value: 'https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v5/latest.zip'
   }
   {
     name: 'FUNCTIONS_EXTENSION_VERSION'
     value: '~4'
   }
   {
-    name: 'FUNCTIONS_INPROC_NET8_ENABLED'
-    value: '1'
-  }
-  {
     name: 'FUNCTIONS_WORKER_RUNTIME'
-    value: 'dotnet'
+    value: 'dotnet-isolated'
   }
   {
     name: 'Acmebot:Contacts'
@@ -100,7 +96,7 @@ var acmebotAppSettings = [
 resource storageAccount 'Microsoft.Storage/storageAccounts@2025-01-01' = {
   name: storageAccountName
   location: location
-  kind: 'Storage'
+  kind: 'StorageV2'
   sku: {
     name: 'Standard_LRS'
   }
