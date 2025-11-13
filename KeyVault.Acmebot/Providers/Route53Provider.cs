@@ -58,7 +58,7 @@ public class Route53Provider : IDnsProvider
             }
         };
 
-        var request = new ChangeResourceRecordSetsRequest(zone.Id, new ChangeBatch(new List<Change> { change }));
+        var request = new ChangeResourceRecordSetsRequest(zone.Id, new ChangeBatch([change]));
 
         return _amazonRoute53Client.ChangeResourceRecordSetsAsync(request);
     }

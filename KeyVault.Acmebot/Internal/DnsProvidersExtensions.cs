@@ -31,7 +31,7 @@ internal static class DnsProvidersExtensions
 
         if (dnsProvider is null)
         {
-            return Array.Empty<DnsZone>();
+            return [];
         }
 
         var dnsZones = await dnsProvider.ListZonesAsync();

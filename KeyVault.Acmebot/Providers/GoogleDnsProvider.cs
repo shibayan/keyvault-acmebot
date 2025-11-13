@@ -57,8 +57,8 @@ public class GoogleDnsProvider : IDnsProvider
 
         var change = new Change
         {
-            Additions = new[]
-            {
+            Additions =
+            [
                 new ResourceRecordSet
                 {
                     Name = recordName,
@@ -66,7 +66,7 @@ public class GoogleDnsProvider : IDnsProvider
                     Ttl = 60,
                     Rrdatas = values.ToArray()
                 }
-            }
+            ]
         };
 
         return _dnsService.Changes.Create(change, _credsParameters.ProjectId, zone.Id).ExecuteAsync();
