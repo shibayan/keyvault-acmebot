@@ -66,7 +66,7 @@ public class AcmeProtocolClientFactory
                 throw new PreconditionException("This ACME endpoint requires External Account Binding.");
             }
 
-            account = await acmeProtocolClient.CreateAccountAsync(new[] { $"mailto:{_options.Contacts}" }, true, externalAccountBinding);
+            account = await acmeProtocolClient.CreateAccountAsync([$"mailto:{_options.Contacts}"], true, externalAccountBinding);
 
             accountKey = new AccountKey
             {
@@ -82,7 +82,7 @@ public class AcmeProtocolClientFactory
 
         if (acmeProtocolClient.Account.Payload.Contact is { Length: > 0 } && acmeProtocolClient.Account.Payload.Contact[0] != $"mailto:{_options.Contacts}")
         {
-            account = await acmeProtocolClient.UpdateAccountAsync(new[] { $"mailto:{_options.Contacts}" });
+            account = await acmeProtocolClient.UpdateAccountAsync([$"mailto:{_options.Contacts}"]);
 
             SaveState(account, "account.json");
 

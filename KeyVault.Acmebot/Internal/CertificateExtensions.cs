@@ -24,7 +24,7 @@ internal static class CertificateExtensions
         {
             Id = certificate.Id,
             Name = certificate.Name,
-            DnsNames = dnsNames is { Length: > 0 } ? dnsNames : new[] { certificate.Policy.Subject[3..] },
+            DnsNames = dnsNames is { Length: > 0 } ? dnsNames : [certificate.Policy.Subject[3..]],
             DnsProviderName = certificate.Properties.Tags.TryGetDnsProvider(out var dnsProviderName) ? dnsProviderName : "",
             CreatedOn = certificate.Properties.CreatedOn.Value,
             ExpiresOn = certificate.Properties.ExpiresOn.Value,
@@ -46,7 +46,7 @@ internal static class CertificateExtensions
         return new CertificatePolicyItem
         {
             CertificateName = certificate.Name,
-            DnsNames = dnsNames.Length > 0 ? dnsNames : new[] { certificate.Policy.Subject[3..] },
+            DnsNames = dnsNames.Length > 0 ? dnsNames : [certificate.Policy.Subject[3..]],
             DnsProviderName = certificate.Properties.Tags.TryGetDnsProvider(out var dnsProviderName) ? dnsProviderName : "",
             KeyType = certificate.Policy.KeyType?.ToString(),
             KeySize = certificate.Policy.KeySize,
