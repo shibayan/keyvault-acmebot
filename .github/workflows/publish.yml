@@ -37,7 +37,7 @@ jobs:
       run: dotnet publish -c Release -r win-x86 --no-self-contained -o ./dist -p:Version=${{ steps.setup_version.outputs.version }} KeyVault.Acmebot
 
     - name: Zip Function app
-      run: 7z a -mx=9 latest.zip ./dist/*
+      run: 7z a -mx=9 latest.zip ./dist/* ./dist/.[^.]*
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v5
