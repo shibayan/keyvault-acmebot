@@ -9,34 +9,9 @@ on:
     - cron: '18 17 * * 4'
 
 jobs:
-  detect-changes:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      languages: ${{ steps.set-matrix.outputs.languages }}
-    steps:
-    - uses: dorny/paths-filter@v3
-      if: github.event_name == 'pull_request'
-      id: filter
-      with:
-        filters: |
-          actions: ./.github/workflows/**/*.yml
-          csharp: ./**/*.cs
-    - name: Set scan languages
-      id: set-matrix
-      run: |
-        if [[ $GITHUB_EVENT_NAME = "pull_request" ]]; then
-          echo "languages=${{ toJson(steps.filter.outputs.changes) }}" >> $GITHUB_OUTPUT
-        else
-          echo "languages=[\"actions\",\"csharp\"]" >> $GITHUB_OUTPUT
-        fi
-
   analyze:
     name: Analyze (${{ matrix.language }})
-    if: ${{ needs.detect-changes.outputs.languages != '[]' && needs.detect-changes.outputs.languages != '' }}
     runs-on: ubuntu-latest
-    needs: [detect-changes]
     permissions:
       security-events: write
       packages: read
@@ -45,7 +20,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ${{ fromJson(needs.detect-changes.outputs.languages) }}
+        include:
+        - language: actions
+          build-mode: none
+        - language: csharp
+          build-mode: autobuild
     steps:
     - name: Checkout repository
       uses: actions/checkout@v5
@@ -56,7 +35,7 @@ jobs:
       uses: github/codeql-action/init@v4
       with:
         languages: ${{ matrix.language }}
-        build-mode: ${{ matrix.language == 'csharp' && 'autobuild' || 'none' }}
+        build-mode: ${{ matrix.build-mode }}
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
