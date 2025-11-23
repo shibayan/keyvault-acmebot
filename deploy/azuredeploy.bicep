@@ -39,14 +39,15 @@ param keyVaultBaseUrl string = ''
 @description('Specifies additional name/value pairs to be appended to the functionap app appsettings.')
 param additionalAppSettings array = []
 
-var functionAppName = 'func-${appNamePrefix}-${substring(uniqueString(resourceGroup().id, deployment().name), 0, 4)}'
-var appServicePlanName = 'plan-${appNamePrefix}-${substring(uniqueString(resourceGroup().id, deployment().name), 0, 4)}'
-var appInsightsName = 'appi-${appNamePrefix}-${substring(uniqueString(resourceGroup().id, deployment().name), 0, 4)}'
-var workspaceName = 'log-${appNamePrefix}-${substring(uniqueString(resourceGroup().id, deployment().name), 0, 4)}'
+var functionAppName = 'func-${appNamePrefix}-${take(uniqueString(resourceGroup().id, deployment().name), 4)}'
+var appServicePlanName = 'plan-${appNamePrefix}-${take(uniqueString(resourceGroup().id, deployment().name), 4)}'
+var appInsightsName = 'appi-${appNamePrefix}-${take(uniqueString(resourceGroup().id, deployment().name), 4)}'
+var workspaceName = 'log-${appNamePrefix}-${take(uniqueString(resourceGroup().id, deployment().name), 4)}'
 var storageAccountName = 'st${uniqueString(resourceGroup().id, deployment().name)}func'
-var keyVaultName = 'kv-${appNamePrefix}-${substring(uniqueString(resourceGroup().id, deployment().name), 0, 4)}'
-var roleDefinitionId = resourceId('Microsoft.Authorization/roleDefinitions/', 'a4417e6f-fecd-4de8-b567-7b0420556985')
+var keyVaultName = 'kv-${appNamePrefix}-${take(uniqueString(resourceGroup().id, deployment().name), 4)}'
 var deploymentStorageContainerName = 'app-package-${take(appNamePrefix, 32)}-${take(resourceGroup().id, 7)}'
+
+var roleDefinitionId = resourceId('Microsoft.Authorization/roleDefinitions/', 'a4417e6f-fecd-4de8-b567-7b0420556985')
 
 var acmebotAppSettings = [
   {
@@ -55,6 +56,10 @@ var acmebotAppSettings = [
   }
   {
     name: 'AzureWebJobsStorage'
+    value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
+  }
+  {
+    name: 'DEPLOYMENT_STORAGE_CONNECTION_STRING'
     value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
   }
   {
@@ -75,7 +80,7 @@ var acmebotAppSettings = [
   }
 ]
 
-resource storageAccount 'Microsoft.Storage/storageAccounts@2025-01-01' = {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2025-06-01' = {
   name: storageAccountName
   location: location
   kind: 'StorageV2'
@@ -89,7 +94,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2025-01-01' = {
   }
 }
 
-resource appServicePlan 'Microsoft.Web/serverfarms@2024-11-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2025-03-01' = {
   name: appServicePlanName
   location: location
   sku: {
@@ -101,7 +106,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-11-01' = {
   }
 }
 
-resource workspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
+resource workspace 'Microsoft.OperationalInsights/workspaces@2025-07-01' = {
   name: workspaceName
   location: location
   properties: {
@@ -125,7 +130,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource functionApp 'Microsoft.Web/sites@2024-11-01' = {
+resource functionApp 'Microsoft.Web/sites@2025-03-01' = {
   name: functionAppName
   location: location
   kind: 'functionapp,linux'
@@ -143,7 +148,7 @@ resource functionApp 'Microsoft.Web/sites@2024-11-01' = {
           value: '${storageAccount.properties.primaryEndpoints.blob}${deploymentStorageContainerName}'
           authentication: {
             type: 'StorageAccountConnectionString'
-            storageAccountConnectionStringName: ''
+            storageAccountConnectionStringName: 'DEPLOYMENT_STORAGE_CONNECTION_STRING'
           }
         }
       }
@@ -157,10 +162,7 @@ resource functionApp 'Microsoft.Web/sites@2024-11-01' = {
     }
     siteConfig: {
       appSettings: concat(acmebotAppSettings, additionalAppSettings)
-      netFrameworkVersion: 'v8.0'
-      ftpsState: 'Disabled'
       minTlsVersion: '1.2'
-      scmMinTlsVersion: '1.2'
       cors: {
         allowedOrigins: ['https://portal.azure.com']
         supportCredentials: false
@@ -169,7 +171,7 @@ resource functionApp 'Microsoft.Web/sites@2024-11-01' = {
   }
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' = if (createWithKeyVault) {
+resource keyVault 'Microsoft.KeyVault/vaults@2025-05-01' = if (createWithKeyVault) {
   name: keyVaultName
   location: location
   properties: {
