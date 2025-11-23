@@ -1,4 +1,4 @@
-﻿namespace KeyVault.Acmebot.Options;
+﻿namespace Acmebot.Options;
 
 public class CloudflareOptions
 {

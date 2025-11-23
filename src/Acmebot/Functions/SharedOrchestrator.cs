@@ -1,9 +1,9 @@
-﻿using KeyVault.Acmebot.Models;
+﻿using Acmebot.Models;
 
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask;
 
-namespace KeyVault.Acmebot.Functions;
+namespace Acmebot.Functions;
 
 public class SharedOrchestrator
 {

@@ -3,7 +3,7 @@ using Microsoft.DurableTask;
 using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
 
-namespace KeyVault.Acmebot.Functions;
+namespace Acmebot.Functions;
 
 public class RenewCertificates(ILogger<RenewCertificates> logger)
 {
@@ -43,7 +43,7 @@ public class RenewCertificates(ILogger<RenewCertificates> logger)
             catch (Exception ex)
             {
                 // 失敗した場合はログに詳細を書き出して続きを実行する
-                logger.LogError(ex, "Failed sub orchestration with DNS names = {Join}", string.Join(",", certificate.DnsNames));
+                logger.LogError(ex, "Failed sub orchestration with DNS names = {Join}", string.Join((string?)",", (IEnumerable<string?>)certificate.DnsNames));
             }
         }
     }

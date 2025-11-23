@@ -1,14 +1,14 @@
 ﻿using System.Text;
 
+using Acmebot.Options;
+
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Dns.v1;
 using Google.Apis.Dns.v1.Data;
 using Google.Apis.Json;
 using Google.Apis.Services;
 
-using KeyVault.Acmebot.Options;
-
-namespace KeyVault.Acmebot.Providers;
+namespace Acmebot.Providers;
 
 public class GoogleDnsProvider : IDnsProvider
 {

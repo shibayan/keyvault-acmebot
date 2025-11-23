@@ -1,7 +1,7 @@
-﻿using KeyVault.Acmebot.Models;
-using KeyVault.Acmebot.Providers;
+﻿using Acmebot.Models;
+using Acmebot.Providers;
 
-namespace KeyVault.Acmebot.Internal;
+namespace Acmebot.Internal;
 
 internal static class DnsZoneExtensions
 {

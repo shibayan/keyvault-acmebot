@@ -1,7 +1,7 @@
 ﻿using Azure.Identity;
 using Azure.ResourceManager;
 
-namespace KeyVault.Acmebot.Internal;
+namespace Acmebot.Internal;
 
 public class AzureEnvironment
 {

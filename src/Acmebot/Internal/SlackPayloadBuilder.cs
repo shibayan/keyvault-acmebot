@@ -1,4 +1,4 @@
-﻿namespace KeyVault.Acmebot.Internal;
+﻿namespace Acmebot.Internal;
 
 internal class SlackPayloadBuilder : IWebhookPayloadBuilder
 {

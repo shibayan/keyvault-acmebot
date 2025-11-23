@@ -2,7 +2,7 @@
 
 using Newtonsoft.Json;
 
-namespace KeyVault.Acmebot.Models;
+namespace Acmebot.Models;
 
 public class CertificatePolicyItem : IValidatableObject
 {

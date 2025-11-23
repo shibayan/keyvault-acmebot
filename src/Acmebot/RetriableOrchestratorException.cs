@@ -1,4 +1,4 @@
-﻿namespace KeyVault.Acmebot;
+﻿namespace Acmebot;
 
 public class RetriableOrchestratorException : Exception
 {

@@ -1,6 +1,6 @@
-﻿using Azure.Functions.Worker.Extensions.HttpApi;
+﻿using Acmebot.Models;
 
-using KeyVault.Acmebot.Models;
+using Azure.Functions.Worker.Extensions.HttpApi;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +9,7 @@ using Microsoft.DurableTask;
 using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
 
-namespace KeyVault.Acmebot.Functions;
+namespace Acmebot.Functions;
 
 public class GetDnsZones(IHttpContextAccessor httpContextAccessor, ILogger<GetDnsZones> logger) : HttpFunctionBase(httpContextAccessor)
 {

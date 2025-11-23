@@ -2,16 +2,16 @@
 using System.Security.Cryptography;
 using System.Text;
 
+using Acmebot.Internal;
+using Acmebot.Options;
+
 using Azure.Core;
 using Azure.Security.KeyVault.Keys.Cryptography;
-
-using KeyVault.Acmebot.Internal;
-using KeyVault.Acmebot.Options;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace KeyVault.Acmebot.Providers;
+namespace Acmebot.Providers;
 
 public class TransIpProvider : IDnsProvider
 {

@@ -1,7 +1,7 @@
 ﻿using System.Buffers.Text;
 using System.Security.Cryptography.X509Certificates;
 
-namespace KeyVault.Acmebot.Internal;
+namespace Acmebot.Internal;
 
 internal static class X509Certificate2Extensions
 {

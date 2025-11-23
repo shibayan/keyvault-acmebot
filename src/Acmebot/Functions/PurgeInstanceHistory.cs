@@ -1,7 +1,7 @@
 ﻿using Microsoft.Azure.Functions.Worker;
 using Microsoft.DurableTask.Client;
 
-namespace KeyVault.Acmebot.Functions;
+namespace Acmebot.Functions;
 
 public class PurgeInstanceHistory
 {

@@ -1,11 +1,11 @@
 ﻿using System.Net.Http.Headers;
 
-using KeyVault.Acmebot.Internal;
-using KeyVault.Acmebot.Options;
+using Acmebot.Internal;
+using Acmebot.Options;
 
 using Newtonsoft.Json;
 
-namespace KeyVault.Acmebot.Providers;
+namespace Acmebot.Providers;
 
 public class CloudflareProvider(CloudflareOptions options) : IDnsProvider
 {

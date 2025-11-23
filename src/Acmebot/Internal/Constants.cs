@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace KeyVault.Acmebot.Internal;
+namespace Acmebot.Internal;
 
 internal static class Constants
 {

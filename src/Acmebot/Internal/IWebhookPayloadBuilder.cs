@@ -1,4 +1,4 @@
-﻿namespace KeyVault.Acmebot.Internal;
+﻿namespace Acmebot.Internal;
 
 public interface IWebhookPayloadBuilder
 {

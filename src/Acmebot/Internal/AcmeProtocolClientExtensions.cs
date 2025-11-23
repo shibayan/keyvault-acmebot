@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 using ACMESharp.Protocol;
 
-namespace KeyVault.Acmebot.Internal;
+namespace Acmebot.Internal;
 
 internal static class AcmeProtocolClientExtensions
 {

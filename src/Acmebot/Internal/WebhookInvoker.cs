@@ -1,9 +1,9 @@
-﻿using KeyVault.Acmebot.Options;
+﻿using Acmebot.Options;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace KeyVault.Acmebot.Internal;
+namespace Acmebot.Internal;
 
 public class WebhookInvoker
 {

@@ -1,15 +1,15 @@
 ﻿using System.Net;
 
+using Acmebot.Internal;
+using Acmebot.Options;
+
 using Azure;
 using Azure.Core;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Dns;
 using Azure.ResourceManager.Dns.Models;
 
-using KeyVault.Acmebot.Internal;
-using KeyVault.Acmebot.Options;
-
-namespace KeyVault.Acmebot.Providers;
+namespace Acmebot.Providers;
 
 public class AzureDnsProvider : IDnsProvider
 {

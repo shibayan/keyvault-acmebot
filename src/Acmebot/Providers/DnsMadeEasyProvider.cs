@@ -3,12 +3,12 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 
-using KeyVault.Acmebot.Internal;
-using KeyVault.Acmebot.Options;
+using Acmebot.Internal;
+using Acmebot.Options;
 
 using Newtonsoft.Json;
 
-namespace KeyVault.Acmebot.Providers;
+namespace Acmebot.Providers;
 
 public class DnsMadeEasyProvider : IDnsProvider
 {

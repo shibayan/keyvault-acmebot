@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
 
-namespace KeyVault.Acmebot.Internal;
+namespace Acmebot.Internal;
 
 internal static class HttpClientExtensions
 {

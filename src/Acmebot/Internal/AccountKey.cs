@@ -1,6 +1,6 @@
 ﻿using ACMESharp.Crypto.JOSE;
 
-namespace KeyVault.Acmebot.Internal;
+namespace Acmebot.Internal;
 
 internal class AccountKey
 {

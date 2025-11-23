@@ -1,11 +1,11 @@
 ﻿using System.Net.Http.Headers;
 
-using KeyVault.Acmebot.Internal;
-using KeyVault.Acmebot.Options;
+using Acmebot.Internal;
+using Acmebot.Options;
 
 using Newtonsoft.Json;
 
-namespace KeyVault.Acmebot.Providers;
+namespace Acmebot.Providers;
 
 public class CustomDnsProvider : IDnsProvider
 {
@@ -17,7 +17,7 @@ public class CustomDnsProvider : IDnsProvider
         };
 
         _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        _httpClient.DefaultRequestHeaders.TryAddWithoutValidation(options.ApiKeyHeaderName, options.ApiKey);
+        _httpClient.DefaultRequestHeaders.TryAddWithoutValidation((string)options.ApiKeyHeaderName, (string?)options.ApiKey);
 
         PropagationSeconds = options.PropagationSeconds;
     }
@@ -36,7 +36,7 @@ public class CustomDnsProvider : IDnsProvider
 
         var zones = await response.Content.ReadAsAsync<Zone[]>();
 
-        return zones.Select(x => new DnsZone(this) { Id = x.Id, Name = x.Name, NameServers = x.NameServers }).ToArray();
+        return Enumerable.Select(zones, x => new DnsZone(this) { Id = x.Id, Name = x.Name, NameServers = x.NameServers }).ToArray();
     }
 
     public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)

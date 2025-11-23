@@ -1,7 +1,7 @@
-﻿using Azure.Functions.Worker.Extensions.HttpApi;
+﻿using Acmebot.Internal;
+using Acmebot.Models;
 
-using KeyVault.Acmebot.Internal;
-using KeyVault.Acmebot.Models;
+using Azure.Functions.Worker.Extensions.HttpApi;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 using FromBodyAttribute = Microsoft.Azure.Functions.Worker.Http.FromBodyAttribute;
 
-namespace KeyVault.Acmebot.Functions;
+namespace Acmebot.Functions;
 
 public class AddCertificate(IHttpContextAccessor httpContextAccessor, ILogger<AddCertificate> logger) : HttpFunctionBase(httpContextAccessor)
 {

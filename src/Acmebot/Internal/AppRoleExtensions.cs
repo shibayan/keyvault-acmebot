@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace KeyVault.Acmebot.Internal;
+namespace Acmebot.Internal;
 
 internal static class AppRoleExtensions
 {

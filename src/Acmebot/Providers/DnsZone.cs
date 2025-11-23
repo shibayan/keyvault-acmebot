@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 
-namespace KeyVault.Acmebot.Providers;
+namespace Acmebot.Providers;
 
 public class DnsZone : IEquatable<DnsZone>
 {

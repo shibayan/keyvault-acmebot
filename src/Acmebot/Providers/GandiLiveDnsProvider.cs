@@ -1,12 +1,12 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
 
-using KeyVault.Acmebot.Internal;
-using KeyVault.Acmebot.Options;
+using Acmebot.Internal;
+using Acmebot.Options;
 
 using Newtonsoft.Json;
 
-namespace KeyVault.Acmebot.Providers;
+namespace Acmebot.Providers;
 
 public class GandiLiveDnsProvider : IDnsProvider
 {
@@ -62,7 +62,7 @@ public class GandiLiveDnsProvider : IDnsProvider
             response.EnsureSuccessStatusCode();
             var domains = await response.Content.ReadAsAsync<Domain[]>();
 
-            return domains.Where(x => x.Nameserver.Current == "livedns").ToArray();
+            return Enumerable.Where(domains, x => x.Nameserver.Current == "livedns").ToArray();
         }
 
         public async Task DeleteRecordAsync(string zoneName, string relativeRecordName)

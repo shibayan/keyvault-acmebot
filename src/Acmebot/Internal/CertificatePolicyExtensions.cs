@@ -1,8 +1,8 @@
-﻿using Azure.Security.KeyVault.Certificates;
+﻿using Acmebot.Models;
 
-using KeyVault.Acmebot.Models;
+using Azure.Security.KeyVault.Certificates;
 
-namespace KeyVault.Acmebot.Internal;
+namespace Acmebot.Internal;
 
 internal static class CertificatePolicyExtensions
 {

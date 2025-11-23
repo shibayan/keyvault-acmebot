@@ -1,6 +1,11 @@
 ﻿using System.Net;
 using System.Security.Cryptography.X509Certificates;
 
+using Acmebot.Internal;
+using Acmebot.Models;
+using Acmebot.Options;
+using Acmebot.Providers;
+
 using ACMESharp.Authorizations;
 using ACMESharp.Protocol;
 using ACMESharp.Protocol.Resources;
@@ -9,18 +14,13 @@ using Azure.Security.KeyVault.Certificates;
 
 using DnsClient;
 
-using KeyVault.Acmebot.Internal;
-using KeyVault.Acmebot.Models;
-using KeyVault.Acmebot.Options;
-using KeyVault.Acmebot.Providers;
-
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using Newtonsoft.Json;
 
-namespace KeyVault.Acmebot.Functions;
+namespace Acmebot.Functions;
 
 public class SharedActivity(
     LookupClient lookupClient,
@@ -111,10 +111,10 @@ public class SharedActivity(
         {
             var zones = await dnsProviders.ListAllZonesAsync();
 
-            return zones.Select(x => new DnsZoneGroup
+            return Enumerable.Select(zones, x => new DnsZoneGroup
             {
                 DnsProviderName = x.Item1,
-                DnsZones = x.Item2?.Select(xs => xs.ToDnsZoneItem()).OrderBy(xs => xs.Name).ToArray()
+                DnsZones = Enumerable.OrderBy(x.Item2?.Select(xs => xs.ToDnsZoneItem()), xs => xs.Name).ToArray()
             }).ToArray();
         }
         catch
@@ -185,9 +185,9 @@ public class SharedActivity(
             var queryResult = await lookupClient.QueryAsync(zone.Name, QueryType.NS);
 
             // 最後の . が付いている場合があるので削除して統一
-            var expectedNameServers = zone.NameServers
-                                          .Select(x => x.TrimEnd('.'))
-                                          .ToArray();
+            var expectedNameServers = Enumerable
+                                            .Select<string, string>(zone.NameServers, x => x.TrimEnd('.'))
+                                            .ToArray();
 
             var actualNameServers = queryResult.Answers
                                                .OfType<DnsClient.Protocol.NsRecord>()
@@ -245,7 +245,7 @@ public class SharedActivity(
             }
 
             // DNS-01 Challenge の情報を拾う
-            var challenge = authorization.Challenges.FirstOrDefault(x => x.Type == "dns-01");
+            var challenge = Enumerable.FirstOrDefault<Challenge>(authorization.Challenges, x => x.Type == "dns-01");
 
             if (challenge is null)
             {
@@ -287,7 +287,7 @@ public class SharedActivity(
             await zone.DnsProvider.CreateTxtRecordAsync(zone, acmeDnsRecordName, lookup.Select(x => x.DnsRecordValue));
 
             // 一番時間のかかる DNS Provider に合わせる
-            propagationSeconds = Math.Max(propagationSeconds, zone.DnsProvider.PropagationSeconds);
+            propagationSeconds = Math.Max(propagationSeconds, (int)zone.DnsProvider.PropagationSeconds);
         }
 
         return (challengeResults, propagationSeconds);

@@ -1,4 +1,4 @@
-﻿namespace KeyVault.Acmebot.Providers;
+﻿namespace Acmebot.Providers;
 
 public interface IDnsProvider
 {

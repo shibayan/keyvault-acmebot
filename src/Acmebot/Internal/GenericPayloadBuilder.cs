@@ -1,6 +1,6 @@
-﻿using KeyVault.Acmebot.Options;
+﻿using Acmebot.Options;
 
-namespace KeyVault.Acmebot.Internal;
+namespace Acmebot.Internal;
 
 internal class GenericPayloadBuilder(AcmebotOptions options) : IWebhookPayloadBuilder
 {

@@ -1,18 +1,18 @@
 ﻿using System.Net.Http.Headers;
 using System.Security.Cryptography;
 
+using Acmebot.Options;
+
 using ACMESharp.Crypto;
 using ACMESharp.Crypto.JOSE;
 using ACMESharp.Protocol;
 using ACMESharp.Protocol.Resources;
 
-using KeyVault.Acmebot.Options;
-
 using Microsoft.Extensions.Options;
 
 using Newtonsoft.Json;
 
-namespace KeyVault.Acmebot.Internal;
+namespace Acmebot.Internal;
 
 public class AcmeProtocolClientFactory
 {

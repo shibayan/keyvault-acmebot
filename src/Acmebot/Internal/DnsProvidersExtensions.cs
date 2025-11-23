@@ -1,6 +1,6 @@
-﻿using KeyVault.Acmebot.Providers;
+﻿using Acmebot.Providers;
 
-namespace KeyVault.Acmebot.Internal;
+namespace Acmebot.Internal;
 
 internal static class DnsProvidersExtensions
 {

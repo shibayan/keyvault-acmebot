@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace KeyVault.Acmebot.Options;
+namespace Acmebot.Options;
 
 public class AcmebotOptions
 {
