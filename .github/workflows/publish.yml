@@ -34,7 +34,7 @@ jobs:
         echo "MAJOR_VERSION=${FULL_VERSION%%.*}" >> $GITHUB_OUTPUT
 
     - name: Publish Function app
-      run: dotnet publish -c Release -r win-x86 --no-self-contained -o ./dist -p:Version=${{ steps.setup_version.outputs.version }} KeyVault.Acmebot
+      run: dotnet publish -c Release -r win-x86 --no-self-contained -o ./dist -p:Version=${{ steps.setup_version.outputs.version }} ./src/Acmebot
 
     - name: Zip Function app
       run: 7z a -mx=9 latest.zip ./dist/* ./dist/.[^.]*
@@ -79,5 +79,5 @@ jobs:
 
     - name: Publish to Private Registry
       run: |
-        az bicep publish --file azuredeploy.bicep --target br:cracmebotprod.azurecr.io/bicep/modules/keyvault-acmebot:v${{ needs.publish.outputs.major_version }} --force
-        az bicep publish --file azuredeploy.bicep --target br:cracmebotprod.azurecr.io/bicep/modules/keyvault-acmebot:v${{ needs.publish.outputs.version }} --force
+        az bicep publish --file ./deploy/azuredeploy.bicep --target br:cracmebotprod.azurecr.io/bicep/modules/keyvault-acmebot:v${{ needs.publish.outputs.major_version }} --force
+        az bicep publish --file ./deploy/azuredeploy.bicep --target br:cracmebotprod.azurecr.io/bicep/modules/keyvault-acmebot:v${{ needs.publish.outputs.version }} --force

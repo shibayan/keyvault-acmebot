@@ -31,10 +31,10 @@ jobs:
         az bicep install --version v${{ env.BICEP_VERSION }}
 
     - name: Build project
-      run: dotnet build -c Release
+      run: dotnet build -c Release ./src
 
     - name: Lint C# code
-      run: dotnet format --verify-no-changes --exclude ACMESharpCore --verbosity detailed --no-restore
+      run: dotnet format --verify-no-changes --exclude ./src/ACMESharpCore --verbosity detailed --no-restore ./src
 
     - name: Lint Bicep template
-      run: az bicep build -f azuredeploy.bicep && git diff --exit-code --quiet
+      run: az bicep build -f ./deploy/azuredeploy.bicep && git diff --exit-code --quiet

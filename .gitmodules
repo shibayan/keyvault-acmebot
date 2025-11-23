@@ -1,0 +1,3 @@
+[submodule "src/ACMESharpCore"]
+	path = src/ACMESharpCore
+	url = https://github.com/shibayan/ACMESharpCore.git

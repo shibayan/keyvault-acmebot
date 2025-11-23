@@ -46,6 +46,8 @@ var workspaceName = 'log-${appNamePrefix}-${substring(uniqueString(resourceGroup
 var storageAccountName = 'st${uniqueString(resourceGroup().id, deployment().name)}func'
 var keyVaultName = 'kv-${appNamePrefix}-${substring(uniqueString(resourceGroup().id, deployment().name), 0, 4)}'
 var roleDefinitionId = resourceId('Microsoft.Authorization/roleDefinitions/', 'a4417e6f-fecd-4de8-b567-7b0420556985')
+var deploymentStorageContainerName = 'app-package-${take(appNamePrefix, 32)}-${take(resourceGroup().id, 7)}'
+
 var acmebotAppSettings = [
   {
     name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
@@ -54,31 +56,6 @@ var acmebotAppSettings = [
   {
     name: 'AzureWebJobsStorage'
     value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
-  }
-  {
-    name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING'
-    value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
-  }
-  {
-    name: 'WEBSITE_CONTENTSHARE'
-    value: toLower(functionAppName)
-  }
-  {
-    name: 'WEBSITE_RUN_FROM_PACKAGE'
-#disable-next-line no-hardcoded-env-urls
-    value: 'https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v4/latest.zip'
-  }
-  {
-    name: 'FUNCTIONS_EXTENSION_VERSION'
-    value: '~4'
-  }
-  {
-    name: 'FUNCTIONS_INPROC_NET8_ENABLED'
-    value: '1'
-  }
-  {
-    name: 'FUNCTIONS_WORKER_RUNTIME'
-    value: 'dotnet'
   }
   {
     name: 'Acmebot:Contacts'
@@ -116,10 +93,12 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-11-01' = {
   name: appServicePlanName
   location: location
   sku: {
-    name: 'Y1'
-    tier: 'Dynamic'
+    name: 'FC1'
+    tier: 'FlexConsumption'
   }
-  properties: {}
+  properties: {
+    reserved: true
+  }
 }
 
 resource workspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
@@ -149,7 +128,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 resource functionApp 'Microsoft.Web/sites@2024-11-01' = {
   name: functionAppName
   location: location
-  kind: 'functionapp'
+  kind: 'functionapp,linux'
   identity: {
     type: 'SystemAssigned'
   }
@@ -157,6 +136,25 @@ resource functionApp 'Microsoft.Web/sites@2024-11-01' = {
     clientAffinityEnabled: false
     httpsOnly: true
     serverFarmId: appServicePlan.id
+    functionAppConfig: {
+      deployment: {
+        storage: {
+          type: 'blobContainer'
+          value: '${storageAccount.properties.primaryEndpoints.blob}${deploymentStorageContainerName}'
+          authentication: {
+            type: 'StorageAccountConnectionString'
+            storageAccountConnectionStringName: ''
+          }
+        }
+      }
+      scaleAndConcurrency: {
+        instanceMemoryMB: 2048
+      }
+      runtime: {
+        name: 'dotnet-isolated'
+        version: '10.0'
+      }
+    }
     siteConfig: {
       appSettings: concat(acmebotAppSettings, additionalAppSettings)
       netFrameworkVersion: 'v8.0'
