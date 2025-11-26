@@ -17,7 +17,7 @@ jobs:
       version: ${{ steps.setup_version.outputs.version }}
       major_version: ${{ steps.setup_version.outputs.major_version }}
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         submodules: true
 
