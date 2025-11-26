@@ -33,7 +33,7 @@ public class DeleteRecord
 
         try
         {
-            RecordSetTxtResource recordSet = await dnsZoneResource.GetRecordSetTxtAsync(recordName.Replace($".{dnsZoneResource.Data.Name}", ""));
+            DnsTxtRecordResource recordSet = await dnsZoneResource.GetDnsTxtRecordAsync(recordName.Replace($".{dnsZoneResource.Data.Name}", ""));
 
             await recordSet.DeleteAsync(WaitUntil.Completed);
         }
