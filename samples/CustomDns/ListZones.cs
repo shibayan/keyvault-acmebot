@@ -32,7 +32,7 @@ public class ListZones
 
         var result = new List<ListZoneResult>();
 
-        await foreach (var dnsZone in subscription.GetDnsZonesByDnszoneAsync())
+        await foreach (var dnsZone in subscription.GetDnsZonesAsync())
         {
             result.Add(new ListZoneResult { Id = ZoneIdConvert.ToZoneId(dnsZone.Id), Name = dnsZone.Data.Name, NameServers = dnsZone.Data.NameServers });
         }

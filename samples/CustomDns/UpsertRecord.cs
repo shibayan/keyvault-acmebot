@@ -30,19 +30,19 @@ public class UpsertRecord
         string recordName,
         ILogger log)
     {
-        var recordSet = new TxtRecordSetData
+        var recordSet = new DnsTxtRecordData
         {
-            TTL = model.TTL
+            TtlInSeconds = model.TTL
         };
 
         foreach (var value in model.Values)
         {
-            recordSet.TxtRecords.Add(new TxtRecord { Value = { value } });
+            recordSet.DnsTxtRecords.Add(new DnsTxtRecordInfo { Values = { value } });
         }
 
         DnsZoneResource dnsZoneResource = await _armClient.GetDnsZoneResource(ZoneIdConvert.FromZoneId(zoneId)).GetAsync();
 
-        var collection = dnsZoneResource.GetRecordSetTxts();
+        var collection = dnsZoneResource.GetDnsTxtRecords();
 
         await collection.CreateOrUpdateAsync(WaitUntil.Completed, recordName.Replace($".{dnsZoneResource.Data.Name}", ""), recordSet);
 
