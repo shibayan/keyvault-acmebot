@@ -40,7 +40,7 @@ jobs:
       run: 7z a -mx=9 latest.zip ./dist/* ./dist/.[^.]*
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: dist
         path: |
@@ -68,7 +68,7 @@ jobs:
         az bicep install --version v${{ env.BICEP_VERSION }}
 
     - name: Download artifacts
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: dist
 
