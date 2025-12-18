@@ -2,22 +2,16 @@
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization;
 
 using Acmebot.Internal;
 using Acmebot.Options;
 
-using Newtonsoft.Json;
-
 namespace Acmebot.Providers;
 
-public class DnsMadeEasyProvider : IDnsProvider
+public class DnsMadeEasyProvider(DnsMadeEasyOptions options) : IDnsProvider
 {
-    public DnsMadeEasyProvider(DnsMadeEasyOptions options)
-    {
-        _client = new DnsMadeEasyClient(options.ApiKey, options.SecretKey);
-    }
-
-    private readonly DnsMadeEasyClient _client;
+    private readonly DnsMadeEasyClient _client = new(options.ApiKey, options.SecretKey);
 
     public string Name => "DNS Made Easy";
 
@@ -171,40 +165,40 @@ public class DnsMadeEasyProvider : IDnsProvider
 
     private class ListDomainsResult
     {
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public IReadOnlyList<Domain> Domains { get; set; }
     }
 
     private class Domain
     {
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Id { get; set; }
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
     }
 
     private class ListDnsEntriesResponse
     {
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public IReadOnlyList<DnsEntry> DnsEntries { get; set; }
     }
 
     private class DnsEntry
     {
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Id { get; set; }
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonProperty("ttl")]
+        [JsonPropertyName("ttl")]
         public int Expire { get; set; }
 
-        [JsonProperty("type")]
+        [JsonPropertyName("type")]
         public string Type { get; set; }
 
-        [JsonProperty("value")]
+        [JsonPropertyName("value")]
         public string Content { get; set; }
     }
 }

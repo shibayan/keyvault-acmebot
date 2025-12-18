@@ -1,9 +1,8 @@
 ﻿using System.Net.Http.Headers;
+using System.Text.Json.Serialization;
 
 using Acmebot.Internal;
 using Acmebot.Options;
-
-using Newtonsoft.Json;
 
 namespace Acmebot.Providers;
 
@@ -117,74 +116,74 @@ public class CloudflareProvider(CloudflareOptions options) : IDnsProvider
 
     private class ApiResult<T>
     {
-        [JsonProperty("result")]
+        [JsonPropertyName("result")]
         public T[] Result { get; set; }
 
-        [JsonProperty("result_info")]
+        [JsonPropertyName("result_info")]
         public ResultInfo ResultInfo { get; set; }
 
-        [JsonProperty("success")]
+        [JsonPropertyName("success")]
         public bool Success { get; set; }
 
-        [JsonProperty("errors")]
+        [JsonPropertyName("errors")]
         public object[] Errors { get; set; }
 
-        [JsonProperty("messages")]
+        [JsonPropertyName("messages")]
         public object[] Messages { get; set; }
     }
 
     private class ResultInfo
     {
-        [JsonProperty("page")]
+        [JsonPropertyName("page")]
         public int Page { get; set; }
 
-        [JsonProperty("per_page")]
+        [JsonPropertyName("per_page")]
         public int PerPage { get; set; }
 
-        [JsonProperty("total_pages")]
+        [JsonPropertyName("total_pages")]
         public int TotalPages { get; set; }
 
-        [JsonProperty("count")]
+        [JsonPropertyName("count")]
         public int Count { get; set; }
 
-        [JsonProperty("total_count")]
+        [JsonPropertyName("total_count")]
         public int TotalCount { get; set; }
     }
 
     private class ZoneResult
     {
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Id { get; set; }
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonProperty("status")]
+        [JsonPropertyName("status")]
         public string Status { get; set; }
 
-        [JsonProperty("name_servers")]
+        [JsonPropertyName("name_servers")]
         public string[] NameServers { get; set; }
 
-        [JsonProperty("vanity_name_servers")]
+        [JsonPropertyName("vanity_name_servers")]
         public string[] VanityNameServers { get; set; }
 
-        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public string[] ActualNameServers => VanityNameServers is { Length: > 0 } ? VanityNameServers : NameServers;
     }
 
     private class DnsRecordResult
     {
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Id { get; set; }
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonProperty("content")]
+        [JsonPropertyName("content")]
         public string Content { get; set; }
 
         // ReSharper disable once InconsistentNaming
-        [JsonProperty("ttl")]
+        [JsonPropertyName("ttl")]
         public int TTL { get; set; }
     }
 }

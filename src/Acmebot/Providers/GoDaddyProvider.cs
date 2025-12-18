@@ -1,21 +1,15 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
+using System.Text.Json.Serialization;
 
 using Acmebot.Internal;
 using Acmebot.Options;
 
-using Newtonsoft.Json;
-
 namespace Acmebot.Providers;
 
-public class GoDaddyProvider : IDnsProvider
+public class GoDaddyProvider(GoDaddyOptions options) : IDnsProvider
 {
-    public GoDaddyProvider(GoDaddyOptions options)
-    {
-        _client = new GoDaddyClient(options.ApiKey, options.ApiSecret);
-    }
-
-    private readonly GoDaddyClient _client;
+    private readonly GoDaddyClient _client = new(options.ApiKey, options.ApiSecret);
 
     public string Name => "GoDaddy";
 
@@ -106,29 +100,29 @@ public class GoDaddyProvider : IDnsProvider
 
     private class ZoneDomain
     {
-        [JsonProperty("domain")]
+        [JsonPropertyName("domain")]
         public string Domain { get; set; }
 
-        [JsonProperty("domainId")]
+        [JsonPropertyName("domainId")]
         public string DomainId { get; set; }
 
-        [JsonProperty("nameServers")]
+        [JsonPropertyName("nameServers")]
         public string[] NameServers { get; set; }
     }
 
     private class DnsEntry
     {
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public string Data { get; set; }
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
         // ReSharper disable once InconsistentNaming
-        [JsonProperty("ttl")]
+        [JsonPropertyName("ttl")]
         public int TTL { get; set; }
 
-        [JsonProperty("type")]
+        [JsonPropertyName("type")]
         public string Type { get; set; }
     }
 }

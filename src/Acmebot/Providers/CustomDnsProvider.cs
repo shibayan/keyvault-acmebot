@@ -1,9 +1,8 @@
 ﻿using System.Net.Http.Headers;
+using System.Text.Json.Serialization;
 
 using Acmebot.Internal;
 using Acmebot.Options;
-
-using Newtonsoft.Json;
 
 namespace Acmebot.Providers;
 
@@ -36,7 +35,7 @@ public class CustomDnsProvider : IDnsProvider
 
         var zones = await response.Content.ReadAsAsync<Zone[]>();
 
-        return Enumerable.Select(zones, x => new DnsZone(this) { Id = x.Id, Name = x.Name, NameServers = x.NameServers }).ToArray();
+        return zones.Select(x => new DnsZone(this) { Id = x.Id, Name = x.Name, NameServers = x.NameServers }).ToArray();
     }
 
     public async Task CreateTxtRecordAsync(DnsZone zone, string relativeRecordName, IEnumerable<string> values)
@@ -59,13 +58,13 @@ public class CustomDnsProvider : IDnsProvider
 
     private class Zone
     {
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Id { get; set; }
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonProperty("nameServers")]
+        [JsonPropertyName("nameServers")]
         public string[] NameServers { get; set; }
     }
 }

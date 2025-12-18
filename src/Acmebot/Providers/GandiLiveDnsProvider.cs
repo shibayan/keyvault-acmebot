@@ -1,21 +1,15 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
+using System.Text.Json.Serialization;
 
 using Acmebot.Internal;
 using Acmebot.Options;
 
-using Newtonsoft.Json;
-
 namespace Acmebot.Providers;
 
-public class GandiLiveDnsProvider : IDnsProvider
+public class GandiLiveDnsProvider(GandiLiveDnsOptions options) : IDnsProvider
 {
-    public GandiLiveDnsProvider(GandiLiveDnsOptions options)
-    {
-        _client = new GandiLiveDnsClient(options.ApiKey);
-    }
-
-    private readonly GandiLiveDnsClient _client;
+    private readonly GandiLiveDnsClient _client = new(options.ApiKey);
 
     public string Name => "Gandi LiveDNS";
 
@@ -88,64 +82,64 @@ public class GandiLiveDnsProvider : IDnsProvider
     }
     public class Domain
     {
-        [JsonProperty("fqdn")]
+        [JsonPropertyName("fqdn")]
         public string Fqdn { get; set; }
 
-        [JsonProperty("tld")]
+        [JsonPropertyName("tld")]
         public string Tld { get; set; }
 
-        [JsonProperty("status")]
+        [JsonPropertyName("status")]
         public List<string> Status { get; set; }
 
-        [JsonProperty("dates")]
+        [JsonPropertyName("dates")]
         public Dates Dates { get; set; }
 
-        [JsonProperty("nameserver")]
+        [JsonPropertyName("nameserver")]
         public Nameserver Nameserver { get; set; }
 
-        [JsonProperty("autorenew")]
+        [JsonPropertyName("autorenew")]
         public bool Autorenew { get; set; }
 
-        [JsonProperty("domain_owner")]
+        [JsonPropertyName("domain_owner")]
         public string DomainOwner { get; set; }
 
-        [JsonProperty("orga_owner")]
+        [JsonPropertyName("orga_owner")]
         public string OrgaOwner { get; set; }
 
-        [JsonProperty("owner")]
+        [JsonPropertyName("owner")]
         public string Owner { get; set; }
 
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Id { get; set; }
 
-        [JsonProperty("tags")]
+        [JsonPropertyName("tags")]
         public List<string> Tags { get; set; }
 
-        [JsonProperty("href")]
+        [JsonPropertyName("href")]
         public string Href { get; set; }
 
-        [JsonProperty("fqdn_unicode")]
+        [JsonPropertyName("fqdn_unicode")]
         public string FqdnUnicode { get; set; }
     }
 
     public class Dates
     {
-        [JsonProperty("created_at")]
+        [JsonPropertyName("created_at")]
         public DateTime CreatedAt { get; set; }
 
-        [JsonProperty("registry_created_at")]
+        [JsonPropertyName("registry_created_at")]
         public DateTime RegistryCreatedAt { get; set; }
 
-        [JsonProperty("registry_ends_at")]
+        [JsonPropertyName("registry_ends_at")]
         public DateTime RegistryEndsAt { get; set; }
 
-        [JsonProperty("updated_at")]
+        [JsonPropertyName("updated_at")]
         public DateTime UpdatedAt { get; set; }
     }
 
     public class Nameserver
     {
-        [JsonProperty("current")]
+        [JsonPropertyName("current")]
         public string Current { get; set; }
     }
 }
