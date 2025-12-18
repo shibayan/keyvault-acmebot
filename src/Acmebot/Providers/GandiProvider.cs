@@ -1,21 +1,15 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
+using System.Text.Json.Serialization;
 
 using Acmebot.Internal;
 using Acmebot.Options;
 
-using Newtonsoft.Json;
-
 namespace Acmebot.Providers;
 
-public class GandiProvider : IDnsProvider
+public class GandiProvider(GandiOptions options) : IDnsProvider
 {
-    public GandiProvider(GandiOptions options)
-    {
-        _client = new GandiClient(options.ApiKey);
-    }
-
-    private readonly GandiClient _client;
+    private readonly GandiClient _client = new(options.ApiKey);
 
     public string Name => "Gandi LiveDNS";
 
@@ -91,34 +85,34 @@ public class GandiProvider : IDnsProvider
 
     public class Zone
     {
-        [JsonProperty("uuid")]
+        [JsonPropertyName("uuid")]
         public string Uuid { get; set; }
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonProperty("primary_ns")]
+        [JsonPropertyName("primary_ns")]
         public string PrimaryNameServer { get; set; }
 
-        [JsonProperty("email")]
+        [JsonPropertyName("email")]
         public string Email { get; set; }
 
-        [JsonProperty("serial")]
+        [JsonPropertyName("serial")]
         public int Serial { get; set; }
 
-        [JsonProperty("user_uuid")]
+        [JsonPropertyName("user_uuid")]
         public string UserUuid { get; set; }
 
-        [JsonProperty("refresh")]
+        [JsonPropertyName("refresh")]
         public int Refresh { get; set; }
 
-        [JsonProperty("minimum")]
+        [JsonPropertyName("minimum")]
         public int Minimum { get; set; }
 
-        [JsonProperty("expire")]
+        [JsonPropertyName("expire")]
         public int Expire { get; set; }
 
-        [JsonProperty("retry")]
+        [JsonPropertyName("retry")]
         public int Retry { get; set; }
     }
 }

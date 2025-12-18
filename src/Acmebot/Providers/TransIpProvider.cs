@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization;
 
 using Acmebot.Internal;
 using Acmebot.Options;
@@ -260,7 +261,7 @@ public class TransIpProvider : IDnsProvider
 
     private class TokenResponse
     {
-        [JsonProperty("token")]
+        [JsonPropertyName("token")]
         public string Token { get; set; }
 
         public long GetTokenExpiration()
@@ -278,61 +279,61 @@ public class TransIpProvider : IDnsProvider
 
     private class TokenRequest
     {
-        [JsonProperty("login")]
+        [JsonPropertyName("login")]
         public string Login { get; set; }
 
-        [JsonProperty("nonce")]
+        [JsonPropertyName("nonce")]
         public string Nonce { get; set; }
 
-        [JsonProperty("read_only")]
+        [JsonPropertyName("read_only")]
         public bool ReadOnly { get; set; }
 
-        [JsonProperty("expiration_time")]
+        [JsonPropertyName("expiration_time")]
         public string ExpirationTime { get; set; } = "4 weeks";
 
-        [JsonProperty("label")]
+        [JsonPropertyName("label")]
         public string Label { get; set; } = "KeyVault.Acmebot." + DateTime.UtcNow;
 
-        [JsonProperty("global_key")]
+        [JsonPropertyName("global_key")]
         public bool GlobalKey { get; set; } = true;
     }
 
     private class ListDomainsResult
     {
-        [JsonProperty("domains")]
+        [JsonPropertyName("domains")]
         public IReadOnlyList<Domain> Domains { get; set; }
     }
 
     private class Domain
     {
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
     }
 
     private class ListDnsEntriesResponse
     {
-        [JsonProperty("dnsEntries")]
+        [JsonPropertyName("dnsEntries")]
         public IReadOnlyList<DnsEntry> DnsEntries { get; set; }
     }
 
     private class DnsEntryRequest
     {
-        [JsonProperty("dnsEntry")]
+        [JsonPropertyName("dnsEntry")]
         public DnsEntry DnsEntry { get; set; }
     }
 
     private class DnsEntry
     {
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonProperty("expire")]
+        [JsonPropertyName("expire")]
         public int Expire { get; set; }
 
-        [JsonProperty("type")]
+        [JsonPropertyName("type")]
         public string Type { get; set; }
 
-        [JsonProperty("content")]
+        [JsonPropertyName("content")]
         public string Content { get; set; }
     }
 }
