@@ -15,7 +15,7 @@ public class GetInstanceState(IHttpContextAccessor httpContextAccessor) : HttpFu
         string instanceId,
         [DurableClient] DurableTaskClient starter)
     {
-        if (!User.Identity.IsAuthenticated)
+        if (!User.Identity?.IsAuthenticated ?? false)
         {
             return Unauthorized();
         }

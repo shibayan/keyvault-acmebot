@@ -14,14 +14,9 @@ using Newtonsoft.Json;
 
 namespace Acmebot.Internal;
 
-public class AcmeProtocolClientFactory
+public class AcmeProtocolClientFactory(IOptions<AcmebotOptions> options)
 {
-    public AcmeProtocolClientFactory(IOptions<AcmebotOptions> options)
-    {
-        _options = options.Value;
-    }
-
-    private readonly AcmebotOptions _options;
+    private readonly AcmebotOptions _options = options.Value;
 
     public async Task<AcmeProtocolClient> CreateClientAsync()
     {
@@ -92,7 +87,7 @@ public class AcmeProtocolClientFactory
         return acmeProtocolClient;
     }
 
-    private object CreateExternalAccountBinding(AcmeProtocolClient acmeProtocolClient)
+    private object? CreateExternalAccountBinding(AcmeProtocolClient acmeProtocolClient)
     {
         if (string.IsNullOrEmpty(_options.ExternalAccountBinding?.KeyId) || string.IsNullOrEmpty(_options.ExternalAccountBinding?.HmacKey))
         {

@@ -75,7 +75,7 @@ public class SharedActivity(
             }
 
             // 期限が近い場合には更新する
-            if ((properties.ExpiresOn.Value - now).TotalDays <= _options.RenewBeforeExpiry)
+            if ((properties.ExpiresOn.GetValueOrDefault(DateTimeOffset.MaxValue) - now).TotalDays <= _options.RenewBeforeExpiry)
             {
                 result.Add(certificate.Value.ToCertificateItem());
             }

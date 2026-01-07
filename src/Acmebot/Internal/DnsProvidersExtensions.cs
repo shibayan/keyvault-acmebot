@@ -46,7 +46,7 @@ internal static class DnsProvidersExtensions
         return zones.Where(x => x.Item2 is not null).SelectMany(x => x.Item2).ToArray();
     }
 
-    public static void TryAdd<TOption>(this IList<IDnsProvider> dnsProviders, TOption options, Func<TOption, IDnsProvider> factory)
+    public static void TryAdd<TOption>(this IList<IDnsProvider> dnsProviders, TOption? options, Func<TOption, IDnsProvider> factory)
     {
         if (options is not null)
         {

@@ -5,8 +5,8 @@ namespace Acmebot.Internal;
 
 public class AzureEnvironment
 {
-    public Uri AuthorityHost { get; private init; }
-    public ArmEnvironment ResourceManager { get; private init; }
+    public required Uri AuthorityHost { get; init; }
+    public required ArmEnvironment ResourceManager { get; init; }
 
     public static AzureEnvironment Get(string name) => s_environments[name];
 

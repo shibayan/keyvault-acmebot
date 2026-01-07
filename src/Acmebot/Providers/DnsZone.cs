@@ -2,30 +2,23 @@
 
 namespace Acmebot.Providers;
 
-public class DnsZone : IEquatable<DnsZone>
+public class DnsZone(IDnsProvider dnsProvider) : IEquatable<DnsZone>
 {
-    public DnsZone(IDnsProvider dnsProvider)
-    {
-        DnsProvider = dnsProvider;
-    }
-
     private static readonly IdnMapping s_idnMapping = new();
-
-    private readonly string _name;
 
     public string Id { get; init; }
 
     public string Name
     {
-        get => _name;
-        init => _name = s_idnMapping.GetAscii(value);
+        get;
+        init => field = s_idnMapping.GetAscii(value);
     }
 
     public IReadOnlyList<string> NameServers { get; init; }
 
-    public IDnsProvider DnsProvider { get; }
+    public IDnsProvider DnsProvider { get; } = dnsProvider;
 
-    public bool Equals(DnsZone other)
+    public bool Equals(DnsZone? other)
     {
         if (other is null)
         {
@@ -35,7 +28,7 @@ public class DnsZone : IEquatable<DnsZone>
         return Id == other.Id;
     }
 
-    public override bool Equals(object obj) => Equals(obj as DnsZone);
+    public override bool Equals(object? obj) => Equals(obj as DnsZone);
 
-    public override int GetHashCode() => Id?.GetHashCode() ?? 0;
+    public override int GetHashCode() => Id.GetHashCode();
 }
