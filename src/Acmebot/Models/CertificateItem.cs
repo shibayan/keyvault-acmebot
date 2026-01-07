@@ -32,7 +32,7 @@ public class CertificateItem
     public int? KeySize { get; set; }
 
     [JsonProperty("keyCurveName")]
-    public string KeyCurveName { get; set; }
+    public string? KeyCurveName { get; set; }
 
     [JsonProperty("reuseKey")]
     public bool? ReuseKey { get; set; }
@@ -50,5 +50,5 @@ public class CertificateItem
     public string AcmeEndpoint { get; set; }
 
     [JsonProperty("dnsAlias")]
-    public string DnsAlias { get; set; }
+    public string? DnsAlias { get; set; }
 }

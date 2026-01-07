@@ -8,5 +8,5 @@ internal static class Constants
 
     public static string ApplicationVersion { get; } = typeof(Program).Assembly
                                                                       .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                                                                      ?.InformationalVersion;
+                                                                      ?.InformationalVersion ?? "1.0.0";
 }

@@ -21,7 +21,7 @@ public class AddCertificate(IHttpContextAccessor httpContextAccessor, ILogger<Ad
         [FromBody] CertificatePolicyItem certificatePolicyItem,
         [DurableClient] DurableTaskClient starter)
     {
-        if (!User.Identity.IsAuthenticated)
+        if (!User.Identity?.IsAuthenticated ?? false)
         {
             return Unauthorized();
         }

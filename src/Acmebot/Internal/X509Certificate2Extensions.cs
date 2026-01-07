@@ -5,11 +5,11 @@ namespace Acmebot.Internal;
 
 internal static class X509Certificate2Extensions
 {
-    public static string GetCertificateId(this X509Certificate2 x509Certificate2)
+    public static string? GetCertificateId(this X509Certificate2 x509Certificate2)
     {
         var keyIdentifierExtension = x509Certificate2.Extensions.OfType<X509AuthorityKeyIdentifierExtension>().FirstOrDefault();
 
-        if (keyIdentifierExtension is null)
+        if (keyIdentifierExtension?.KeyIdentifier is null)
         {
             return null;
         }

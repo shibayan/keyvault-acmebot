@@ -24,7 +24,7 @@ public class GetCertificates(IHttpContextAccessor httpContextAccessor, ILogger<G
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/certificates")] HttpRequest req,
         [DurableClient] DurableTaskClient starter)
     {
-        if (!User.Identity.IsAuthenticated)
+        if (!User.Identity?.IsAuthenticated ?? false)
         {
             return Unauthorized();
         }

@@ -24,7 +24,7 @@ public class GetDnsZones(IHttpContextAccessor httpContextAccessor, ILogger<GetDn
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/dns-zones")] HttpRequest req,
         [DurableClient] DurableTaskClient starter)
     {
-        if (!User.Identity.IsAuthenticated)
+        if (!User.Identity?.IsAuthenticated ?? false)
         {
             return Unauthorized();
         }

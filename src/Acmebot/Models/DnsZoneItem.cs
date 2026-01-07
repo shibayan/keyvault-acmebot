@@ -5,14 +5,14 @@ namespace Acmebot.Models;
 public class DnsZoneItem
 {
     [JsonProperty("name")]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 }
 
 public class DnsZoneGroup
 {
     [JsonProperty("dnsProviderName")]
-    public string DnsProviderName { get; set; }
+    public required string DnsProviderName { get; set; }
 
     [JsonProperty("dnsZones")]
-    public IReadOnlyList<DnsZoneItem> DnsZones { get; set; }
+    public required IReadOnlyList<DnsZoneItem> DnsZones { get; set; }
 }

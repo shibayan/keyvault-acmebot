@@ -12,6 +12,11 @@ public class SharedOrchestrator
     {
         var certificatePolicyItem = context.GetInput<CertificatePolicyItem>();
 
+        if (certificatePolicyItem is null)
+        {
+            return;
+        }
+
         try
         {
             // 前提条件をチェック
