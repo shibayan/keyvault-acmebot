@@ -6,4 +6,5 @@ paths-ignore:
   - "**/test/**"
 
 queries:
-  - uses: security-extended,security-and-quality
+  - uses: security-extended
+  - uses: security-and-quality
