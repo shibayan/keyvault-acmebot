@@ -1,0 +1,9 @@
+name: CodeQL config
+
+paths:
+  - src
+paths-ignore:
+  - "**/test/**"
+
+queries:
+  - uses: security-extended,security-and-quality
