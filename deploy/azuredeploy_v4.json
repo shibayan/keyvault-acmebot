@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.39.26.7824",
-      "templateHash": "15352501263152010206"
+      "templateHash": "9552310865921561376"
     }
   },
   "parameters": {
@@ -34,7 +34,6 @@
       "defaultValue": "https://acme-v02.api.letsencrypt.org/directory",
       "allowedValues": [
         "https://acme-v02.api.letsencrypt.org/directory",
-        "https://api.buypass.com/acme/directory",
         "https://acme.zerossl.com/v2/DV90/",
         "https://dv.acme-v02.api.pki.goog/directory",
         "https://acme.entrust.net/acme2/directory",

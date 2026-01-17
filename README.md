@@ -36,7 +36,6 @@ Key Vault Acmebot provides secure and centralized management of ACME certificate
 - Automated certificate renewal
 - Support for ACME v2 compliant Certification Authorities
   - [Let's Encrypt](https://letsencrypt.org/)
-  - [Buypass Go SSL](https://www.buypass.com/ssl/resources/acme-free-ssl)
   - [ZeroSSL](https://zerossl.com/features/acme/) (Requires EAB Credentials)
   - [Google Trust Services](https://pki.goog/) (Requires EAB Credentials)
   - [SSL.com](https://www.ssl.com/how-to/order-free-90-day-ssl-tls-certificates-with-acme/) (Requires EAB Credentials)

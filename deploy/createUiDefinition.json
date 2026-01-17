@@ -126,11 +126,6 @@
                       "value": "https://acme-v02.api.letsencrypt.org/directory"
                     },
                     {
-                      "label": "Buypass Go SSL",
-                      "description": "The value to select for option 2.",
-                      "value": "https://api.buypass.com/acme/directory"
-                    },
-                    {
                       "label": "ZeroSSL",
                       "description": "The value to select for option 3.",
                       "value": "https://acme.zerossl.com/v2/DV90"
