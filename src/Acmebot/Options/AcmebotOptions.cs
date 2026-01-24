@@ -30,6 +30,8 @@ public class AcmebotOptions
     public ExternalAccountBindingOptions? ExternalAccountBinding { get; set; }
 
     // Properties should be in alphabetical order
+    public AkamaiOptions Akamai { get; set; }
+
     public AzureDnsOptions? AzureDns { get; set; }
 
     public AzurePrivateDnsOptions? AzurePrivateDns { get; set; }
