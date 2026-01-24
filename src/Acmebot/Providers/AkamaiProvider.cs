@@ -97,7 +97,7 @@ public class AkamaiProvider : IDnsProvider
 
             allZones.AddRange(result.Zones);
 
-            if (result.Metadata == null || result.Zones.Length < pageSize)
+            if (result.Zones.Length < pageSize || (result.Metadata != null && allZones.Count >= result.Metadata.TotalElements))
             {
                 break;
             }
@@ -123,7 +123,8 @@ public class AkamaiProvider : IDnsProvider
             return true;
         }
 
-        // For other status codes, treat as non-existent
+        response.EnsureSuccessStatusCode();
+
         return false;
     }
 
