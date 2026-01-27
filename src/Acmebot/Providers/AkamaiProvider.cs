@@ -1,10 +1,10 @@
-using System.Net;
+﻿using System.Net;
 using System.Text.Json.Serialization;
-
-using Akamai.EdgeGrid.Auth;
 
 using Acmebot.Internal;
 using Acmebot.Options;
+
+using Akamai.EdgeGrid.Auth;
 
 namespace Acmebot.Providers;
 
