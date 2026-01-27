@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Akamai.EdgeGrid.Auth" Version="1.0.0-preview" />
     <PackageReference Include="AWSSDK.Route53" Version="4.0.8.3" />
     <PackageReference Include="Azure.Identity" Version="1.17.1" />
     <PackageReference Include="Azure.ResourceManager.Dns" Version="1.1.1" />
