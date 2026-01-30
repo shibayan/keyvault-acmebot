@@ -56,7 +56,7 @@ public class GandiLiveDnsProvider(GandiLiveDnsOptions options) : IDnsProvider
             response.EnsureSuccessStatusCode();
             var domains = await response.Content.ReadAsAsync<Domain[]>();
 
-            return Enumerable.Where(domains, x => x.Nameserver.Current == "livedns").ToArray();
+            return domains.Where(x => x.Nameserver.Current == "livedns").ToArray();
         }
 
         public async Task DeleteRecordAsync(string zoneName, string relativeRecordName)

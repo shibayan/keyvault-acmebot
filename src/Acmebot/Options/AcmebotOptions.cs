@@ -20,6 +20,8 @@ public class AcmebotOptions
 
     public string? PreferredChain { get; set; }
 
+    public string? PreferredProfile { get; set; }
+
     [Range(0, 365)]
     public int RenewBeforeExpiry { get; set; } = 30;
 
