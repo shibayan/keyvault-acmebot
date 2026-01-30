@@ -1,6 +1,6 @@
 ﻿namespace Acmebot.Options;
 
-public class AkamaiOptions
+public class AkamaiEdgeDnsOptions
 {
     public string Host { get; set; }
 

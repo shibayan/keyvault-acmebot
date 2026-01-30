@@ -8,12 +8,12 @@ using Akamai.EdgeGrid.Auth;
 
 namespace Acmebot.Providers;
 
-public class AkamaiProvider : IDnsProvider
+public class AkamaiEdgeDnsProvider : IDnsProvider
 {
     private readonly HttpClient _httpClient;
     private readonly string _baseUrl;
 
-    public AkamaiProvider(AkamaiOptions options)
+    public AkamaiEdgeDnsProvider(AkamaiEdgeDnsOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(options.Host);
@@ -32,7 +32,7 @@ public class AkamaiProvider : IDnsProvider
         _baseUrl = $"https://{options.Host}/config-dns/v2/";
     }
 
-    public string Name => "Akamai";
+    public string Name => "Akamai Edge DNS";
 
     public int PropagationSeconds => 120;
 
