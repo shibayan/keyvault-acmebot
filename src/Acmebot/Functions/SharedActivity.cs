@@ -111,10 +111,10 @@ public class SharedActivity(
         {
             var zones = await dnsProviders.ListAllZonesAsync();
 
-            return Enumerable.Select(zones, x => new DnsZoneGroup
+            return zones.Select(x => new DnsZoneGroup
             {
                 DnsProviderName = x.Item1,
-                DnsZones = Enumerable.OrderBy(x.Item2?.Select(xs => xs.ToDnsZoneItem()), xs => xs.Name).ToArray()
+                DnsZones = x.Item2.Select(xs => xs.ToDnsZoneItem()).OrderBy(xs => xs.Name).ToArray()
             }).ToArray();
         }
         catch
@@ -146,7 +146,7 @@ public class SharedActivity(
     {
         var acmeProtocolClient = await acmeProtocolClientFactory.CreateClientAsync();
 
-        return await acmeProtocolClient.CreateOrderAsync(dnsNames);
+        return await acmeProtocolClient.CreateOrderAsync(dnsNames, preferredProfile: _options.PreferredProfile);
     }
 
     [Function(nameof(Dns01Precondition))]
@@ -185,9 +185,9 @@ public class SharedActivity(
             var queryResult = await lookupClient.QueryAsync(zone.Name, QueryType.NS);
 
             // 最後の . が付いている場合があるので削除して統一
-            var expectedNameServers = Enumerable
-                                            .Select<string, string>(zone.NameServers, x => x.TrimEnd('.'))
-                                            .ToArray();
+            var expectedNameServers = zone.NameServers
+                                          .Select<string, string>(x => x.TrimEnd('.'))
+                                          .ToArray();
 
             var actualNameServers = queryResult.Answers
                                                .OfType<DnsClient.Protocol.NsRecord>()
@@ -245,7 +245,7 @@ public class SharedActivity(
             }
 
             // DNS-01 Challenge の情報を拾う
-            var challenge = Enumerable.FirstOrDefault<Challenge>(authorization.Challenges, x => x.Type == "dns-01");
+            var challenge = authorization.Challenges.FirstOrDefault<Challenge>(x => x.Type == "dns-01");
 
             if (challenge is null)
             {
@@ -287,7 +287,7 @@ public class SharedActivity(
             await zone.DnsProvider.CreateTxtRecordAsync(zone, acmeDnsRecordName, lookup.Select(x => x.DnsRecordValue));
 
             // 一番時間のかかる DNS Provider に合わせる
-            propagationSeconds = Math.Max(propagationSeconds, (int)zone.DnsProvider.PropagationSeconds);
+            propagationSeconds = Math.Max(propagationSeconds, zone.DnsProvider.PropagationSeconds);
         }
 
         return (challengeResults, propagationSeconds);
@@ -468,6 +468,11 @@ public class SharedActivity(
             var dnsRecordName = lookup.Key;
 
             var zone = zones.FindDnsZone(dnsRecordName);
+
+            if (zone is null)
+            {
+                continue;
+            }
 
             // Challenge の詳細から DNS 向けにレコード名を作成
             var acmeDnsRecordName = dnsRecordName.Replace($".{zone.Name}", "", StringComparison.OrdinalIgnoreCase);

@@ -8,7 +8,7 @@ namespace Acmebot.Internal;
 internal static class AcmeProtocolClientExtensions
 {
     public static async Task<X509Certificate2Collection> GetOrderCertificateAsync(this AcmeProtocolClient acmeProtocolClient, OrderDetails order,
-                                                                                  string preferredChain, CancellationToken cancel = default)
+                                                                                  string? preferredChain, CancellationToken cancel = default)
     {
         IEnumerable<string>? linkHeaders;
         X509Certificate2Collection defaultX509Certificates;
