@@ -43,7 +43,7 @@ public class RenewCertificates(ILogger<RenewCertificates> logger)
             catch (Exception ex)
             {
                 // 失敗した場合はログに詳細を書き出して続きを実行する
-                logger.LogError(ex, "Failed sub orchestration with DNS names = {Join}", string.Join((string?)",", (IEnumerable<string?>)certificate.DnsNames));
+                logger.LogError(ex, "Failed sub orchestration with DNS names = {Join}", string.Join((string?)",", certificate.DnsNames));
             }
         }
     }
