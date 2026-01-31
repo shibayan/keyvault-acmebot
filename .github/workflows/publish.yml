@@ -6,7 +6,7 @@ on:
 
 env:
   DOTNET_VERSION: 10.0.x
-  BICEP_VERSION: 0.39.26
+  BICEP_VERSION: 0.40.2
 
 jobs:
   publish:
@@ -34,7 +34,7 @@ jobs:
         echo "MAJOR_VERSION=${FULL_VERSION%%.*}" >> $GITHUB_OUTPUT
 
     - name: Publish Function app
-      run: dotnet publish -c Release -r win-x86 --no-self-contained -o ./dist -p:Version=${{ steps.setup_version.outputs.version }} ./src/Acmebot
+      run: dotnet publish -c Release -r linux-x64 --no-self-contained -o ./dist -p:Version=${{ steps.setup_version.outputs.version }} ./src/Acmebot
 
     - name: Zip Function app
       run: 7z a -mx=9 latest.zip ./dist/* ./dist/.[^.]*
