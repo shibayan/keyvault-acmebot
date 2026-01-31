@@ -38,7 +38,7 @@ param keyVaultBaseUrl string = ''
 @description('Specifies additional name/value pairs to be appended to the functionap app appsettings.')
 param additionalAppSettings array = []
 
-var generatedToken = toLower(uniqueString(subscription().id, location))
+var generatedToken = toLower(uniqueString(resourceGroup().id, location))
 
 var functionAppName = 'func-${appNamePrefix}-${take(generatedToken, 4)}'
 var appServicePlanName = 'plan-${appNamePrefix}-${take(generatedToken, 4)}'
