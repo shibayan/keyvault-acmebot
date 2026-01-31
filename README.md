@@ -74,10 +74,10 @@ Thank you for your support of our development. Interested in supporting the proj
 
 Commercial support for Acmebot is planned to be offered by Polymind Inc.
 
-Details of the support offerings are not finalized yet and will be announced separately.
+Details of the support offerings are not yet finalized and will be announced separately.
 Acmebot remains fully open source and free to use under the Apache License 2.0.
 
-If you are interested in future commercial support, please reach out to [Polymind Inc](https://github.com/polymind-inc).
+If you are interested in future commercial support, please reach out to [Polymind Inc.](https://github.com/polymind-inc).
 
 ## License
 
