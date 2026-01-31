@@ -38,13 +38,15 @@ param keyVaultBaseUrl string = ''
 @description('Specifies additional name/value pairs to be appended to the functionap app appsettings.')
 param additionalAppSettings array = []
 
-var functionAppName = 'func-${appNamePrefix}-${take(uniqueString(resourceGroup().id, deployment().name), 4)}'
-var appServicePlanName = 'plan-${appNamePrefix}-${take(uniqueString(resourceGroup().id, deployment().name), 4)}'
-var appInsightsName = 'appi-${appNamePrefix}-${take(uniqueString(resourceGroup().id, deployment().name), 4)}'
-var workspaceName = 'log-${appNamePrefix}-${take(uniqueString(resourceGroup().id, deployment().name), 4)}'
-var storageAccountName = 'st${uniqueString(resourceGroup().id, deployment().name)}func'
-var keyVaultName = 'kv-${appNamePrefix}-${take(uniqueString(resourceGroup().id, deployment().name), 4)}'
-var deploymentStorageContainerName = 'app-package-${take(appNamePrefix, 32)}-${take(resourceGroup().id, 7)}'
+var generatedToken = toLower(uniqueString(subscription().id, location))
+
+var functionAppName = 'func-${appNamePrefix}-${take(generatedToken, 4)}'
+var appServicePlanName = 'plan-${appNamePrefix}-${take(generatedToken, 4)}'
+var appInsightsName = 'appi-${appNamePrefix}-${take(generatedToken, 4)}'
+var workspaceName = 'log-${appNamePrefix}-${take(generatedToken, 4)}'
+var storageAccountName = 'st${generatedToken}func'
+var keyVaultName = 'kv-${appNamePrefix}-${take(generatedToken, 4)}'
+var deploymentStorageContainerName = 'app-package-${take(appNamePrefix, 32)}-${take(generatedToken, 7)}'
 
 var roleDefinitionId = resourceId('Microsoft.Authorization/roleDefinitions/', 'a4417e6f-fecd-4de8-b567-7b0420556985')
 
@@ -62,19 +64,19 @@ var acmebotAppSettings = [
     value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
   }
   {
-    name: 'Acmebot:Contacts'
+    name: 'Acmebot__Contacts'
     value: mailAddress
   }
   {
-    name: 'Acmebot:Endpoint'
+    name: 'Acmebot__Endpoint'
     value: acmeEndpoint
   }
   {
-    name: 'Acmebot:VaultBaseUrl'
+    name: 'Acmebot__VaultBaseUrl'
     value: (createWithKeyVault ? 'https://${keyVaultName}${environment().suffixes.keyvaultDns}' : keyVaultBaseUrl)
   }
   {
-    name: 'Acmebot:Environment'
+    name: 'Acmebot__Environment'
     value: environment().name
   }
 ]
@@ -91,17 +93,18 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2025-06-01' = {
     allowBlobPublicAccess: false
     minimumTlsVersion: 'TLS1_2'
   }
-}
 
-resource appServicePlan 'Microsoft.Web/serverfarms@2025-03-01' = {
-  name: appServicePlanName
-  location: location
-  sku: {
-    name: 'FC1'
-    tier: 'FlexConsumption'
-  }
-  properties: {
-    reserved: true
+  resource blobServices 'blobServices' = {
+    name: 'default'
+    properties: {
+      deleteRetentionPolicy: {}
+    }
+    resource deploymentContainer 'containers' = {
+      name: deploymentStorageContainerName
+      properties: {
+        publicAccess: 'None'
+      }
+    }
   }
 }
 
@@ -129,6 +132,19 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
+resource appServicePlan 'Microsoft.Web/serverfarms@2025-03-01' = {
+  name: appServicePlanName
+  location: location
+  kind: 'functionapp'
+  sku: {
+    name: 'FC1'
+    tier: 'FlexConsumption'
+  }
+  properties: {
+    reserved: true
+  }
+}
+
 resource functionApp 'Microsoft.Web/sites@2025-03-01' = {
   name: functionAppName
   location: location
@@ -152,6 +168,7 @@ resource functionApp 'Microsoft.Web/sites@2025-03-01' = {
         }
       }
       scaleAndConcurrency: {
+        maximumInstanceCount: 100
         instanceMemoryMB: 2048
       }
       runtime: {
@@ -167,6 +184,15 @@ resource functionApp 'Microsoft.Web/sites@2025-03-01' = {
         supportCredentials: false
       }
     }
+  }
+}
+
+resource functionAppDeploy 'Microsoft.Web/sites/extensions@2025-03-01' = {
+  parent: functionApp
+  name: 'onedeploy'
+  properties: {
+    packageUri: 'https://stacmebotprod.blob.core.windows.net/keyvault-acmebot/v5/latest.zip'
+    remoteBuild: false
   }
 }
 
