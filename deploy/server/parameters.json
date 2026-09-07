@@ -1,0 +1,51 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "northeurope"
+        },
+        "resourceNames": {
+            "value": {
+                "functionAppName": "func-func-ndl-cer",
+                "appServicePlanName": "plan-func-ndl-cer",
+                "storageAccountName": "stfuncndlcerfunc",
+                "keyVaultName": "",
+                "appInsightsName": "appi-func-ndl-cer",
+                "logAnalyticsWorkspaceName": ""
+            }
+        },
+        "acme": {},
+        "dnsProvider": {},
+        "managedIdentity": {
+            "value": {
+                "type": "SystemAssigned",
+                "userAssignedResourceId": ""
+            }
+        },
+        "keyVault": {
+            "value": {
+                "createNew": false,
+                "resourceId": "/subscriptions/fe9c7522-c3b5-4fec-ac4c-2ba3e9eac493/resourceGroups/RG-EU-CORE-CERTIFICATES-COMMON/providers/Microsoft.KeyVault/vaults/kveucertificatescommon"
+            }
+        },
+        "monitoring": {
+            "value": {
+                "createLogAnalyticsWorkspace": false,
+                "logAnalyticsWorkspaceResourceId": "/subscriptions/fe9c7522-c3b5-4fec-ac4c-2ba3e9eac493/resourceGroups/func-ndl-cer-all-ne2-1/providers/Microsoft.OperationalInsights/workspaces/log-func-ndl-cer"
+            }
+        },
+        "tagsByResource": {
+            "value": {}
+        },
+        "keyVaultSkuName": {
+            "value": "standard"
+        },
+        "appPackageUri": {
+            "value": "https://github.com/polymind-inc/acmebot/releases/latest/download/acmebot.zip"
+        },
+        "additionalAppSettings": {
+            "value": []
+        }
+    }
+}
