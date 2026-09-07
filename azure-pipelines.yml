@@ -1,0 +1,17 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: 'Deploy ARM Template'
+  inputs:
+    deploymentScope: 'Subscription'
+    azureResourceManagerConnection: 'Promotigo Production - Microsoft'
+    subscriptionId: 'fe9c7522-c3b5-4fec-ac4c-2ba3e9eac493'
+    location: 'North Europe'
+    templateLocation: 'Linked artifact'
+    csmFile: 'deploy/template.json'
+    deploymentMode: 'Incremental'
