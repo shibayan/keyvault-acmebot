@@ -74,7 +74,7 @@ Accept: application/json
 | `certificateName` | Yes | Key Vault certificate name. API clients must provide this value. It must be 1 to 127 characters and contain only letters, numbers, and hyphens. |
 | `dnsNames` | Yes | ASCII/punycode DNS names to include in the certificate. Omit trailing dots. Wildcards are allowed only as the leftmost label. |
 | `dnsProviderName` | Yes | Provider display name, such as `Azure DNS` or `Cloudflare`. When `dnsAlias` is set, this provider must manage the DNS alias zone. |
-| `keyType` | Yes | `RSA`, `RSA-HSM`, `EC`, or `EC-HSM`. The `-HSM` variants require a Premium-tier Key Vault. |
+| `keyType` | Yes | `RSA`, `RSA-HSM`, `EC`, or `EC-HSM`. The `-HSM` variants require a Premium-tier Key Vault and are only available through the API and CLI — the dashboard's Add Certificate dialog does not offer them. Certificates issued with an HSM key type still display correctly in the dashboard's list and details views. |
 | `keySize` | For RSA/RSA-HSM | `2048`, `3072`, or `4096`. |
 | `keyCurveName` | For EC/EC-HSM | `P-256`, `P-384`, `P-521`, or `P-256K`. |
 | `reuseKey` | No | Whether Key Vault should reuse the certificate key. |
